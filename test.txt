@@ -55,3 +55,10 @@ lemmas
 
 xs :: List a and ys :: List a
   ==> (xs ++ ys) :: List a;
+
+definitions
+
+filter p [] == [];
+filter p (x : xs)
+  == x : (filter p xs) if p x
+   |     (filter p xs) otherwise;

@@ -12,12 +12,27 @@ object Printer {
   def pp(any: Pretty): String = any match {
     case expr: Expr => pp(expr)
     case cmd: Cmd   => pp(cmd)
+    case data: Data => pp(data)
     case _          => sys.error("no pretty printer for object")
   }
 
   def pp(cmd: Cmd): String = cmd match {
     case Cmd(name, exprs) =>
       exprs mkString (name + "\n", ";\n", ";\n")
+  }
+
+  def pp(data: Data): String = data match {
+    case Op(name) =>
+      "(" + name + ")"
+
+    case Id(name) =>
+      name
+
+    case semantics.Apply(fun, arg) =>
+      ???
+
+    case semantics.Closure(bound, body, env) =>
+      ???
   }
 
   def pp(expr: Expr): String = expr match {
