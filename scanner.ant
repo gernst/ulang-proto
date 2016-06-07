@@ -1,0 +1,10 @@
+<project name="scanner" default="scanner">
+    <target name="jflextask" unless="jflex.available" description="creates JFlex Ant task">
+        <taskdef name="jflex" classname="jflex.anttask.JFlexTask" classpath="lib/jflex-1.6.1.jar"/>
+        <property name="jflex.available" value="yes"/>
+    </target>
+
+    <target name="scanner" depends="jflextask" description="generate scanner">
+        <jflex file="src/ulang/syntax/Scanner.flex" nobak="yes" verbose="yes" />
+    </target>
+</project> 

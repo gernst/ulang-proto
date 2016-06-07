@@ -1,0 +1,57 @@
+definitions
+
+not True  <==> False;
+not False <==> True;
+
+True  and True  <==> True;
+True  and False <==> False;
+False and True  <==> False;
+False and False <==> False;
+
+True  or  True  <==> True;
+True  or  False <==> True;
+False or  True  <==> True;
+False or  False <==> False;
+
+ite True  x _ == x;
+ite False _ y == y;
+
+0 == Zero;
+n +1 == Succ n;
+
+m + 0 == m;
+m + n +1 == (m + n) +1;
+
+lemmas
+not not phi <==> phi;
+
+axioms
+
+(forall) phi
+  <==> phi == lambda x. True;
+
+(exists x. phi x)
+  <==> not (forall x. not (phi x));
+
+inductive
+
+True  :: Bool;
+False :: Bool;
+
+0 :: Nat;
+n :: Nat
+  ==> n +1 :: Nat;
+
+Nil :: List a;
+x :: a and xs :: List a
+  ==> (x : xs) :: List a;
+
+definitions
+
+[] ++ ys == ys;
+(x : xs) ++ ys == x : (xs ++ ys);
+
+lemmas
+
+xs :: List a and ys :: List a
+  ==> (xs ++ ys) :: List a;
