@@ -18,7 +18,7 @@ object Parser extends Combinators with Mixfix {
   type Expr = ulang.Expr
 
   val keywords = Set("definitions", "inductive", "axioms", "lemmas", "theorems")
-  val special = Set(";", ".", "(", ")", "lambda") ++ keywords
+  val special = Set(";", ".", "(", ")", "=", "lambda", "if", "then", "else", "let", "in") ++ keywords
   val eol = lit(";")
   val dot = lit(".")
 
@@ -55,7 +55,18 @@ object Parser extends Combinators with Mixfix {
   val ids_dot = id.+ <~ dot
   val binder = parse(Binds)(bindfix_op, ids_dot, expr)
   val lambda = lit("lambda") ~> parse(Lambdas)(ids_dot, expr)
-  val closed = parens(expr | anyop) | lambda | binder | id
+  
+  val if_ = lit("if") ~> expr
+  val then_ = lit("then") ~> expr
+  val else_ = lit("else") ~> expr
+  val ite = parse(IfThenElse)(if_, then_, else_)
+  
+  val let_ = lit("let") ~> id
+  val eq_ = lit("=") ~> expr
+  val in_ = lit("in") ~> expr
+  val let = parse(LetIn)(let_, eq_, in_)
+  
+  val closed = parens(expr | anyop) | lambda | binder | ite | let | id
   val normal_app = parse(Applys)(closed, closed.*)
 
   val inner_expr: Parser[String, Expr] = normal_app

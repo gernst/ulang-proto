@@ -1,4 +1,4 @@
-package ulang.syntax
+package ulang
 
 import arse._
 
@@ -26,9 +26,10 @@ object Operators {
     "!=" -> (Non, 6),
     "==" -> (Non, 6),
     "<=" -> (Non, 6),
-    "=>" -> (Non, 6),
+    ">=" -> (Non, 6),
     "<" -> (Non, 6),
     ">" -> (Non, 6),
+    "->" -> (Right, 6),
     "::" -> (Non, 5),
     "and" -> (Left, 4),
     "or" -> (Left, 3),

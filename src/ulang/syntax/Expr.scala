@@ -3,32 +3,32 @@ package ulang.syntax
 import ulang._
 
 case class Apply(fun: Expr, arg: Expr) extends Expr
-case class Lambda(bound: Id, body: Expr) extends Expr
 
-object Op {
-  def unapply(expr: Expr): Option[String] = expr match {
-    case Id(name) if Operators contains name =>
-      Some(name)
+case class Case(pattern: Expr, body: Expr) extends Ordered[Case] {
+  def compare(that: Case) = CaseOrdering.compare(this, that)
+}
+
+case class Match(cases: List[Case]) extends Expr
+
+object Lambda extends ((Expr, Expr) => Expr) {
+  def apply(bound: Expr, body: Expr): Expr = {
+    Match(List(Case(bound, body)))
+  }
+
+  def unapply(expr: Expr): Option[(Expr, Expr)] = expr match {
+    case Match(List(Case(bound, body))) =>
+      Some((bound, body))
     case _ =>
       None
   }
 }
 
-object Constr {
-  def unapply(expr: Expr): Option[String] = expr match {
-    case Id(name) if Character.isUpperCase(name.head) =>
-      Some(name)
-    case _ =>
-      None
-  }
-}
-
-object Bind extends ((Id, Id, Expr) => Expr) {
-  def apply(op: Id, bound: Id, body: Expr): Expr = {
+object Bind extends ((Id, Expr, Expr) => Expr) {
+  def apply(op: Id, bound: Expr, body: Expr): Expr = {
     Apply(op, Lambda(bound, body))
   }
 
-  def unapply(expr: Expr): Option[(Id, Id, Expr)] = expr match {
+  def unapply(expr: Expr): Option[(Id, Expr, Expr)] = expr match {
     case Apply(op: Id, Lambda(bound, body)) =>
       Some((op, bound, body))
     case _ =>
@@ -53,16 +53,16 @@ object Applys extends ((Expr, List[Expr]) => Expr) {
   }
 }
 
-object Lambdas extends ((List[Id], Expr) => Expr) {
-  def apply(bounds: List[Id], body: Expr): Expr = {
+object Lambdas extends ((List[Expr], Expr) => Expr) {
+  def apply(bounds: List[Expr], body: Expr): Expr = {
     bounds.foldRight(body)(Lambda)
   }
 
-  def unapply(expr: Expr): Option[(List[Id], Expr)] = {
+  def unapply(expr: Expr): Option[(List[Expr], Expr)] = {
     Some(flatten(expr))
   }
 
-  def flatten(expr: Expr): (List[Id], Expr) = expr match {
+  def flatten(expr: Expr): (List[Expr], Expr) = expr match {
     case Lambda(bound, body) =>
       val (bounds, inner) = flatten(body)
       (bound :: bounds, inner)
@@ -76,7 +76,7 @@ object Binds extends ((Id, List[Id], Expr) => Expr) {
     bounds.foldRight(body)(Bind(op, _, _))
   }
 
-  def unapply(expr: Expr): Option[(Id, List[Id], Expr)] = expr match {
+  def unapply(expr: Expr): Option[(Id, List[Expr], Expr)] = expr match {
     case Bind(op, bound, body) =>
       val (bounds, inner) = flatten(op, body)
       Some((op, bound :: bounds, inner))
@@ -84,11 +84,69 @@ object Binds extends ((Id, List[Id], Expr) => Expr) {
       None
   }
 
-  def flatten(op: Id, expr: Expr): (List[Id], Expr) = expr match {
+  def flatten(op: Id, expr: Expr): (List[Expr], Expr) = expr match {
     case Bind(`op`, bound, body) =>
       val (bounds, inner) = flatten(op, body)
       (bound :: bounds, inner)
     case _ =>
       (Nil, expr)
+  }
+}
+
+class Unary(val op: Id) extends (Expr => Expr) {
+  def unapply(e: Expr) = e match {
+    case Apply(`op`, arg) =>
+      Some(arg)
+    case _ =>
+      None
+  }
+
+  def apply(arg: Expr) = {
+    Apply(op, arg)
+  }
+}
+
+class Binary(val op: Id) extends ((Expr, Expr) => Expr) {
+  def unapply(e: Expr) = e match {
+    case Apply(Apply(`op`, arg1), arg2) =>
+      Some((arg1, arg2))
+    case _ =>
+      None
+  }
+
+  def apply(arg1: Expr, arg2: Expr) = {
+    Apply(Apply(op, arg1), arg2)
+  }
+}
+
+class Ternary(val op: Id) extends ((Expr, Expr, Expr) => Expr) {
+  def unapply(e: Expr) = e match {
+    case Apply(Apply(Apply(`op`, arg1), arg2), arg3) =>
+      Some((arg1, arg2, arg3))
+    case _ =>
+      None
+  }
+
+  def apply(arg1: Expr, arg2: Expr, arg3: Expr) = {
+    Apply(Apply(Apply(op, arg1), arg2), arg3)
+  }
+}
+
+class Nary(val op: Id, val neutral: Id) {
+  def flatArgs(e: Expr): List[Expr] = e match {
+    case Apply(Apply(`op`, arg1), arg2) =>
+      flatArgs(arg1) ++ flatArgs(arg2)
+    case _ =>
+      List(e)
+  }
+
+  def unapply(e: Expr) = flatArgs(e) match {
+    case List(_) => None
+    case args    => Some(args)
+  }
+
+  def apply(args: List[Expr]): Expr = {
+    if (args.isEmpty) neutral
+    else args.reduce((arg1, arg2) => Apply(Apply(op, arg1), arg2))
   }
 }

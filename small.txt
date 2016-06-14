@@ -1,0 +1,20 @@
+inductive
+
+Nil :: List a;
+x :: a and xs :: List a
+  ==> Cons x xs :: List a;
+
+definitions
+
+Nil ++ ys == ys;
+Cons x xs ++ ys == Cons x (xs ++ ys);
+
+foo == (Cons A (Cons A Nil));
+test == (Cons A foo) ++ (Cons B (Cons C Nil));
+
+lemmas
+
+xs ++ Nil == xs;
+
+f x == x and g y == x and f (g y) == f x and x == y
+  ==> h (f x == g (g (g x))) == z;

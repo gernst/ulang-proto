@@ -1,3 +1,17 @@
+inductive
+True  :: Bool;
+False :: Bool;
+
+x :: a and y :: a
+  ==> x == y :: Bool;
+
+definitions
+x != y <==> not x == y;
+
+inductive
+x :: a and f x :: b
+  ==> f :: a -> b;
+
 definitions
 
 not True  <==> False;
@@ -13,17 +27,61 @@ True  or  False <==> True;
 False or  True  <==> True;
 False or  False <==> False;
 
-ite True  x _ == x;
-ite False _ y == y;
+True  ==> True  <==> True;
+True  ==> False <==> False;
+False ==> True  <==> True;
+False ==> False <==> True;
+
+(True  <==> True)  <==> True;
+(True  <==> False) <==> False;
+(False <==> True)  <==> False;
+(False <==> False) <==> True;
+
+lemmas
+(not) :: Bool -> Bool;
+(and) :: Bool -> Bool -> Bool;
+(or) :: Bool -> Bool -> Bool;
+(==>) :: Bool -> Bool -> Bool;
+(<==>) :: Bool -> Bool -> Bool;
+
+lemmas
+not not phi <==> phi;
+
+not (phi and psi) <==> not phi or  not psi;
+not (phi or  psi) <==> not phi and not psi;
+
+phi ==> psi ==> chi
+  <==> phi and psi ==> chi;
+
+phi ==> psi
+  <==> not phi or psi;
+
+not psi ==> not phi
+  <==> phi ==> psi;
+
+definitions
 
 0 == Zero;
 n +1 == Succ n;
 
+1 == 0 +1;
+
 m + 0 == m;
 m + n +1 == (m + n) +1;
 
-lemmas
-not not phi <==> phi;
+[] == Nil;
+x : xs == Cons x xs;
+
+length Nil == 0;
+length (Cons x xs) == (length xs) +1;
+
+test == length (A : B : []);
+
+// weird semantics of applications to Data
+constr (x y) == x;
+bar == constr (K X);
+
+foo == let x = A in (x : []);
 
 axioms
 
@@ -33,14 +91,39 @@ axioms
 (exists x. phi x)
   <==> not (forall x. not (phi x));
 
-inductive
+phi x
+  ==> phi ((choose) phi); 
 
-True  :: Bool;
-False :: Bool;
+inductive
 
 0 :: Nat;
 n :: Nat
   ==> n +1 :: Nat;
+
+0 <= n;
+m <= n
+  ==> m +1 <= n +1;
+
+lemmas
+
+n :: Nat
+  ==> n <= n;
+
+n :: Nat and m :: Nat
+  ==> m <= n and n <= m ==> n == m;
+
+k :: Nat and m :: Nat and n :: Nat
+  ==> k <= m and m <= n ==> k <= n;
+
+definitions
+m < n <==> not n <= m;
+
+lemmas
+
+(forall n. (forall m. m < n ==> phi m) ==> phi n)
+  ==> phi n;
+  
+inductive
 
 Nil :: List a;
 x :: a and xs :: List a
@@ -51,14 +134,28 @@ definitions
 [] ++ ys == ys;
 (x : xs) ++ ys == x : (xs ++ ys);
 
+filter p [] == [];
+filter p (x : xs)
+  == if p x
+    then x : (filter p xs)
+    else     (filter p xs);
+
 lemmas
 
 xs :: List a and ys :: List a
   ==> (xs ++ ys) :: List a;
 
-definitions
+f (f c) == f c and g c == f c 
+  ==> f (g c) == g c;
 
-filter p [] == [];
-filter p (x : xs)
-  == x : (filter p xs) if p x
-   |     (filter p xs) otherwise;
+    (p ==> f (f c) == f c)
+and g c == f c
+and p and q
+and not z
+    ==> f (g c) == g c and r;
+
+    x == f (g (h y))
+and y == f x
+and f x == x
+==> p x == p y;
+
