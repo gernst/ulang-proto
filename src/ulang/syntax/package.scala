@@ -3,23 +3,23 @@ package ulang
 import ulang._
 
 package object syntax {
-  object LetIn extends Ternary(Id("let_=_in_"))
-  object IfThenElse extends Ternary(Id("if_then_else_"))
+  object LetIn extends Ternary("let_=_in_")
+  object IfThenElse extends Ternary("if_then_else_")
 
-  object Eq extends Binary(Id("=="))
+  object Eq extends Binary("==")
 
-  object Not extends Unary(Id("not"))
-  object And extends Binary(Id("and"))
-  object Or extends Binary(Id("or"))
-  object Imp extends Binary(Id("==>"))
-  object Eqv extends Binary(Id("<==>"))
+  object Not extends Unary("not")
+  object And extends Binary("and")
+  object Or extends Binary("or")
+  object Imp extends Binary("==>")
+  object Eqv extends Binary("<==>")
 
   val Zero = Id("Zero")
-  object Succ extends Unary(Id("Succ"))
-  object UnaryMinus extends Unary(Id("-"))
-  object Plus extends Binary(Id("+"))
-  object Minus extends Binary(Id("-"))
-  object Mult extends Binary(Id("*"))
+  object Succ extends Unary("Succ")
+  object UnaryMinus extends Unary("-")
+  object Plus extends Binary("+")
+  object Minus extends Binary("-")
+  object Mult extends Binary("*")
 
   implicit val ev1 = ExprOrdering
 

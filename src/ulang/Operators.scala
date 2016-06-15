@@ -2,7 +2,7 @@ package ulang
 
 import arse._
 
-object Operators {
+object Operators extends Syntax[String, Id] {
   def contains(s: String) =
     (prefix_ops contains s) ||
       (postfix_ops contains s) ||
@@ -41,4 +41,6 @@ object Operators {
     "exists",
     "forall",
     "choose")
+
+  val bindfix_op = Mixfix.mixfix_op(bindfix_ops, Id)
 }

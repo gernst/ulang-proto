@@ -7,7 +7,15 @@ class Congruence(var _cong: DisjointSets[Expr], var _use: Map[Expr, Set[Expr]], 
   def find(e: Expr) = _cong find e
   def union(e1: Expr, e2: Expr) { _cong = _cong union (e1, e2) }
   def use(e: Expr) = _use.getOrElse(e, Set.empty)
-  def sig(e: Expr) = _sig(e)
+
+  // invariant sig(f(t)) = f(find(t))
+  // and sig contains only applications
+  // def sig(e: Expr) = _sig(e)
+
+  def sig(e: Expr): Expr = e match {
+    case Apply(f, e) => Apply(sig(f), find(e))
+    case _           => e
+  }
 
   def merge(e1: Expr, e2: Expr) = {
     val cc = new Congruence(_cong, _use, _sig)

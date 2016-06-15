@@ -159,3 +159,6 @@ and y == f x
 and f x == x
 ==> p x == p y;
 
+y == f y and y == x and p (f x)
+  ==> p y and r x;
+

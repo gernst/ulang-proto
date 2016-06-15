@@ -7,8 +7,8 @@ import ulang.syntax._
 
 object Simplify extends Rule {
   def name = "simplify"
-
-  type Rewrites = Map[String, (List[Expr], Goal) => Expr]
+  
+  val rw: Rewrites = Map.empty
 
   def simp(phi: Expr, prove: Boolean, ctx: Goal): Expr = {
     phi match {
@@ -59,9 +59,11 @@ object Simplify extends Rule {
   }
 
   def literal(phi: Expr, prove: Boolean, ctx: Goal): Expr = {
-    if (ctx contains phi) True
-    else if (ctx contains Not(phi)) False
-    else phi
+    val newphi = canon(phi, ctx)
+
+    if (ctx contains newphi) True
+    else if (ctx contains Not(newphi)) False
+    else newphi
   }
 
   def term(expr: Expr, ctx: Goal): Expr = {

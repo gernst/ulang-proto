@@ -93,7 +93,9 @@ object Binds extends ((Id, List[Id], Expr) => Expr) {
   }
 }
 
-class Unary(val op: Id) extends (Expr => Expr) {
+class Unary(name: String) extends (Expr => Expr) {
+  val op = Id(name)
+
   def unapply(e: Expr) = e match {
     case Apply(`op`, arg) =>
       Some(arg)
@@ -106,7 +108,9 @@ class Unary(val op: Id) extends (Expr => Expr) {
   }
 }
 
-class Binary(val op: Id) extends ((Expr, Expr) => Expr) {
+class Binary(name: String) extends ((Expr, Expr) => Expr) {
+  val op = Id(name)
+
   def unapply(e: Expr) = e match {
     case Apply(Apply(`op`, arg1), arg2) =>
       Some((arg1, arg2))
@@ -119,7 +123,9 @@ class Binary(val op: Id) extends ((Expr, Expr) => Expr) {
   }
 }
 
-class Ternary(val op: Id) extends ((Expr, Expr, Expr) => Expr) {
+class Ternary(name: String) extends ((Expr, Expr, Expr) => Expr) {
+  val op = Id(name)
+
   def unapply(e: Expr) = e match {
     case Apply(Apply(Apply(`op`, arg1), arg2), arg3) =>
       Some((arg1, arg2, arg3))
@@ -129,24 +135,5 @@ class Ternary(val op: Id) extends ((Expr, Expr, Expr) => Expr) {
 
   def apply(arg1: Expr, arg2: Expr, arg3: Expr) = {
     Apply(Apply(Apply(op, arg1), arg2), arg3)
-  }
-}
-
-class Nary(val op: Id, val neutral: Id) {
-  def flatArgs(e: Expr): List[Expr] = e match {
-    case Apply(Apply(`op`, arg1), arg2) =>
-      flatArgs(arg1) ++ flatArgs(arg2)
-    case _ =>
-      List(e)
-  }
-
-  def unapply(e: Expr) = flatArgs(e) match {
-    case List(_) => None
-    case args    => Some(args)
-  }
-
-  def apply(args: List[Expr]): Expr = {
-    if (args.isEmpty) neutral
-    else args.reduce((arg1, arg2) => Apply(Apply(op, arg1), arg2))
   }
 }
