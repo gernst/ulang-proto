@@ -2,10 +2,43 @@ package ulang.syntax
 
 import ulang._
 
+sealed trait Expr extends Pretty
+
+case class Id(name: String) extends Expr {
+  assert(!name.isEmpty && !name.isConstr)
+}
+
+case class Constr(tag: String, args: List[Expr]) extends Expr {
+  assert(!tag.isEmpty && tag.isConstr)
+}
+
 case class Apply(fun: Expr, arg: Expr) extends Expr
 
 case class Case(pattern: Expr, body: Expr)
+
 case class Match(cases: List[Case]) extends Expr
+
+object Op {
+  def unapply(expr: Id): Option[String] = expr match {
+    case Id(name) if Operators contains name =>
+      Some(name)
+    case _ =>
+      None
+  }
+}
+
+object Const extends (String => Constr) {
+  def apply(tag: String): Constr = {
+    Constr(tag, Nil)
+  }
+
+  def unapply(expr: Constr): Option[String] = expr match {
+    case Constr(tag, Nil) =>
+      Some(tag)
+    case _ =>
+      None
+  }
+}
 
 object Lambda extends ((Expr, Expr) => Expr) {
   def apply(bound: Expr, body: Expr): Expr = {

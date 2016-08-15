@@ -1,4 +1,4 @@
-package ulang
+package ulang.syntax
 
 import arse._
 

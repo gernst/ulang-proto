@@ -1,7 +1,6 @@
-package ulang.semantics
+package ulang.syntax
 
 import arse._
-
 import ulang._
 
 object Reduce {
@@ -16,7 +15,7 @@ object Reduce {
 
   def apply(cases: List[syntax.Case], arg: Expr, dyn: Subst): Expr = cases match {
     case Nil =>
-      Undefined
+      ???
 
     case syntax.Case(pattern, body) :: rest =>
       {
@@ -34,13 +33,16 @@ object Reduce {
   }
 
   def _matches(pattern: Expr, arg: Expr, env: Subst): Subst = pattern match {
-    case Constr(name) =>
+    case Constr(name, args) =>
+      ???
+      /*
       arg match {
         case Constr(`name`) => env
         case _              => fail
       }
+      */
 
-    case Var(name) =>
+    case Id(name) =>
       (env get name) match {
         case Some(`arg`) => env // TODO: dubious semantics
         case None        => env + (name -> arg)
@@ -76,8 +78,9 @@ object Reduce {
   }
 
   def _reduce(expr: Expr, lex: Subst, dyn: Subst): Expr = expr match {
-    case Constr(name) =>
-      expr
+    case Constr(name, args) =>
+      ???
+      /// expr
 
     case Id(name) if lex contains name =>
       lex(name)

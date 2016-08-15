@@ -1,5 +1,7 @@
 package ulang
 
+import ulang.command.Cmd
+
 case class State(cmds: Map[String,List[Expr]]) {
 }
 

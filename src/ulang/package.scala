@@ -1,50 +1,5 @@
 package object ulang {
-  trait Expr extends Pretty
-
-  trait Data extends Pretty
-
-  trait Proof extends Pretty {
-    def isClosed: Boolean
-  }
-
-  case class Cmd(name: String, exprs: List[Expr]) extends Pretty {
-  }
-
-  case class Id(name: String) extends Expr with Data {
-    assert(!name.isEmpty)
-  }
-  
-  object Op {
-    def unapply(expr: Id): Option[String] = expr match {
-      case Id(name) if Operators contains name =>
-        Some(name)
-      case _ =>
-        None
-    }
-  }
-
-  object Var {
-    def unapply(expr: Id): Option[String] = expr match {
-      case Id(name) if Character.isLowerCase(name.head) =>
-        Some(name)
-      case _ =>
-        None
-    }
-  }
-
-  object Constr {
-    def unapply(expr: Id): Option[String] = expr match {
-      case Id(name) if Character.isUpperCase(name.head) =>
-        Some(name)
-      case _ =>
-        None
-    }
-  }
-
-  val Undefined = Id("?")
-  val Wildcard = Id("_")
-  val True = Id("True")
-  val False = Id("False")
+  type Expr = syntax.Expr
 
   def group[A, B](xs: List[(A, B)]) = {
     xs.groupBy(_._1).map {

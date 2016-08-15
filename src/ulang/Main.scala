@@ -8,13 +8,12 @@ import ulang.command._
 
 object Main {
   val handlers = Map(
-    "definitions" -> Definitions,
-    "lemmas" -> Lemmas)
+    "definitions" -> Definitions)
 
   def main(args: Array[String]) {
     import syntax.Parser._
 
-    val cmds = load(new File("test.txt"))
+    val cmds = load(new File("small.txt"))
 
     for (Cmd(name, exprs) <- cmds if handlers contains name) {
       val res = handlers(name)(exprs)

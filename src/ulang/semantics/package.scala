@@ -1,15 +1,13 @@
 package ulang
 
 package object semantics {
-  type Val = Any
+  val True = Obj("True", Nil)
+  val False = Obj("False", Nil)
+  val Undefined = Obj("?", Nil)
+  
   type Env = Map[String, Val]
-  type Subst = Map[String, Expr]
-
+  
   object Env {
     val empty: Env = Map.empty
-  }
-
-  object Subst {
-    val empty: Subst = Map.empty
   }
 }

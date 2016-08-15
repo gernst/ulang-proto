@@ -3,6 +3,20 @@ package ulang
 import ulang._
 
 package object syntax {
+  type Subst = Map[String, Expr]
+  
+  object Subst {
+    val empty: Subst = Map.empty
+  }
+  
+  implicit class IsConstr(str: String) {
+    def isConstr = str.head.isUpper
+  }
+  
+  val Wildcard = Id("_")
+  val True = Const("True")
+  val False = Const("False")
+
   object LetIn extends Ternary("let_=_in_")
   object IfThenElse extends Ternary("if_then_else_")
 
@@ -13,13 +27,6 @@ package object syntax {
   object Or extends Binary("or")
   object Imp extends Binary("==>")
   object Eqv extends Binary("<==>")
-
-  val Zero = Id("Zero")
-  object Succ extends Unary("Succ")
-  object UnaryMinus extends Unary("-")
-  object Plus extends Binary("+")
-  object Minus extends Binary("-")
-  object Mult extends Binary("*")
 
   object Def {
     def unapply(expr: Expr): Option[(Expr, Expr)] = expr match {
@@ -33,7 +40,7 @@ package object syntax {
   }
 
   def free(expr: Expr): Set[String] = expr match {
-    case Var(name) =>
+    case Id(name) =>
       Set(name)
     case Apply(fun, arg) =>
       free(fun) ++ free(arg)
