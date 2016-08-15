@@ -1,7 +1,52 @@
 definitions
 
-Nil ++ ys == ys;
-Cons x xs ++ ys == Cons x (xs ++ ys);
+(x, y) == Pair x y;
 
-foo == (Cons A (Cons A Nil));
-test == (Cons A foo) ++ (Cons B (Cons C Nil));
+[] == Nil;
+x : xs == Cons x xs;
+
+Nil ++ ys == ys;
+Cons x xs ++ ys == x : (xs ++ ys);
+
+foo == A : A : [];
+test == A : foo ++ B : C : Nil;
+
+0 == Zero;
+n +1 == Succ n;
+
+1 == 0 +1;
+2 == 1 +1;
+3 == 2 +1;
+
+Zero + n == n;
+Succ m + n == (m + n) +1;
+
+xyz == (3 + 2 == 1 + 2 + 1 + 1);
+
+foldl z f Nil == z;
+foldl z f (Cons x xs) == foldl (f z x) f xs;
+
+foldr z f Nil == z;
+foldr z f (Cons x xs) == f x (foldr z f xs);
+
+reduce f (Cons x Nil) == x;
+reduce f (Cons x xs) == f x (reduce f xs);
+
+numbers == 0 : 1 : 2 : 3 : [];
+baz == foldl 0 (+) numbers;
+bay == reduce (+) numbers;
+
+map f Nil == [];
+map f (Cons x xs) == f x : map f xs;
+inc == map (+1) numbers;
+
+zip Nil Nil == [];
+zip (Cons x xs) (Cons y ys) == (x, y) : zip xs ys;
+
+nz == zip numbers (A : B : C : D : []);
+
+curry f x y == f (x, y);
+uncurry f (Pair x y) == f x y;
+
+combine x y == Foo x y;
+blubb == map (uncurry combine) nz;

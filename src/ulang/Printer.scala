@@ -107,8 +107,8 @@ object Printer {
     case Binds(Id(name), bounds, body) if bindfix_ops contains name =>
       indent + "(" + name + " " + bounds.mkString(" ") + ". " + body + ")"
 
-    case Lambdas(bounds, body) if !bounds.isEmpty =>
-      indent + "(lambda " + bounds.mkString(" ") + ". " + body + ")"
+   // case Lambdas(bounds, body) if !bounds.isEmpty =>
+    //  indent + "(lambda " + bounds.mkString(" ") + ". " + body + ")"
 
     case Match(cases) =>
       val cs = pp(cases)

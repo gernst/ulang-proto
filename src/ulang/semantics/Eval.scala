@@ -11,9 +11,6 @@ object Eval {
     case Closure(cases, lex) =>
       apply(cases, arg, lex, dyn)
 
-    case Undefined =>
-      Undefined
-
     case _ =>
       ??? // 
   }
@@ -56,7 +53,7 @@ object Eval {
 
   def apply(cases: List[syntax.Case], arg: Val, lex: Env, dyn: Env): Val = cases match {
     case Nil =>
-      Undefined
+      ???
 
     case syntax.Case(pat, body) :: rest =>
       {
@@ -89,6 +86,12 @@ object Eval {
 
     case syntax.Id(name) if dyn contains name =>
       dyn(name)
+      
+    case syntax.Eq(arg1, arg2) =>
+      if(equal(eval(arg1, lex, dyn), eval(arg2, lex, dyn)))
+        True
+      else
+        False
 
     case syntax.LetIn(syntax.Id(name), arg, body) =>
       eval(body, lex + (name -> eval(arg, lex, dyn)), dyn)
@@ -97,7 +100,7 @@ object Eval {
       eval(test, lex, dyn) match {
         case True => eval(arg1, lex, dyn)
         case False => eval(arg2, lex, dyn)
-        case _ => Undefined
+        case _ => ???
       }
 
     case syntax.Apply(fun, arg) =>

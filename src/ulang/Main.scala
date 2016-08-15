@@ -18,7 +18,9 @@ object Main {
     for (Cmd(name, exprs) <- cmds if handlers contains name) {
       val res = handlers(name)(exprs)
       println(name)
-      res foreach println
+      val res_sorted = res.toList.sortBy(_._1)
+      for((name, value) <- res_sorted)
+        println(name + " == " + value)
       println()
     }
   }
