@@ -1,0 +1,40 @@
+grammar base
+  id = Id '[a-zA-Z]';
+
+grammar mixfix
+  level op inner
+    = Level (inner op ... inner);
+
+  levels [] inner
+    = inner;
+
+  levels (op :: tighter) inner
+    = level op (levels tighter inner);
+
+
+grammar grammar
+  rule = Rule lhs '=' rhs ';';
+  grammar = Grammar rule*;
+
+  lhs = id id*;
+  rhs = ???;
+
+grammar expr
+  closed
+    = Ite    'if' expr 'then' expr 'else' expr
+    | Let    'let' id '=' expr 'in' expr
+    | Lambda '\\' id+ '.' expr
+    | id
+    ;
+
+  app
+    = App closed closed*;
+
+  ops
+    = ['[+-]', '[*/]'];
+    
+  mixfix
+    = levels ops app;
+
+  expr
+    = mixfix;

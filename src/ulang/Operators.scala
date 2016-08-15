@@ -2,7 +2,7 @@ package ulang
 
 import arse._
 
-object Operators extends Syntax[String, Id] {
+object Operators extends Syntax[String] {
   def contains(s: String) =
     (prefix_ops contains s) ||
       (postfix_ops contains s) ||

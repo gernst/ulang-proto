@@ -1,15 +1,19 @@
+// hm what does it mean?
+// there is only one way to prove True :: Bool??
+// does not fix _ :: Bool itself?
+
 inductive
 True  :: Bool;
 False :: Bool;
 
-x :: a and y :: a
-  ==> x == y :: Bool;
+x :: a and y :: a and t == Bool
+  ==> x == y :: t;
 
 definitions
 x != y <==> not x == y;
 
 inductive
-x :: a and f x :: b
+(forall x. x :: a ==> f x :: b)
   ==> f :: a -> b;
 
 definitions
@@ -160,5 +164,5 @@ and f x == x
 ==> p x == p y;
 
 y == f y and y == x and p (f x)
-  ==> p y and r x;
+  ==> p y z and x x;
 

@@ -4,10 +4,7 @@ import ulang._
 
 case class Apply(fun: Expr, arg: Expr) extends Expr
 
-case class Case(pattern: Expr, body: Expr) extends Ordered[Case] {
-  def compare(that: Case) = CaseOrdering.compare(this, that)
-}
-
+case class Case(pattern: Expr, body: Expr)
 case class Match(cases: List[Case]) extends Expr
 
 object Lambda extends ((Expr, Expr) => Expr) {

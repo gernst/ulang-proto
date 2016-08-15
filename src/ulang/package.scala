@@ -1,7 +1,5 @@
 package object ulang {
-  trait Expr extends Pretty with Ordered[Expr] {
-    def compare(that: Expr) = syntax.ExprOrdering.compare(this, that)
-  }
+  trait Expr extends Pretty
 
   trait Data extends Pretty
 
@@ -15,7 +13,7 @@ package object ulang {
   case class Id(name: String) extends Expr with Data {
     assert(!name.isEmpty)
   }
-
+  
   object Op {
     def unapply(expr: Id): Option[String] = expr match {
       case Id(name) if Operators contains name =>

@@ -20,10 +20,10 @@ object Parser {
   val name = __ filterNot special
   val keyword = __ filter keywords
   val nonmixfix = name filterNot Operators.contains
-  def expect(s: String) = tok(s) // ! "expected '" + s + "'"
-  def parens[A](p: Parser[String, A]) = tok("(") ~ p ~ expect(")")
+  def expect(s: String) = s ! "expected '" + s + "'"
+  def parens[A](p: Parser[List[String], A]) = "(" ~ p ~ expect(")")
   
-  val expr: Parser[String, Expr] = mixfix(normal_app, Id, Applys, Operators)
+  val expr: Parser[List[String], Expr] = mixfix(normal_app, Id, Applys, Operators)
 
   // grammar
   val id = Id.from(nonmixfix)

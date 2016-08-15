@@ -32,7 +32,7 @@ object Merge {
           cases
         case _ =>
           sys.error("overlapping matches " + exprs)
-      } flatten
+      }.flatten
 
       Match(merge(cases))
     }

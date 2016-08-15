@@ -1,5 +1,8 @@
 package ulang
 
+import ulang.semantics.Closure
+import ulang.syntax.Case
+
 trait Pretty {
   override def toString = Printer.pp("", this)
 }
@@ -12,11 +15,26 @@ object Printer {
   }
 
   def pp(indent: String, any: Pretty): String = any match {
-    case cmd: Cmd     => pp(indent, cmd)
-    case expr: Expr   => pp(indent, expr)
-    case data: Data   => pp(indent, data)
+    case cmd: Cmd => pp(indent, cmd)
+    case expr: Expr => pp(indent, expr)
+    case data: Data => pp(indent, data)
     case proof: Proof => pp(indent, proof)
-    case _            => sys.error("no pretty printer for object")
+    case clos: Closure => pp(indent, clos)
+    case _ => sys.error("no pretty printer for object")
+  }
+
+  def pp(indent: String, clos: Closure): String = clos match {
+    case Closure(cases, env) =>
+      val cs = pp(cases)
+      val es = env.map {
+        case (x, v) =>
+          x + " == " + v
+      }
+      if (env.isEmpty) {
+        indent + cs.mkString("(closure ", " | ", ")")
+      } else {
+        indent + cs.mkString("(closure ", " | ", " where ") + es.mkString(" ", ", ", ")")
+      }
   }
 
   def pp(indent: String, cmd: Cmd): String = cmd match {
@@ -62,6 +80,13 @@ object Printer {
       indent + "(" + fun + " " + args.mkString(" ") + ")"
   }
 
+  def pp(cases: List[Case]): List[String] = {
+    cases.map {
+      case syntax.Case(pattern, body) =>
+        pattern + ". " + body
+    }
+  }
+
   def pp(indent: String, expr: Expr): String = expr match {
     case Op(name) =>
       indent + "(" + name + ")"
@@ -88,10 +113,7 @@ object Printer {
       indent + "(lambda " + bounds.mkString(" ") + ". " + body + ")"
 
     case syntax.Match(cases) =>
-      val cs = cases.map {
-        case syntax.Case(pattern, body) =>
-          pattern + ". " + body
-      }
+      val cs = pp(cases)
       indent + cs.mkString("(lambda ", " | ", ")")
 
     case syntax.Applys(fun, args) if !args.isEmpty =>

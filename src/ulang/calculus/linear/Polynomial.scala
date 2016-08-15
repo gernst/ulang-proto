@@ -90,7 +90,7 @@ case class Polynomial(summands: List[(Int, Expr)], const: Int) {
       case (x, a) if a != 0 => (a, x)
     }
 
-    val newsummands = nontrivial.sortBy(_._2)(ExprOrdering)
+    val newsummands = nontrivial // .sortBy(_._2)(ExprOrdering)
 
     Polynomial(newsummands, const)
   }

@@ -4,7 +4,7 @@ import arse._
 
 import ulang._
 
-case class Closure(cases: List[syntax.Case], lex: Env)
+case class Closure(cases: List[syntax.Case], lex: Env) extends Pretty
 
 object Eval {
   var indent = "eval   "

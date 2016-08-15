@@ -21,8 +21,6 @@ package object syntax {
   object Minus extends Binary("-")
   object Mult extends Binary("*")
 
-  implicit val ev1 = ExprOrdering
-
   object Def {
     def unapply(expr: Expr): Option[(Expr, Expr)] = expr match {
       case Eq(lhs, rhs) =>
