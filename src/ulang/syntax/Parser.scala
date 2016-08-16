@@ -51,7 +51,7 @@ object Parser {
   val else_ = "else" ~ expr
   val ite = IfThenElse.from(if_, then_, else_)
 
-  val let_ = "let" ~ id
+  val let_ = "let" ~ expr
   val eq_ = "=" ~ expr
   val in_ = "in" ~ expr
   val let = LetIn.from(let_, eq_, in_)

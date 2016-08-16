@@ -1,0 +1,66 @@
+definitions
+
+curry f x y == f (x, y);
+uncurry f (Pair x y) == f x y;
+
+(x, y) == Pair x y;
+
+[] == Nil;
+x : xs == Cons x xs;
+
+fail src
+  == Failure;
+
+return a src
+  == Success a src;
+
+map f (Success a src) == f a src;
+map f _ == Failure;
+
+bind p f src
+  == map f (p src);
+
+orelse (Success a src) p _ == (Success a src);
+orelse Failure p src == p src;
+
+alt p q src
+  == orelse (p src) q src;
+
+item (Cons a src) == Success a src;
+item _ == Failure;
+
+match a (Cons a src) == Success a src;
+match a _ == Failure;
+
+seq f p q
+  == bind p (lambda x.
+     bind q (lambda y.
+     return (f x y)));
+
+pair == seq (,);
+
+input == A : B : C;
+blubb == pair (match B) item input;
+blabb == alt (match B) (match C) input;
+
+definitions
+
+parse (Return a) src
+  == Success a src;
+
+parse (Bind p f) src
+  == map f (parse p src);
+
+parse Item (Cons a src)
+  == Success a src;
+
+parse (Match a) (Cons a src)
+  == Success a src;
+
+parse (Match a) _
+  == Failure;
+
+parse (Seq p q) src
+  == parse (Bind p (lambda x.
+     parse (Bind q (lambda y.
+     parse (Return (f x y))))));

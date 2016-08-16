@@ -17,7 +17,7 @@ object Eval {
 
   def matches(pat: Expr, arg: Val, env: Env): Env = {
     val res = _matches(pat, arg, env)
-    // println(indent + pat + " | " + arg + " ~> " + res)
+    // println(indent + pat + " | " + arg + " ~> " + res + " <~ " + env)
     res
   }
 
@@ -35,10 +35,13 @@ object Eval {
   def _matches(pat: Expr, arg: Val, env: Env): Env = pat match {
     case syntax.Constr(name, pats) =>
       arg match {
-        case Obj(`name`, args: List[_]) =>
+        case Obj(`name`, args) =>
           matches(pats, args, env)
         case _ => fail
       }
+      
+    case syntax.Wildcard =>
+      env
 
     case syntax.Id(name) =>
       (env get name) match {
@@ -57,8 +60,10 @@ object Eval {
 
     case syntax.Case(pat, body) :: rest =>
       {
-        val env = matches(pat, arg, Env.empty)
-        eval(body, lex ++ env, dyn)
+        // val env = matches(pat, arg, Env.empty)
+        // eval(body, lex ++ env, dyn)
+        val env = matches(pat, arg, lex) // can handle non-linear patterns this way, however, shadowing is impossible
+        eval(body, env, dyn)
       } or {
         apply(rest, arg, lex, dyn)
       }
@@ -93,8 +98,8 @@ object Eval {
       else
         False
 
-    case syntax.LetIn(syntax.Id(name), arg, body) =>
-      eval(body, lex + (name -> eval(arg, lex, dyn)), dyn)
+    case syntax.LetIn(pat, arg, body) =>
+      eval(body, matches(pat, eval(arg, lex, dyn), lex), dyn)
 
     case syntax.IfThenElse(test, arg1, arg2) =>
       eval(test, lex, dyn) match {

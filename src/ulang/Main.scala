@@ -13,7 +13,7 @@ object Main {
   def main(args: Array[String]) {
     import syntax.Parser._
 
-    val cmds = load(new File("small.txt"))
+    val cmds = load(new File("parser.txt"))
 
     for (Cmd(name, exprs) <- cmds if handlers contains name) {
       val res = handlers(name)(exprs)
