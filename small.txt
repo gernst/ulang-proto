@@ -50,3 +50,4 @@ uncurry f (Pair x y) == f x y;
 
 combine x y == Foo x y;
 blubb == map (uncurry combine) nz;
+
