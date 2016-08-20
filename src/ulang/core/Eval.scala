@@ -10,6 +10,9 @@ object Eval {
     case Closure(cases, lex) =>
       apply(cases, args, lex, dyn) or { sys.error("cannot apply " + fun + " to " + args) }
 
+    case Prim(apply) =>
+      apply(args)
+
     case _ =>
       sys.error("cannot apply " + fun + " to " + args)
   }
@@ -37,10 +40,6 @@ object Eval {
 
     case Id(name) if dyn contains name =>
       dyn(name)
-
-    case Eq(lhs, rhs) =>
-      val eq = equal(eval(lhs, lex, dyn), eval(rhs, lex, dyn))
-      if (eq) True else False
 
     case LetIn(pat, arg, body) =>
       eval(body, matches(pat, eval(arg, lex, dyn), lex), dyn)

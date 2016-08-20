@@ -10,8 +10,11 @@ object Matches {
     case (pat :: pats, arg :: args) =>
       matches(pats, args, matches(pat, arg, env))
 
-    case _ =>
-      fail
+    case (_, Nil) =>
+      sys.error("extra patterns: " + pats)
+
+    case (Nil, _) =>
+      sys.error("extra arguments: " + args)
   }
 
   def matches(pat: Pat, arg: Val, env: Env): Env = pat match {
