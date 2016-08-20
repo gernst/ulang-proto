@@ -18,10 +18,9 @@ object Parser {
   import arse.Recognizer._
   import arse.Mixfix._
 
-  val keywords = Set("definitions", "inductive", "axioms", "lemmas", "theorems")
-  val special = Set(";", ".", "(", ")", "=", "lambda", "if", "then", "else", "let", "in")
+  val keywords = Set(";", ".", "(", ")", "=", "|", "lambda", "if", "then", "else", "let", "in", "match", "with", "end")
 
-  val name = string filterNot special
+  val name = string filterNot keywords
   val tag = string filter isTag
   val nonmixfix = name filter isFun
 
@@ -40,7 +39,9 @@ object Parser {
 
   val dot_ = "." ~ expr
   val cs = Case.from(pats, dot_)
-  val lambda = "lambda" ~ Lambda.from(cs *)
+  val cases = cs rep (sep = "|")
+
+  val lambda = "lambda" ~ Lambda.from(cases)
 
   val if_ = "if" ~ expr
   val then_ = "then" ~ expr
@@ -51,6 +52,10 @@ object Parser {
   val eq_ = "=" ~ expr
   val in_ = "in" ~ expr
   val let = LetIn.from(let_, eq_, in_)
+
+  val match_ = "match" ~ exprs
+  val with_ = "with" ~ "|".? ~ cases
+  val matches = Match.from(match_, with_)
 
   val constr = Constr.from(tag, pats)
 

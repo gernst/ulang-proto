@@ -14,6 +14,7 @@ case class Apply(fun: Expr, args: List[Expr]) extends Expr
 
 case class Case(pats: List[Pat], body: Expr)
 case class Lambda(cases: List[Case]) extends Expr
+case class Match(args: List[Expr], cases: List[Case]) extends Expr
 
 case class Eq(lhs: Expr, rhs: Expr) extends Expr
 case class LetIn(pat: Pat, arg: Expr, body: Expr) extends Expr
