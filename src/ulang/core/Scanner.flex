@@ -1,4 +1,4 @@
-package ulang.syntax;
+package ulang.core;
 
 %%
 

@@ -1,11 +1,9 @@
 package ulang.command
 
-import ulang._
-import ulang.syntax._
-import ulang.semantics._
-
-object Definitions extends Handler {
-  def apply(exprs: List[Expr]) = {
+object Definitions {
+  /*def apply(exprs: List[Expr]) = {
+    ???
+    
     def defs = exprs collect {
       case Def(syntax.Applys(Id(name), args), rhs) =>
         (name, Lambdas(args, rhs))
@@ -28,5 +26,6 @@ object Definitions extends Handler {
     }
 
     dyn
-  }
+    
+  }*/
 }

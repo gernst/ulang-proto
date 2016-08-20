@@ -15,7 +15,7 @@ return a src
   == Success a src;
 
 map f (Success a src) == f a src;
-map f _ == Failure;
+map f  Failure == Failure;
 
 bind p f src
   == map f (p src);
@@ -27,10 +27,11 @@ alt p q src
   == orelse (p src) q src;
 
 item (Cons a src) == Success a src;
-item _ == Failure;
+item  Nil == Failure;
 
 match a (Cons a src) == Success a src;
-match a _ == Failure;
+match a (Cons _ src) == Failure;
+match a Nil == Failure;
 
 seq f p q
   == bind p (lambda x.
@@ -42,25 +43,3 @@ pair == seq (,);
 input == A : B : C;
 blubb == pair (match B) item input;
 blabb == alt (match B) (match C) input;
-
-definitions
-
-parse (Return a) src
-  == Success a src;
-
-parse (Bind p f) src
-  == map f (parse p src);
-
-parse Item (Cons a src)
-  == Success a src;
-
-parse (Match a) (Cons a src)
-  == Success a src;
-
-parse (Match a) _
-  == Failure;
-
-parse (Seq p q) src
-  == parse (Bind p (lambda x.
-     parse (Bind q (lambda y.
-     parse (Return (f x y))))));

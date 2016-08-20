@@ -5,6 +5,6 @@
     </target>
 
     <target name="scanner" depends="jflextask" description="generate scanner">
-        <jflex file="src/ulang/syntax/Scanner.flex" nobak="yes" verbose="yes" />
+        <jflex file="src/ulang/core/Scanner.flex" nobak="yes" verbose="yes" />
     </target>
 </project> 

@@ -1,27 +1,26 @@
-package ulang.semantics
+package ulang.core
 
 import arse._
-
 import ulang._
 
 object Eval {
   var indent = "eval   "
 
-  def apply(fun: Val, arg: Val, dyn: Env): Val = fun match {
+  def apply(fun: Val, args: List[Val], dyn: Env): Val = fun match {
     case Closure(cases, lex) =>
-      apply(cases, arg, lex, dyn)
+      apply(cases, args, lex, dyn) or { sys.error("cannot apply " + fun + " to " + args) }
 
     case _ =>
-      ??? // 
+      sys.error("cannot apply " + fun + " to " + args)
   }
 
-  def matches(pat: Expr, arg: Val, env: Env): Env = {
+  def matches(pat: Pat, arg: Val, env: Env): Env = {
     val res = _matches(pat, arg, env)
     // println(indent + pat + " | " + arg + " ~> " + res + " <~ " + env)
     res
   }
 
-  def matches(pats: List[Expr], args: List[Val], env: Env): Env = (pats, args) match {
+  def matches(pats: List[Pat], args: List[Val], env: Env): Env = (pats, args) match {
     case (Nil, Nil) =>
       env
 
@@ -32,18 +31,18 @@ object Eval {
       fail
   }
 
-  def _matches(pat: Expr, arg: Val, env: Env): Env = pat match {
-    case syntax.Constr(name, pats) =>
+  def _matches(pat: Pat, arg: Val, env: Env): Env = pat match {
+    case Constr(name, pats) =>
       arg match {
         case Obj(`name`, args) =>
           matches(pats, args, env)
         case _ => fail
       }
-      
-    case syntax.Wildcard =>
+
+    case Wildcard =>
       env
 
-    case syntax.Id(name) =>
+    case Id(name) =>
       (env get name) match {
         case Some(`arg`) => env
         case None => env + (name -> arg)
@@ -54,18 +53,16 @@ object Eval {
       fail
   }
 
-  def apply(cases: List[syntax.Case], arg: Val, lex: Env, dyn: Env): Val = cases match {
+  def apply(cases: List[Case], args: List[Val], lex: Env, dyn: Env): Val = cases match {
     case Nil =>
-      ???
+      fail
 
-    case syntax.Case(pat, body) :: rest =>
+    case Case(pats, body) :: rest =>
       {
-        // val env = matches(pat, arg, Env.empty)
-        // eval(body, lex ++ env, dyn)
-        val env = matches(pat, arg, lex) // can handle non-linear patterns this way, however, shadowing is impossible
+        val env = matches(pats, args, lex)
         eval(body, env, dyn)
       } or {
-        apply(rest, arg, lex, dyn)
+        apply(rest, args, lex, dyn)
       }
   }
 
@@ -83,35 +80,35 @@ object Eval {
   }
 
   def _eval(expr: Expr, lex: Env, dyn: Env): Val = expr match {
-    case syntax.Constr(name, args) =>
-      Obj(name, eval(args, lex, dyn))
-
-    case syntax.Id(name) if lex contains name =>
+    case Id(name) if lex contains name =>
       lex(name)
 
-    case syntax.Id(name) if dyn contains name =>
+    case Id(name) if dyn contains name =>
       dyn(name)
-      
-    case syntax.Eq(arg1, arg2) =>
-      if(equal(eval(arg1, lex, dyn), eval(arg2, lex, dyn)))
+
+    case Eq(lhs, rhs) =>
+      if (equal(eval(lhs, lex, dyn), eval(rhs, lex, dyn)))
         True
       else
         False
 
-    case syntax.LetIn(pat, arg, body) =>
+    case LetIn(pat, arg, body) =>
       eval(body, matches(pat, eval(arg, lex, dyn), lex), dyn)
 
-    case syntax.IfThenElse(test, arg1, arg2) =>
+    case IfThenElse(test, arg1, arg2) =>
       eval(test, lex, dyn) match {
         case True => eval(arg1, lex, dyn)
         case False => eval(arg2, lex, dyn)
-        case _ => ???
+        case res => sys.error("not a boolean value: " + res)
       }
 
-    case syntax.Apply(fun, arg) =>
-      apply(eval(fun, lex, dyn), eval(arg, lex, dyn), dyn)
+    case Apply(id @ Id(tag), args) if isTag(tag) =>
+      Obj(tag, eval(args, lex, dyn))
 
-    case syntax.Match(cases) =>
+    case Apply(fun, args) =>
+      apply(eval(fun, lex, dyn), eval(args, lex, dyn), dyn)
+
+    case Lambda(cases) =>
       Closure(cases, lex)
   }
 }
