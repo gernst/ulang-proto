@@ -31,10 +31,10 @@ test a (b :: src)
 
 test a [] == Failure;
 
-seq f p q
-  == (bind p (lambda x.
-      bind q (lambda y.
-      return (f x y))));
+seq f p q src
+  == (bind p function x ->
+      bind q function y ->
+      return (f x y));
 
 pair p q == seq (,) p q;
 
@@ -42,10 +42,17 @@ input == A :: B :: C :: [];
 blubb == pair (test A) item input;
 blabb == alt (test B) (test C) input;
 
-x == lambda a b. (a, b);
+x == function a b -> (a, b);
 y == x A B;
 
-z == lambda A a. K | B b. b;
+z == function
+    A a -> K
+  | B b -> b;
+
 w == z A C;
 
-
+o == match input, C :: [] with
+  | [], _ -> []
+  | (A :: rest), (C :: x) -> rest, x;
+  
+  

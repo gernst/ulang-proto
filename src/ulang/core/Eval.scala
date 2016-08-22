@@ -4,37 +4,59 @@ import arse._
 import ulang._
 
 object Eval {
-  import Pat._
+  def bind(pat: Expr, arg: Val, env: Env): Env = pat match {
+    case Wildcard =>
+      env
 
-  def apply(fun: Val, arg: Val, dyn: Env): Val = fun match {
-    case Closure(cases, lex) =>
-      apply(cases, arg, lex, dyn) or { sys.error("cannot apply " + fun + " to " + arg) }
-      
-    case Prim(apply) =>
-      apply(arg) or { sys.error("cannot apply " + fun + " to " + arg) }
+    case id @ Id(name) if isTag(name) =>
+      if (id == arg) env
+      else fail
 
-    case data: Data =>
-      Obj(data, arg)
+    case Id(name) =>
+      (env get name) match {
+        case Some(`arg`) => env
+        case None => env + (name -> arg)
+        case _ => fail
+      }
+
+    case Apply(pfun, parg) =>
+      arg match {
+        case Obj(vfun, varg) =>
+          bind(parg, varg, bind(pfun, vfun, env))
+        case _ =>
+          fail
+      }
 
     case _ =>
-      sys.error("not a function " + fun)
+      fail
+  }
+
+  def apply(cs: Case, arg: Val, lex: Env, dyn: Env): Val = cs match {
+    case Case(pat, body) =>
+      val env = bind(pat, arg, Env.empty)
+      eval(body, lex ++ env, dyn)
   }
 
   def apply(cases: List[Case], arg: Val, lex: Env, dyn: Env): Val = cases match {
     case Nil =>
       fail
 
-    case Case(pat, body) :: rest =>
-      {
-        val env = bind(pat, arg, Env.empty)
-        eval(body, lex ++ env, dyn)
-      } or {
-        apply(rest, arg, lex, dyn)
-      }
+    case cs :: rest =>
+      apply(cs, arg, lex, dyn) or apply(rest, arg, lex, dyn)
   }
 
-  def eval(exprs: List[Expr], lex: Env, dyn: Env): List[Val] = {
-    exprs map { eval(_, lex, dyn) }
+  def apply(fun: Val, arg: Val, dyn: Env): Val = fun match {
+    case Closure(cases, lex) =>
+      apply(cases, arg, lex, dyn) or sys.error("cannot apply " + fun + " to " + arg)
+
+    case Prim(apply) =>
+      apply(arg) or sys.error("cannot apply " + fun + " to " + arg)
+
+    case data: Data =>
+      Obj(data, arg)
+
+    case _ =>
+      sys.error("not a function " + fun)
   }
 
   def eval(expr: Expr, lex: Env, dyn: Env): Val = expr match {

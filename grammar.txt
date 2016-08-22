@@ -12,29 +12,18 @@ grammar mixfix
     = level op (levels tighter inner);
 
 
-grammar grammar
-  rule = Rule lhs '=' rhs ';';
-  grammar = Grammar rule*;
-
-  lhs = id id*;
-  rhs = ???;
-
 grammar expr
-  closed
-    = Ite    'if' expr 'then' expr 'else' expr
-    | Let    'let' id '=' expr 'in' expr
-    | Lambda '\\' id+ '.' expr
-    | id
-    ;
 
-  app
-    = App closed closed*;
+case == Case expr '->' expr;
+cases == '|' ... case;
 
-  ops
-    = ['[+-]', '[*/]'];
+ite == IfThenElse 'if' expr 'then' expr 'else' expr;
+let == Let 'let' expr '=' expr 'in' expr
+
+app == App closed closed*;
+
+ops == ['[+-]', '[*/]'];
     
-  mixfix
-    = levels ops app;
+mixfix == levels ops app;
 
-  expr
-    = mixfix;
+expr == mixfix;

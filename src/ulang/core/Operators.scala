@@ -25,7 +25,7 @@ object Operators extends Syntax[String] {
     ">=" -> (Non, 6),
     "<" -> (Non, 6),
     ">" -> (Non, 6),
-    "->" -> (Right, 6),
+    // "->" -> (Right, 6),
     "and" -> (Left, 4),
     "or" -> (Left, 3),
     "==>" -> (Right, 2),

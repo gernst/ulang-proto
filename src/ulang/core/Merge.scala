@@ -27,12 +27,12 @@ object Merge extends (List[Expr] => Expr) {
     if (exprs.length == 1) {
       exprs.head
     } else {
-      val cases = exprs.collect {
+      val cases = exprs.flatMap {
         case Bind(cases) =>
           cases
         case _ =>
           sys.error("overlapping matches " + exprs)
-      }.flatten
+      }
 
       Bind(merge(cases))
     }

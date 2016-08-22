@@ -9,14 +9,14 @@ object Grammar {
   import arse.Recognizer._
   import arse.Mixfix._
 
-  val keywords = Set(";", ".", "(", ")", "==", "|", "lambda", "if", "then", "else", "let", "in", "match", "with", "end")
+  val keywords = Set(";", ".", "->", "(", ")", "==", "|", "\\", "function", "if", "then", "else", "let", "in", "match", "with", "end")
 
   val name = string filterNot keywords
   val nonmixfix = name filterNot Operators.contains
 
   def expect(s: String) = s ! "expected '" + s + "'"
   def parens[A](p: Parser[List[String], A]) = "(" ~ p ~ expect(")")
-  
+
   val expr: Parser[List[String], Expr] = mixfix(inner, Id, Applys, Operators)
   val exprs = expr +
 
@@ -25,12 +25,13 @@ object Grammar {
   val anyid = Id.from(name)
 
   val dot_ = "." ~ expr
-  val cs = Case.from(expr, dot_)
+  val arrow_ = "->" ~ expr
+  val cs = Case.from(expr, arrow_)
   val cases = "|".? ~ cs.rep(sep = "|")
 
-  val bind = Lambdas.from(Parser.rec(closed +), dot_)
-  val binds = bind.rep(sep = "|")
-  val lambda = "lambda" ~ Merge.from(binds)
+  val bind = Lambdas.from(Parser.rec(closed +), arrow_)
+  val binds = "|".? ~ bind.rep(sep = "|")
+  val function = "function" ~ Merge.from(binds)
 
   val if_ = "if" ~ expr
   val then_ = "then" ~ expr
@@ -43,11 +44,11 @@ object Grammar {
   val let = LetIn.from(let_, eq_, in_)
 
   val match_ = "match" ~ expr
-  val with_ = "with" ~ "|".? ~ cases
+  val with_ = "with" ~ cases
   val matches = Match.from(match_, with_)
 
   val open = expr | anyid
-  val closed: Parser[List[String], Expr] = parens(open) | lambda | ite | let | id
+  val closed: Parser[List[String], Expr] = parens(open) | function | matches | ite | let | id
 
   val app = Applys.from(closed, closed *)
   val inner = app
