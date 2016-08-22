@@ -2,22 +2,14 @@ package ulang.core
 
 import arse._
 
-object Constrs extends Syntax[String] {
-  val prefix_ops: Map[String, Int] = Map()
+object Operators extends Syntax[String] {
+  val constrs = Set("::", "+1", ",", "[]")
 
-  val postfix_ops: Map[String, Int] = Map(
-    "+1" -> 11)
-
-  val infix_ops: Map[String, (Assoc, Int)] = Map(
-    "::" -> (Right, 8),
-    "," -> (Left, 0))
-}
-
-object Funs extends Syntax[String] {
   val prefix_ops: Map[String, Int] = Map(
     "not" -> 5)
 
   val postfix_ops: Map[String, Int] = Map(
+    "+1" -> 11,
     "-1" -> 11)
 
   val infix_ops: Map[String, (Assoc, Int)] = Map(
@@ -25,9 +17,10 @@ object Funs extends Syntax[String] {
     "/" -> (Left, 9),
     "+" -> (Left, 8),
     "-" -> (Left, 8),
+    "::" -> (Right, 8),
     "++" -> (Right, 7),
     "!=" -> (Non, 6),
-    "==" -> (Non, 6),
+    "=" -> (Non, 6),
     "<=" -> (Non, 6),
     ">=" -> (Non, 6),
     "<" -> (Non, 6),
@@ -36,5 +29,6 @@ object Funs extends Syntax[String] {
     "and" -> (Left, 4),
     "or" -> (Left, 3),
     "==>" -> (Right, 2),
-    "<==>" -> (Non, 1))
+    "<==>" -> (Non, 1),
+    "," -> (Right, 0))
 }

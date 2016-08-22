@@ -1,35 +1,31 @@
 package ulang
 
 package object core {
-  val True = Obj("True", Nil)
-  val False = Obj("False", Nil)
+  val Wildcard = Id("_")
+
+  val True = Id("True")
+  val False = Id("False")
 
   type Env = Map[String, Val]
 
   def identity[A](a: A) = a
 
   def isTag(str: String) = {
-    str.head.isUpper || Constrs.contains(str)
-  }
-
-  def isFun(str: String) = {
-    !str.head.isUpper || Funs.contains(str)
+    str.head.isUpper || Operators.constrs(str)
   }
 
   object Env {
     val empty: Env = Map.empty
-    val defailt: Env = Map("==" -> builtin_equals)
+    val default: Env = Map("=" -> Prim(obj1 => Prim(obj2 => test(equal(obj1, obj2)))))
   }
   
-  object builtin_equals extends Prim({
-    case List(obj1, obj2) => 
-      if(equals(obj1, obj2)) True
-      else False
-  })
+  def test(b: Boolean) = if(b) True else False
 
   def equal(obj1: Val, obj2: Val): Boolean = (obj1, obj2) match {
-    case (Obj(tag1, args1), Obj(tag2, args2)) =>
-      tag1 == tag2 && args1.length == args2.length && (args1, args2).zipped.forall((equal _).tupled)
+    case (Id(name1), Id(name2)) =>
+      name1 == name2
+    case (Obj(data1, arg1), Obj(data2, arg2)) =>
+      equal(data1, data2) && equal(arg1, arg2)
     case _ =>
       sys.error("cannot compare " + obj1 + " and " + obj2)
   }
