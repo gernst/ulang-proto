@@ -31,7 +31,7 @@ ws = {nl} | {sp}
 special = "[]" | "()" | "::" | "::="
 id = [^ \r\n\t\f()\[\]\\.,:;\'\"]+
 delim = [()\[\]\\.,:;]
-string = [\'] [^\']* [\']
+string = \' ([^\']|\\\')* \' | \" ([^\"]|\\\")* \"
 
 %state BLOCK_COMMENT
 %state LINE_COMMENT
