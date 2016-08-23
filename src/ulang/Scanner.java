@@ -35,10 +35,10 @@ class Scanner {
    * Translates characters to character classes
    */
   private static final String ZZ_CMAP_PACKED = 
-    "\11\0\1\3\1\2\1\15\1\16\1\1\22\0\1\3\7\0\1\6"+
-    "\1\7\1\14\1\0\1\12\1\0\1\12\1\13\12\0\1\10\1\12"+
-    "\1\0\1\11\35\0\1\4\1\12\1\5\47\0\1\15\u1fa2\0\1\15"+
-    "\1\15\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\udfe6\0";
+    "\11\0\1\3\1\2\1\17\1\20\1\1\22\0\1\3\1\0\1\12"+
+    "\4\0\1\14\1\6\1\7\1\16\1\0\1\13\1\0\1\13\1\15"+
+    "\12\0\1\10\1\13\1\0\1\11\35\0\1\4\1\13\1\5\47\0"+
+    "\1\17\u1fa2\0\1\17\1\17\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\udfe6\0";
 
   /** 
    * Translates characters to character classes
@@ -51,11 +51,11 @@ class Scanner {
   private static final int [] ZZ_ACTION = zzUnpackAction();
 
   private static final String ZZ_ACTION_PACKED_0 =
-    "\3\0\1\1\1\2\5\1\4\2\2\3\1\1\1\4"+
-    "\1\5\1\6\1\7";
+    "\3\0\1\1\1\2\4\1\1\0\1\1\4\2\2\3"+
+    "\1\1\1\4\1\5\1\6\1\7";
 
   private static int [] zzUnpackAction() {
-    int [] result = new int[21];
+    int [] result = new int[22];
     int offset = 0;
     offset = zzUnpackAction(ZZ_ACTION_PACKED_0, offset, result);
     return result;
@@ -80,12 +80,12 @@ class Scanner {
   private static final int [] ZZ_ROWMAP = zzUnpackRowMap();
 
   private static final String ZZ_ROWMAP_PACKED_0 =
-    "\0\0\0\17\0\36\0\55\0\74\0\113\0\132\0\151"+
-    "\0\170\0\207\0\132\0\226\0\245\0\264\0\303\0\132"+
-    "\0\322\0\55\0\55\0\132\0\132";
+    "\0\0\0\21\0\42\0\63\0\104\0\125\0\146\0\167"+
+    "\0\210\0\231\0\252\0\146\0\273\0\314\0\335\0\356"+
+    "\0\146\0\377\0\63\0\63\0\146\0\146";
 
   private static int [] zzUnpackRowMap() {
-    int [] result = new int[21];
+    int [] result = new int[22];
     int offset = 0;
     offset = zzUnpackRowMap(ZZ_ROWMAP_PACKED_0, offset, result);
     return result;
@@ -109,16 +109,16 @@ class Scanner {
 
   private static final String ZZ_TRANS_PACKED_0 =
     "\1\4\3\5\1\6\1\7\1\10\1\7\1\11\1\4"+
-    "\1\7\1\12\2\4\1\5\1\13\1\14\11\13\1\15"+
-    "\1\16\2\0\1\13\1\17\1\20\12\13\2\0\1\4"+
-    "\10\0\1\4\1\0\3\4\2\0\3\5\12\0\1\5"+
-    "\5\0\1\7\37\0\1\7\17\0\1\21\6\0\1\4"+
-    "\10\0\1\4\1\0\1\22\1\23\1\4\3\0\1\13"+
-    "\30\0\1\24\15\0\1\25\5\0\1\20\25\0\1\7"+
-    "\5\0";
+    "\1\0\1\7\1\12\1\13\2\4\1\5\1\14\1\15"+
+    "\13\14\1\16\1\17\2\0\1\14\1\20\1\21\14\14"+
+    "\2\0\1\4\10\0\1\4\3\0\3\4\2\0\3\5"+
+    "\14\0\1\5\5\0\1\7\43\0\1\7\21\0\1\22"+
+    "\10\0\14\12\1\7\4\12\1\4\10\0\1\4\3\0"+
+    "\1\23\1\24\1\4\3\0\1\14\34\0\1\25\17\0"+
+    "\1\26\5\0\1\21\27\0\1\7\7\0";
 
   private static int [] zzUnpackTrans() {
-    int [] result = new int[225];
+    int [] result = new int[272];
     int offset = 0;
     offset = zzUnpackTrans(ZZ_TRANS_PACKED_0, offset, result);
     return result;
@@ -156,11 +156,11 @@ class Scanner {
   private static final int [] ZZ_ATTRIBUTE = zzUnpackAttribute();
 
   private static final String ZZ_ATTRIBUTE_PACKED_0 =
-    "\3\0\3\1\1\11\3\1\1\11\4\1\1\11\3\1"+
-    "\2\11";
+    "\3\0\3\1\1\11\2\1\1\0\1\1\1\11\4\1"+
+    "\1\11\3\1\2\11";
 
   private static int [] zzUnpackAttribute() {
-    int [] result = new int[21];
+    int [] result = new int[22];
     int offset = 0;
     offset = zzUnpackAttribute(ZZ_ATTRIBUTE_PACKED_0, offset, result);
     return result;
@@ -271,7 +271,7 @@ class Scanner {
     char [] map = new char[0x110000];
     int i = 0;  /* index in packed string  */
     int j = 0;  /* index in unpacked array */
-    while (i < 96) {
+    while (i < 102) {
       int  count = packed.charAt(i++);
       char value = packed.charAt(i++);
       do map[j++] = value; while (--count > 0);

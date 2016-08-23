@@ -29,8 +29,9 @@ sp = [ \t\f]
 ws = {nl} | {sp} 
 
 special = "[]" | "()" | "::" | "::="
-id = [^ \r\n\t\f()\[\]\\.,:;]+
+id = [^ \r\n\t\f()\[\]\\.,:;\'\"]+
 delim = [()\[\]\\.,:;]
+string = [\'] [^\']* [\']
 
 %state BLOCK_COMMENT
 %state LINE_COMMENT
@@ -60,6 +61,7 @@ delim = [()\[\]\\.,:;]
 {delim}     { return tok(); }
 {id}        { return tok(); }
 {special}   { return tok(); }
+{string}    { return tok(); }
 
 // .|\n        { throw new RuntimeException("in scan: unexpected character '" + tok() + "'"); }
 }
