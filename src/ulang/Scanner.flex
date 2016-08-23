@@ -28,8 +28,8 @@ nl = \r|\n|\r\n
 sp = [ \t\f]
 ws = {nl} | {sp} 
 
-special = "[]" | "()" | "::"
-id = [^ \r\n\t\f()\[\]\\.,:;\"\']+
+special = "[]" | "()" | "::" | "::="
+id = [^ \r\n\t\f()\[\]\\.,:;]+
 delim = [()\[\]\\.,:;]
 
 %state BLOCK_COMMENT

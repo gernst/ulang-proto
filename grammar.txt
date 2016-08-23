@@ -1,33 +1,16 @@
-grammar base
-  id = Id '[a-zA-Z]';
-
-grammar mixfix
-  level op inner
-    = Level (inner op ... inner);
-
-  levels [] inner
-    = inner;
-
-  levels (op :: tighter) inner
-    = level op (levels tighter inner);
-
-definitions
-
-grammar expr
+grammar
 
 case ::= expr '->' expr { Case };
-cases ::= '|' ... case;
+
+cases ::= case ('|' case) * { (::) };
 
 fun ::= 'function' cases { Function };
 ite ::= 'if' expr 'then' expr 'else' expr { IfThenElse };
 let ::= 'let' expr '=' expr 'in' expr { LetIn };
+match ::= 'match' expr 'with' cases { MatchWith };
 
-closed ::= fun | ite | let
+open ::= '(' expr ')';
+closed ::= open | fun | ite | let | matches | id;
+app ::= closed closed * { foldl App };
 
-app ::= closed closed* { foldl App };
-
-ops == ['[+-]', '[*/]'];
-    
-mixfix == levels ops app;
-
-expr == mixfix;
+end

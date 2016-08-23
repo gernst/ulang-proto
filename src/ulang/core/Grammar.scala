@@ -4,18 +4,18 @@ import scala.language.postfixOps
 
 import arse._
 
+import ulang._
+
 object Grammar {
   import arse.Parser._
   import arse.Recognizer._
   import arse.Mixfix._
 
-  val keywords = Set(";", ".", "->", "(", ")", "==", "|", "\\", "function", "if", "then", "else", "let", "in", "match", "with", "end")
+  val keywords = Set(";", "(", ")", "{", "}", ".", "->", "==", "|", "\\",
+    "function", "if", "then", "else", "let", "in", "match", "with", "end")
 
   val name = string filterNot keywords
   val nonmixfix = name filterNot Operators.contains
-
-  def expect(s: String) = s ! "expected '" + s + "'"
-  def parens[A](p: Parser[List[String], A]) = "(" ~ p ~ expect(")")
 
   val expr: Parser[List[String], Expr] = mixfix(inner, Id, Applys, Operators)
   val exprs = expr +

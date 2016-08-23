@@ -9,9 +9,9 @@ case class Definitions(defs: List[Def]) extends ulang.Language {
   import Merge._
 
   def extend(add: List[Def]) = Definitions(defs ++ add)
-  val parser = (extend _).from("definitions" ~ Grammar.defs)
+  val parser = (extend _).from("definitions" ~ Grammar.defs ~ "end")
 
-  override def toString = defs.mkString("definitions\n", "\n", "\n")
+  override def toString = defs.mkString("definitions\n", "\n", "\nend")
 
   def compile = {
     val lex = Env.empty
