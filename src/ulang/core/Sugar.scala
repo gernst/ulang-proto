@@ -1,5 +1,19 @@
 package ulang.core
 
+object Tag extends (String => Id) {
+  def apply(name: String) = {
+    assert(isTag(name))
+    Id(name)
+  }
+  
+  def unapply(id: Id): Option[String] = id match {
+    case Id(name) if isTag(name) =>
+      Some(name)
+    case _ =>
+      None
+  }
+}
+
 object Applys extends ((Expr, List[Expr]) => Expr) {
   def apply(fun: Expr, args: List[Expr]) = {
     args.foldLeft(fun)(Apply)
@@ -40,5 +54,35 @@ object Lambdas extends ((List[Expr], Expr) => Expr) {
       val (pats, inner) = flatten(body)
       (pat :: pats, inner)
     case _ => (Nil, expr)
+  }
+}
+
+class Unary(name: String) extends (Expr => Expr) {
+  val op = Id(name)
+
+  def unapply(e: Expr) = e match {
+    case Apply(`op`, arg) =>
+      Some(arg)
+    case _ =>
+      None
+  }
+
+  def apply(arg: Expr) = {
+    Apply(op, arg)
+  }
+}
+
+class Binary(name: String) extends ((Expr, Expr) => Expr) {
+  val op = Id(name)
+
+  def unapply(e: Expr) = e match {
+    case Apply(Apply(`op`, arg1), arg2) =>
+      Some((arg1, arg2))
+    case _ =>
+      None
+  }
+
+  def apply(arg1: Expr, arg2: Expr) = {
+    Apply(Apply(op, arg1), arg2)
   }
 }

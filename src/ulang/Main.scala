@@ -2,17 +2,17 @@ package ulang
 
 import java.io.File
 import java.io.FileReader
-import ulang.core.ULang
+import ulang.core.Definitions
 import ulang.core.Data
 
 object Main {
   def main(args: Array[String]) {
     import Language._
     
-    val file = new File("parser.txt")
+    val file = new File("prelude.txt")
     val source = tokenize(file)
     
-    val empty = ULang(Nil)
+    val empty = Definitions(Nil)
     val (some, rest) = empty.parser(source)
     // println(some)
     

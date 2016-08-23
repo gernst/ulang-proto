@@ -2,13 +2,13 @@ package ulang.core
 
 import arse._
 
-case class ULang(defs: List[Def]) extends _root_.ulang.Language {
+case class Definitions(defs: List[Def]) extends ulang.Language {
   import Recognizer._
   import Parser._
   import Eval._
   import Merge._
 
-  def extend(add: List[Def]) = ULang(defs ++ add)
+  def extend(add: List[Def]) = Definitions(defs ++ add)
   val parser = (extend _).from("definitions" ~ Grammar.defs)
 
   override def toString = defs.mkString("definitions\n", "\n", "\n")

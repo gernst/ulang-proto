@@ -1,0 +1,30 @@
+definitions
+
+1 == 0 +1;
+2 == 1 +1;
+
+(n +1) -1 == n;
+
+0 + n == n;
+(m +1) + n == (m + n) +1;
+
+0 * n == 0;
+(m +1) * n == (m * n) + n;
+
+[] ++ ys == ys;
+(x :: xs) ++ ys == x :: (xs ++ ys);
+
+map f [] == [];
+map f (x :: xs) == (f x) :: (map f xs);
+
+foldl f z [] == z;
+foldl f z (x :: xs) == foldl f (f z x) xs;
+
+foldr f z [] == z;
+foldr f z (x :: xs) == f x (foldr f z xs);
+
+filter p [] == [];
+filter p (x :: xs)
+  == let ys = (filter p xs)
+     in if (p x) then (x :: ys) else ys;
+

@@ -11,16 +11,20 @@ grammar mixfix
   levels (op :: tighter) inner
     = level op (levels tighter inner);
 
+definitions
 
 grammar expr
 
-case == Case expr '->' expr;
-cases == '|' ... case;
+case ::= expr '->' expr { Case };
+cases ::= '|' ... case;
 
-ite == IfThenElse 'if' expr 'then' expr 'else' expr;
-let == Let 'let' expr '=' expr 'in' expr
+fun ::= 'function' cases { Function };
+ite ::= 'if' expr 'then' expr 'else' expr { IfThenElse };
+let ::= 'let' expr '=' expr 'in' expr { LetIn };
 
-app == App closed closed*;
+closed ::= fun | ite | let
+
+app ::= closed closed* { foldl App };
 
 ops == ['[+-]', '[*/]'];
     

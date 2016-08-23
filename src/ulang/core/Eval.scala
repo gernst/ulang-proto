@@ -8,7 +8,7 @@ object Eval {
     case Wildcard =>
       env
 
-    case id @ Id(name) if isTag(name) =>
+    case id @ Tag(_) =>
       if (id == arg) env
       else fail
 
@@ -49,18 +49,18 @@ object Eval {
     case Closure(cases, lex) =>
       apply(cases, arg, lex, dyn) or sys.error("cannot apply " + fun + " to " + arg)
 
-    case Prim(apply) =>
-      apply(arg) or sys.error("cannot apply " + fun + " to " + arg)
-
     case data: Data =>
       Obj(data, arg)
+
+    case fun: (Val => Val) @unchecked =>
+      fun(arg) or sys.error("cannot apply " + fun + " to " + arg)
 
     case _ =>
       sys.error("not a function " + fun)
   }
 
   def eval(expr: Expr, lex: Env, dyn: Env): Val = expr match {
-    case id @ Id(name) if isTag(name) =>
+    case id @ Tag(_) =>
       id
 
     case Id(name) if lex contains name =>

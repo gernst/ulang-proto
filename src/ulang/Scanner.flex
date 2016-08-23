@@ -29,7 +29,7 @@ sp = [ \t\f]
 ws = {nl} | {sp} 
 
 special = "[]" | "()" | "::"
-id = [^ \r\n\t\f()\[\]\\.,:;]+
+id = [^ \r\n\t\f()\[\]\\.,:;\"\']+
 delim = [()\[\]\\.,:;]
 
 %state BLOCK_COMMENT

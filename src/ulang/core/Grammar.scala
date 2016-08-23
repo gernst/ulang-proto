@@ -34,17 +34,17 @@ object Grammar {
   val function = "function" ~ Merge.from(binds)
 
   val if_ = "if" ~ expr
-  val then_ = "then" ~ expr
-  val else_ = "else" ~ expr
+  val then_ = expect("then") ~ expr
+  val else_ = expect("else") ~ expr
   val ite = IfThenElse.from(if_, then_, else_)
 
-  val let_ = "let" ~ expr
-  val eq_ = "=" ~ expr
-  val in_ = "in" ~ expr
+  val let_ = "let" ~ Parser.rec(closed)
+  val eq_ = expect("=") ~ expr
+  val in_ = expect("in") ~ expr
   val let = LetIn.from(let_, eq_, in_)
 
   val match_ = "match" ~ expr
-  val with_ = "with" ~ cases
+  val with_ = expect("with") ~ cases
   val matches = Match.from(match_, with_)
 
   val open = expr | anyid
