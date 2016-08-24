@@ -1,5 +1,14 @@
 package ulang.core
 
+object Op {
+  def unapply(id: Id): Option[String] = {
+    if(Operators contains id.name)
+      Some(id.name)
+    else
+      None
+  }
+}
+
 object Tag extends (String => Id) {
   def apply(name: String) = {
     assert(isTag(name))

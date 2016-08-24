@@ -10,6 +10,6 @@ object Operators extends Syntax[String] {
     "+" -> 3)
 
   val infix_ops: Map[String, (Assoc, Int)] = Map(
-    "|" -> (Right, 1),
+    // "|" -> (Right, 1),
     "=" -> (Non, 2))
 }

@@ -2,38 +2,38 @@ package ulang.grammar
 
 import ulang._
 
-sealed trait Expr
+sealed trait Closed
 
-case class Id(name: String) extends Expr {
+case class Id(name: String) extends Closed {
   override def toString = name
 }
 
-case class Apply(id: Id, args: List[Expr]) extends Expr {
-  override def toString = (id :: args).mkString("(", " ", ")")
+case class Rec(alt: Alt) extends Closed {
+  override def toString = "(" + alt + ")"
 }
 
-case class Seq(args: List[Expr]) extends Expr {
-  override def toString = args.mkString("(", " ", ")")
-}
-
-case class Attr(arg: Expr, fun: core.Expr) extends Expr {
-  override def toString = arg + " { " + fun + " }"
-}
-
-object Seqs extends (List[Expr] => Expr) {
-  def apply(args: List[Expr]) = {
-    if(args.length == 1) args.head
-    else Seq(args)
+case class Rep(arg: Closed, how: Option[String]) {
+  override def toString = how match {
+    case Some(how) => arg + " " +how
+    case None => "" + arg
   }
 }
 
-object Attr extends ((Expr, Option[core.Expr]) => Expr) {
-  def apply(arg: Expr, fun: Option[core.Expr]) = fun match {
-    case Some(fun) => Attr(arg, fun)
-    case None => arg
+case class Seq(args: List[Rep]) {
+  override def toString = args.mkString(" ")
+}
+
+case class Attr(arg: Seq, fun: Option[core.Expr]) {
+  override def toString = fun match {
+    case Some(fun) => arg + " { " + fun + " }"
+    case None => "" + arg
   }
 }
 
-case class Rule(lhs: Expr, rhs: Expr) {
+case class Alt(args: List[Attr]) {
+  override def toString = args.mkString(" | ")
+}
+
+case class Rule(lhs: Id, rhs: Alt) {
   override def toString = lhs + " ::= " + rhs
 }

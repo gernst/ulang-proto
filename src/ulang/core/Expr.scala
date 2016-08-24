@@ -4,7 +4,10 @@ sealed trait Expr
 
 case class Id(name: String) extends Expr with Data {
   assert(!name.isEmpty)
-  override def toString = name
+  override def toString = this match {
+    case Op(name) => "(" + name + ")"
+    case _ => name
+  }
 }
 
 case class Apply(fun: Expr, arg: Expr) extends Expr {

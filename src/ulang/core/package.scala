@@ -5,7 +5,12 @@ package object core {
 
   val True = Tag("True")
   val False = Tag("False")
-  
+
+  object Pair extends Binary(",")
+
+  val Empty = Tag("[]")
+  object Cons extends Binary("::")
+
   type Val = Any
   type Env = Map[String, Val]
 
@@ -17,9 +22,9 @@ package object core {
     val empty: Env = Map.empty
     val default: Env = Map("=" -> builtin_equal _)
   }
-  
-  def test(b: Boolean) = if(b) True else False
-  
+
+  def test(b: Boolean) = if (b) True else False
+
   def builtin_equal(obj1: Val)(obj2: Val): Val = test(equal(obj1, obj2))
 
   def equal(obj1: Val, obj2: Val): Boolean = (obj1, obj2) match {
