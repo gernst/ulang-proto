@@ -11,7 +11,16 @@ case class Id(name: String) extends Expr with Data {
 }
 
 case class Apply(fun: Expr, arg: Expr) extends Expr {
-  override def toString = "(" + fun + " " + arg + ")"
+  override def toString = this match {
+    case Applys(Op(name), List(arg)) if Operators.prefix_ops contains name =>
+      "(" + name + " " + arg + ")"
+    case Applys(Op(name), List(arg)) if Operators.postfix_ops contains name =>
+      "(" + arg + " " + name + ")"
+    case Applys(Op(name), List(arg1, arg2)) if Operators.infix_ops contains name =>
+      "(" + arg1 + " " + name + " " + arg2 + ")"
+    case Applys(fun, args) =>
+      (fun :: args).mkString("(", " ", ")")
+  }
 }
 
 case class Case(pat: Expr, body: Expr) {

@@ -8,6 +8,7 @@ import scala.collection.mutable.ListBuffer
 import scala.annotation.tailrec
 
 import arse._
+import java.io.StringReader
 
 trait Language {
   def parser: Parser[List[String], Language]
@@ -16,6 +17,10 @@ trait Language {
 object Language {
   def tokenize(file: File): List[String] = {
     tokenize(new FileReader(file))
+  }
+  
+  def tokenize(line: String): List[String] = {
+    tokenize(new StringReader(line))
   }
 
   def tokenize(reader: Reader): List[String] = {

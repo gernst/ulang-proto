@@ -5,13 +5,15 @@ import arse._
 import ulang._
 import java.io.File
 
-object Import extends Language {
+case class Import(imports: List[String]) extends Language {
   import Parser._
   import Recognizer._
   
+  override def toString = imports.map("import " + _ + ";").mkString("\n")
+  
   def load(name: String) = parse {
     in: List[String] =>
-      (this, Language.tokenize(new File(name + ".txt")) ++ in)
+      (Import(name :: imports), Language.tokenize(new File(name + ".txt")) ++ in)
   }
   
   val parser = "import" ~ string ~ ";" >> (load _)

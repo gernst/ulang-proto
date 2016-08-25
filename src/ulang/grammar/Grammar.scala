@@ -10,7 +10,7 @@ case class Grammar(rules: List[Rule]) extends Language {
   import arse.Parser._
   import arse.Recognizer._
 
-  override def toString = rules.mkString("grammar\n", "\n", "\nend")
+  override def toString = "grammar\n" + rules.map("  " + _ + ";\n").mkString + "end"
 
   def extend(add: List[Rule]) = Grammar(rules ++ add)
   val parser = (extend _).from("grammar" ~ Grammar.rules ~ "end")

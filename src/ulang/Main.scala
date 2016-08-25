@@ -10,11 +10,17 @@ import ulang.grammar.Grammar
 object Main {
   def main(args: Array[String]) {
     import Language._
+    
+    val state = new State(List(Import(Nil), Definitions(Nil), Grammar(Nil)))
+    val in = tokenize("import grammar;")
+    
+    val out = state(in);
+    
+    println(out)
+    println(state)
+    
 
-    val languages = List(Import, Definitions(Nil), Grammar(Nil))
-    val parsers = languages.map(_.parser)
-    val parser = parsers.reduce(_ | _)
-
+    /*
     val file = new File("grammar.txt")
     val source = tokenize(file)
 
@@ -24,7 +30,6 @@ object Main {
 
     println("rest: " + rest)
 
-    /*
     val dyn = some.compile
 
     for ((name, value) <- dyn if value.isInstanceOf[Data]) {
