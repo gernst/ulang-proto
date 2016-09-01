@@ -44,5 +44,5 @@ case class IfThenElse(test: Expr, iftrue: Expr, iffalse: Expr) extends Expr {
 }
 
 case class Def(lhs: Expr, rhs: Expr) {
-  override def toString = lhs + " == " + rhs
+  override def toString = lhs + " == " + rhs + ";"
 }

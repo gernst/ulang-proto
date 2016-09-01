@@ -11,7 +11,7 @@ import arse._
 import java.io.StringReader
 
 trait Language {
-  def parser: Parser[List[String], Language]
+  def parser: Parser[List[String], Part]
 }
 
 object Language {

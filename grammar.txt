@@ -1,18 +1,37 @@
 import prelude;
 
-grammar
+grammar ulang
+  // top level symbol
+  ulang ::= def *;
+  
+  expr ::= app;
+  def ::= expr '==' expr ';' { Def };
+  
+  open ::= '(' expr ')';
+  closed ::= open | fun | ite | let | matches | id;
+  app ::= closed closed * { foldl App };
 
-case ::= expr '->' expr { Case };
+  fun ::= 'function' cases { Function };
+  ite ::= 'if' expr 'then' expr 'else' expr { IfThenElse };
+  let ::= 'let' expr '=' expr 'in' expr { LetIn };
+  match ::= 'match' expr 'with' cases { MatchWith };
+  
+  case ::= expr '->' expr { Case };
+  cases ::= case ('|' case) * { (::) };
+end
 
-cases ::= case ('|' case) * { (::) };
+implementation ulang
+  ulang defs
+    == map split defs;
+  
+  lambdas args body
+    == foldr Lambda body args;
 
-fun ::= 'function' cases { Function };
-ite ::= 'if' expr 'then' expr 'else' expr { IfThenElse };
-let ::= 'let' expr '=' expr 'in' expr { LetIn };
-match ::= 'match' expr 'with' cases { MatchWith };
-
-open ::= '(' expr ')';
-closed ::= open | fun | ite | let | matches | id;
-app ::= closed closed * { foldl App };
-
+  unapps expr
+    == unfold App expr Nil;
+  
+  split (Def lhs rhs)
+    == let (fun, args) = unapps lhs
+       in (fun, lambdas args rhs);
+    
 end

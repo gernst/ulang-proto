@@ -2,7 +2,12 @@ package ulang
 
 import java.io.File
 import java.io.FileReader
-import ulang.core.Definitions
+
+import scala.language.postfixOps
+
+import arse._
+
+import ulang.core.Defs
 import ulang.core.Data
 import ulang.core.Import
 import ulang.grammar.Grammar
@@ -10,17 +15,23 @@ import ulang.grammar.Grammar
 object Main {
   def main(args: Array[String]) {
     import Language._
+    import Parser._
     
-    val state = new State(List(Import(Nil), Definitions(Nil), Grammar(Nil)))
-    val in = tokenize("import grammar;")
+    val languages = List(Import, Defs, Grammar)
+    val part = parse((in: List[String]) => alt(languages.map(_.parser), in))
+    val parts = part *
     
-    val out = state(in);
+    /*
+    val state = new State(List(new Import(), new Definitions(), new Grammar()))
+    val in = tokenize("import small;")
+    
+    val out = state parse in;
     
     println(out)
     println(state)
     
-
-    /*
+    state.languages map (_.build())
+    
     val file = new File("grammar.txt")
     val source = tokenize(file)
 

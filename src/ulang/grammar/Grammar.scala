@@ -6,17 +6,11 @@ import arse._
 
 import ulang._
 
-case class Grammar(rules: List[Rule]) extends Language {
-  import arse.Parser._
-  import arse.Recognizer._
-
-  override def toString = "grammar\n" + rules.map("  " + _ + ";\n").mkString + "end"
-
-  def extend(add: List[Rule]) = Grammar(rules ++ add)
-  val parser = (extend _).from("grammar" ~ Grammar.rules ~ "end")
+case class Grammar(rules: List[Rule]) extends Part {
+  override def toString = rules.mkString("grammar\n", "\n", "\nend")
 }
 
-object Grammar {
+object Grammar extends (List[Rule] => Grammar) with Language {
   import arse.Parser._
   import arse.Recognizer._
 
@@ -43,4 +37,6 @@ object Grammar {
   val rhs = expr ~ expect(";")
   val rule = Rule.from(lhs, rhs)
   val rules = rule *
+  
+  val parser = "grammar" ~ Grammar.from(rules) ~ "end"
 }

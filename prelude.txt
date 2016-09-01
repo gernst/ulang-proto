@@ -20,6 +20,9 @@ map f (x :: xs) == (f x) :: (map f xs);
 foldl f z [] == z;
 foldl f z (x :: xs) == foldl f (f z x) xs;
 
+unfoldl f (f y x) xs == unfoldl f y (x :: xs);
+unfoldl f z xs == (z, xs);
+
 foldr f z [] == z;
 foldr f z (x :: xs) == f x (foldr f z xs);
 
@@ -27,5 +30,10 @@ filter p [] == [];
 filter p (x :: xs)
   == let ys = (filter p xs)
      in if (p x) then (x :: ys) else ys;
+
+put k v xs == (k,v) :: xs;
+
+get k ((k, v) :: xs) == v;
+get k (_ :: xs) == get k xs;
 
 end

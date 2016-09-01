@@ -2,21 +2,23 @@ package ulang.core
 
 import arse._
 
-case class Definitions(defs: List[Def]) extends ulang.Language {
+import ulang._
+
+case class Defs(defs: List[Def]) extends Part {
+  override def toString = defs.mkString("definitions\n", "\n", "\nend")
+}
+
+object Defs extends (List[Def] => Defs) with Language {
   import Recognizer._
   import Parser._
   import Eval._
   import Merge._
 
-  def extend(add: List[Def]) = Definitions(defs ++ add)
-  
-  val parser = (extend _).from("definitions" ~ Grammar.defs ~ "end")
+  val parser = "definitions" ~ Defs.from(Grammar.defs) ~ "end"
 
-  override def toString = "definitions\n" + defs.map("  " + _ + ";\n").mkString + "end"
-
-  def compile = {
-    val lex = Env.empty
+  def build(defs: List[Def]) {
     var dyn = Env.default
+    val lex = Env.empty
 
     val funs = defs.collect {
       case Def(Applys(Id(name), args), rhs) if !args.isEmpty =>
@@ -36,11 +38,9 @@ case class Definitions(defs: List[Def]) extends ulang.Language {
     }
 
     for ((name, rhs) <- consts) {
-      // println(name + " == " + rhs)
       val const = eval(rhs, lex, dyn)
+      println(name + " == " + const)
       dyn += (name -> const)
     }
-
-    dyn
   }
 }
