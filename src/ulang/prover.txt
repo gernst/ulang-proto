@@ -1,5 +1,36 @@
 definitions
 
+triv (Not False) == True;
+triv (Not True)  == False;
+triv (Not (Not phi)) == phi;
 
+triv (And True psi)) == psi;
+triv (And False psi) == False;
+triv (And phi True)  == phi;
+triv (And phi False) == False;
+triv (And phi phi)   == phi;
+
+triv (Or True psi)   == True;
+triv (Or False psi)  == psi;
+triv (Or phi True)   == True;
+triv (Or phi False)  == phi;
+triv (Or phi phi)    == phi;
+
+triv (Imp True psi)  == psi;
+triv (Imp False psi) == True;
+triv (Imp phi True)  == True;
+triv (Imp phi False) == Not phi;
+triv (Imp phi phi)   == True;
+
+triv (Eqv True psi)  == psi;
+triv (Eqv False psi) == Not psi;
+triv (Eqv phi True)  == phi;
+triv (Eqv phi False) == Not phi;
+triv (Eqv phi phi)   == True;
+triv (Eqv phi (Not phi)) == False;
+triv (Eqv (Not phi) phi) == False;
+triv (Eqv (Not phi) (Not psi)) == Eqv phi psi;
+
+triv phi == phi;
 
 end
