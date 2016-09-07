@@ -4,8 +4,12 @@ import arse._
 
 import ulang._
 
-case class Defs(defs: List[Def]) extends Part {
+case class Defs(defs: List[Def]) extends Source {
   override def toString = defs.mkString("definitions\n", "\n", "\nend")
+}
+
+case class Model(dyn: Env) extends Compiled {
+  override def toString = dyn.keys.mkString("Model(", ", ", ")")
 }
 
 object Defs extends (List[Def] => Defs) with Language {
@@ -16,9 +20,14 @@ object Defs extends (List[Def] => Defs) with Language {
 
   val parser = "definitions" ~ Defs.from(Grammar.defs) ~ "end"
 
-  def build(defs: List[Def]) {
+  def build(parts: List[Source]) = {
     var dyn = Env.default
     val lex = Env.empty
+    
+    val defs = parts.flatMap {
+      case Defs(defs) => defs
+      case _ => Nil
+    }
 
     val funs = defs.collect {
       case Def(Applys(Id(name), args), rhs) if !args.isEmpty =>
@@ -42,5 +51,7 @@ object Defs extends (List[Def] => Defs) with Language {
       println(name + " == " + const)
       dyn += (name -> const)
     }
+    
+    Model(dyn)
   }
 }

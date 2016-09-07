@@ -2,8 +2,6 @@ package ulang
 
 import arse._
 
-trait Part
-
 /*
 class State(var languages: List[Language]) {
   override def toString = languages.mkString("\n\n")

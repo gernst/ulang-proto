@@ -10,8 +10,12 @@ import scala.annotation.tailrec
 import arse._
 import java.io.StringReader
 
+trait Source
+trait Compiled
+
 trait Language {
-  def parser: Parser[List[String], Part]
+  def parser: Parser[List[String], Source]
+  def build(parts: List[Source]): Compiled
 }
 
 object Language {

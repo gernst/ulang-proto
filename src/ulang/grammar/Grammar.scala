@@ -6,13 +6,17 @@ import arse._
 
 import ulang._
 
-case class Grammar(rules: List[Rule]) extends Part {
-  override def toString = rules.mkString("grammar\n", "\n", "\nend")
+case class Grammar(name: String, rules: List[Rule]) extends Source {
+  override def toString = rules.mkString("grammar" + name + "\n", "\n", "\nend")
 }
 
-object Grammar extends (List[Rule] => Grammar) with Language {
+object Grammar extends ((String, List[Rule]) => Grammar) with Language {
   import arse.Parser._
   import arse.Recognizer._
+  
+  def build(parts: List[Source]) = {
+    null
+  }
 
   val keywords = Set(";", "(", ")", "{", "}", "::=", "*", "+", "|", "end")
 
@@ -38,5 +42,5 @@ object Grammar extends (List[Rule] => Grammar) with Language {
   val rule = Rule.from(lhs, rhs)
   val rules = rule *
   
-  val parser = "grammar" ~ Grammar.from(rules) ~ "end"
+  val parser = "grammar" ~ Grammar.from(string, rules) ~ "end"
 }

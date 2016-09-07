@@ -23,11 +23,12 @@ object Main {
     
     /*
     val state = new State(List(new Import(), new Definitions(), new Grammar()))
-    val in = tokenize("import small;")
+    */
+    val in = tokenize(new File("small.txt"))
+    val (ps, out) = parts(in);
+    val res = languages.map(_.build(ps))
     
-    val out = state parse in;
-    
-    println(out)
+    /*
     println(state)
     
     state.languages map (_.build())

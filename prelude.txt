@@ -26,6 +26,14 @@ unfoldl f z xs == (z, xs);
 foldr f z [] == z;
 foldr f z (x :: xs) == f x (foldr f z xs);
 
+zip [] [] == [];
+zip (x :: xs) (y :: ys) == (x, y) :: zip xs ys;
+
+unzip [] == [];
+unzip (x, y) :: zs
+  == let (xs, ys) = unzip zs
+     in (x :: xs, y :: ys);
+
 filter p [] == [];
 filter p (x :: xs)
   == let ys = (filter p xs)

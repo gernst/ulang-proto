@@ -1,10 +1,16 @@
-import prelude;
+// import prelude;
 
 definitions
+
+foldl f z [] == z;
+foldl f z (x :: xs) == foldl f (f z x) xs;
+
+unfoldl f (f y x) xs == unfoldl f y (x :: xs);
+unfoldl f z xs == (z, xs);
 
 list == A :: B :: C :: [];
 
 one == foldl App F list;
-two == unfoldl App one Nil;
+two == unfoldl App one [];
 
 end

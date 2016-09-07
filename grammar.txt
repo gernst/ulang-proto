@@ -1,8 +1,23 @@
 import prelude;
 
+definitions
+  ulang defs
+    == map split defs;
+  
+  lambdas args body
+    == foldr Lambda body args;
+
+  unapps expr
+    == unfold App expr Nil;
+  
+  split (Def lhs rhs)
+    == let (fun, args) = unapps lhs
+       in (fun, lambdas args rhs);
+end
+
 grammar ulang
   // top level symbol
-  ulang ::= def *;
+  ulang ::= def * { ulang };
   
   expr ::= app;
   def ::= expr '==' expr ';' { Def };
@@ -20,18 +35,3 @@ grammar ulang
   cases ::= case ('|' case) * { (::) };
 end
 
-implementation ulang
-  ulang defs
-    == map split defs;
-  
-  lambdas args body
-    == foldr Lambda body args;
-
-  unapps expr
-    == unfold App expr Nil;
-  
-  split (Def lhs rhs)
-    == let (fun, args) = unapps lhs
-       in (fun, lambdas args rhs);
-    
-end
