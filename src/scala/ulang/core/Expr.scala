@@ -2,7 +2,7 @@ package ulang.core
 
 sealed trait Expr
 
-case class Id(name: String) extends Expr with Data {
+case class Id(name: String) extends Expr {
   assert(!name.isEmpty)
   override def toString = this match {
     case Op(name) => "(" + name + ")"
@@ -10,29 +10,29 @@ case class Id(name: String) extends Expr with Data {
   }
 }
 
-case class Apply(fun: Expr, arg: Expr) extends Expr {
+case class Apply(fun: Expr, args: List[Expr]) extends Expr {
   override def toString = this match {
-    case Applys(Op(name), List(arg)) if Operators.prefix_ops contains name =>
+    case Apply(Op(name), List(arg)) if Operators.prefix_ops contains name =>
       "(" + name + " " + arg + ")"
-    case Applys(Op(name), List(arg)) if Operators.postfix_ops contains name =>
+    case Apply(Op(name), List(arg)) if Operators.postfix_ops contains name =>
       "(" + arg + " " + name + ")"
-    case Applys(Op(name), List(arg1, arg2)) if Operators.infix_ops contains name =>
+    case Apply(Op(name), List(arg1, arg2)) if Operators.infix_ops contains name =>
       "(" + arg1 + " " + name + " " + arg2 + ")"
-    case Applys(fun, args) =>
+    case _ =>
       (fun :: args).mkString("(", " ", ")")
   }
 }
 
-case class Case(pat: Expr, body: Expr) {
-  override def toString = pat + ". " + body
+case class Case(pats: List[Expr], body: Expr) {
+  override def toString = pats.mkString(" ") + ". " + body
 }
 
 case class Bind(cases: List[Case]) extends Expr {
-  override def toString = "lambda " + cases.mkString(" | ")
+  override def toString = "\\ " + cases.mkString(" | ")
 }
 
-case class Match(arg: Expr, cases: List[Case]) extends Expr {
-  override def toString = "match " + arg + " with " + cases.mkString(" | ")
+case class Match(args: List[Expr], cases: List[Case]) extends Expr {
+  override def toString = "match " + args.mkString(" ") + " with " + cases.mkString(" | ")
 }
 
 case class LetIn(pat: Expr, arg: Expr, body: Expr) extends Expr {

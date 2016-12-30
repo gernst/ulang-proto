@@ -31,32 +31,47 @@ object Eval {
       fail
   }
 
-  def apply(cs: Case, arg: Val, lex: Env, dyn: Env): Val = cs match {
-    case Case(pat, body) =>
-      val env = bind(pat, arg, Env.empty)
+  def bind(pats: List[Expr], args: List[Val], env: Env): Env = (pats, args) match {
+    case (Nil, Nil) =>
+      env
+      
+    case (pat :: pats, arg :: args) =>
+      bind(pats, args, bind(pat, arg, env))
+      
+    case (_, Nil) =>
+      sys.error("missing arguments for " + pats.mkString(" "))
+      
+    case (Nil, _) =>
+      sys.error("extra arguments " + args.mkString(" "))
+  }
+
+  def apply(cs: Case, args: List[Val], lex: Env, dyn: Env): Val = cs match {
+    case Case(pats, body) =>
+      val env = bind(pats, args, Env.empty)
       eval(body, lex ++ env, dyn)
   }
 
-  def apply(cases: List[Case], arg: Val, lex: Env, dyn: Env): Val = cases match {
+  def apply(cases: List[Case], args: List[Val], lex: Env, dyn: Env): Val = cases match {
     case Nil =>
-      fail
+      sys.error("no case for " + args.mkString(" "))
 
     case cs :: rest =>
-      apply(cs, arg, lex, dyn) or apply(rest, arg, lex, dyn)
+      apply(cs, args, lex, dyn) or apply(rest, args, lex, dyn)
   }
 
-  def apply(fun: Val, arg: Val, dyn: Env): Val = fun match {
-    case Closure(cases, lex) =>
-      apply(cases, arg, lex, dyn) or sys.error("cannot apply " + fun + " to " + arg)
+  def apply(fun: Val, args: List[Val], dyn: Env): Val = fun match {
+    case id @ Tag(_) =>
+      Obj(id, args)
 
-    case data: Data =>
-      Obj(data, arg)
-
-    case fun: (Val => Val) @unchecked =>
-      fun(arg) or sys.error("cannot apply " + fun + " to " + arg)
+    case fun: Fun @unchecked =>
+      fun(args, dyn) or sys.error("cannot apply " + fun + " to " + args.mkString(" "))
 
     case _ =>
       sys.error("not a function " + fun)
+  }
+
+  def eval(exprs: List[Expr], lex: Env, dyn: Env): List[Val] = {
+    exprs map (eval(_, lex, dyn))
   }
 
   def eval(expr: Expr, lex: Env, dyn: Env): Val = expr match {
@@ -73,8 +88,10 @@ object Eval {
       val bound = lex.keys ++ dyn.keys
       sys.error("unbound identifier " + name + " in " + bound.mkString("[", " ", "]"))
 
-    case LetIn(pat, arg, body) =>
-      eval(body, bind(pat, eval(arg, lex, dyn), lex), dyn)
+    case LetIn(pat, _arg, body) =>
+      val arg = eval(_arg, lex, dyn)
+      val env = bind(pat, arg, lex) or sys.error("cannot bind " + pat + " to "+ arg)
+      eval(body, env, dyn)
 
     case IfThenElse(test, arg1, arg2) =>
       eval(test, lex, dyn) match {
@@ -83,13 +100,13 @@ object Eval {
         case res => sys.error("not a boolean value: " + res)
       }
 
-    case Apply(fun, arg) =>
-      apply(eval(fun, lex, dyn), eval(arg, lex, dyn), dyn)
+    case Apply(fun, args) =>
+      apply(eval(fun, lex, dyn), eval(args, lex, dyn), dyn)
 
     case Match(args, cases) =>
       apply(cases, eval(args, lex, dyn), lex, dyn)
 
     case Bind(cases) =>
-      Closure(cases, lex)
+      (args: List[Val], dyn: Env) => apply(cases, args, lex, dyn)
   }
 }

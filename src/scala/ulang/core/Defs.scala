@@ -16,7 +16,6 @@ object Defs extends (List[Def] => Defs) with Language {
   import Recognizer._
   import Parser._
   import Eval._
-  import Merge._
 
   val parser = "definitions" ~ Defs.from(Grammar.defs) ~ "end"
 
@@ -30,8 +29,8 @@ object Defs extends (List[Def] => Defs) with Language {
     }
 
     val funs = defs.collect {
-      case Def(Applys(Id(name), args), rhs) if !args.isEmpty =>
-        (name, Lambdas(args, rhs))
+      case Def(Apply(Id(name), args), rhs) if !args.isEmpty =>
+        (name, Case(args, rhs))
     }
 
     val consts = defs.collect {
@@ -40,8 +39,8 @@ object Defs extends (List[Def] => Defs) with Language {
     }
 
     for ((name, cases) <- _root_.ulang.group(funs)) {
-      val rhs = Merge(cases)
-      // println(name + " == " + rhs)
+      val rhs = Bind(cases)
+      println(name + " == " + rhs)
       val fun = eval(rhs, lex, dyn)
       dyn += (name -> fun)
     }

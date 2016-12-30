@@ -51,7 +51,7 @@ class Compile {
     val p = compile(arg)
     fun match {
       case Some(fun) => p map {
-        args => List(core.Applys(fun, args))
+        args => List(core.Apply(fun, args))
       }
       case None => p
     }

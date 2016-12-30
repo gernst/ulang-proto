@@ -8,7 +8,6 @@ import scala.language.postfixOps
 import arse._
 
 import ulang.core.Defs
-import ulang.core.Data
 import ulang.core.Import
 import ulang.grammar.Grammar
 
@@ -24,7 +23,7 @@ object Main {
     /*
     val state = new State(List(new Import(), new Definitions(), new Grammar()))
     */
-    val in = tokenize(new File("small.txt"))
+    val in = tokenize(new File("src/ulang/small.txt"))
     val (ps, out) = parts(in);
     val res = languages.map(_.build(ps))
     

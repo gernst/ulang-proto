@@ -2,15 +2,26 @@
 
 definitions
 
-foldl f z [] == z;
 foldl f z (x :: xs) == foldl f (f z x) xs;
+foldl f z [] == z;
 
 unfoldl f (f y x) xs == unfoldl f y (x :: xs);
 unfoldl f z xs == (z, xs);
 
+foldr f z (x :: xs) == f x (foldr f z xs);
+foldr f z [] == z;
+
+unfoldr f (f x y) == x :: (unfoldr f y);
+unfoldr f z == z;
+
 list == A :: B :: C :: [];
 
-one == foldl App F list;
-two == unfoldl App one [];
+a == foldl App F list;
+b == unfoldl App a [];
+
+c == foldr App F list;
+d == unfoldr App c;
+
+e == let (x :: xs) = list in (x,xs);
 
 end
