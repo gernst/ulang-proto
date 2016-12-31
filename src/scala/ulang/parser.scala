@@ -78,12 +78,17 @@ object grammar {
   val app = Apply.from(closed, closed +)
   val inner = app | closed
 
+  val imports = "import" ~ Imports.from(name +) ~ expect(";")
+
   val lhs = expr ~ expect("==")
   val rhs = expr ~ expect(";")
   val df = Def.from(lhs, rhs)
-  val defs = df *
+  val defs = "definitions" ~ Defs.from(df *) ~ "end"
+  
+  val cmd = imports | defs;
+  val cmds = cmd *
 
-  val module = "definitions" ~ Module.from(defs) ~ "end"
+  val module = Module.from(cmds)
 }
 
 

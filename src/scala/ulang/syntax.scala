@@ -15,9 +15,14 @@ case class Match(args: List[Expr], cases: List[Case]) extends Expr
 case class LetIn(pat: Expr, arg: Expr, body: Expr) extends Expr
 case class IfThenElse(test: Expr, iftrue: Expr, iffalse: Expr) extends Expr
 
+
 case class Def(lhs: Expr, rhs: Expr) extends Pretty
 
-case class Module(defs: List[Def]) extends Pretty
+sealed trait Cmd extends Pretty
+case class Imports(names: List[String]) extends Cmd
+case class Defs(defs: List[Def]) extends Cmd
+
+case class Module(defs: List[Cmd]) extends Pretty
 
 object Atom extends (String => Expr) {
   def isTag(name: String) = {

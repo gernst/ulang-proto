@@ -141,31 +141,40 @@ object interpreter {
       Clos(cases, lex)
   }
 
-  def eval(mod: Module, lex: Env, _dyn: Env): Env = mod match {
-    case Module(defs) =>
-      var dyn = _dyn
+  def eval(df: Def, lex: Env, dyn: Env): Env = df match {
+    case Def(Id(name), rhs) =>
+      dyn + (name -> eval(rhs, lex, dyn))
+  }
 
+  def eval(cmd: Cmd, lex: Env, dyn: Env): Env = cmd match {
+    case Imports(names) =>
+      dyn
+
+    case Defs(defs) =>
       val funs = defs.collect {
-        case Def(Apply(Id(name), args), rhs) if !args.isEmpty =>
-          (name, Case(args, rhs))
+        case Def(Apply(id: Id, args), rhs) if !args.isEmpty =>
+          (id, Case(args, rhs))
+      }
+      
+      val merged = group(funs).map {
+        case (id, cases) =>
+          Def(id, Bind(cases))
       }
 
       val consts = defs.collect {
-        case Def(Id(name), rhs) =>
-          (name, rhs)
+        case df @ Def(_: Id, rhs) =>
+          df
       }
 
-      for ((name, cases) <- group(funs)) {
-        val rhs = Bind(cases)
-        val fun = eval(rhs, lex, dyn)
-        dyn += (name -> fun)
+      (merged ++ consts).foldLeft(dyn) {
+        case (dyn, df) => eval(df, lex, dyn)
       }
+  }
 
-      for ((name, rhs) <- consts) {
-        val const = eval(rhs, lex, dyn)
-        dyn += (name -> const)
+  def eval(mod: Module, lex: Env, dyn: Env): Env = mod match {
+    case Module(cmds) =>
+      cmds.foldLeft(dyn) {
+        case (dyn, cmd) => eval(cmd, lex, dyn)
       }
-
-      dyn
   }
 }
