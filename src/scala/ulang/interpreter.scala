@@ -2,12 +2,21 @@ package ulang
 
 import arse._
 import ulang._
+import java.io.File
 
 trait Val extends Pretty
 
 case class Clos(cases: List[Case], lex: Env) extends Val
 case class Prim(name: String, f: List[Val] => Val) extends Val
 case class Obj(tag: Tag, args: List[Val]) extends Val
+
+// imports go to lexical environment
+case class State(local: Env, imported: Env)
+
+object State {
+  val empty = State(Env.empty, Env.empty)
+  val default = State(Env.empty, Env.default)
+}
 
 object Env {
   val empty: Env = Map.empty
@@ -141,21 +150,32 @@ object interpreter {
       Clos(cases, lex)
   }
 
-  def eval(df: Def, lex: Env, dyn: Env): Env = df match {
+  def eval(df: Def, lex: Env, dyn: Env): (String, Val) = df match {
     case Def(Id(name), rhs) =>
-      dyn + (name -> eval(rhs, lex, dyn))
+      (name -> eval(rhs, lex, dyn))
   }
 
-  def eval(cmd: Cmd, lex: Env, dyn: Env): Env = cmd match {
+  def add(st: State, cmd: Cmd): State = cmd match {
     case Imports(names) =>
-      dyn
+      import parser._
+
+      val State(local, in) = st
+
+      val out = names.foldLeft(in) {
+        (dyn, name) =>
+          val mod = parse(grammar.module, new File(name))
+          val st = add(State.default, mod)
+          dyn ++ st.local
+      }
+
+      State(local, out)
 
     case Defs(defs) =>
       val funs = defs.collect {
         case Def(Apply(id: Id, args), rhs) if !args.isEmpty =>
           (id, Case(args, rhs))
       }
-      
+
       val merged = group(funs).map {
         case (id, cases) =>
           Def(id, Bind(cases))
@@ -166,15 +186,17 @@ object interpreter {
           df
       }
 
-      (merged ++ consts).foldLeft(dyn) {
-        case (dyn, df) => eval(df, lex, dyn)
+      val State(in, imported) = st
+
+      val out = (merged ++ consts).foldLeft(in) {
+        (dyn, df) => dyn + eval(df, imported, dyn)
       }
+
+      State(out, imported)
   }
 
-  def eval(mod: Module, lex: Env, dyn: Env): Env = mod match {
+  def add(st: State, mod: Module): State = mod match {
     case Module(cmds) =>
-      cmds.foldLeft(dyn) {
-        case (dyn, cmd) => eval(cmd, lex, dyn)
-      }
+      cmds.foldLeft(st)(add)
   }
 }
