@@ -193,6 +193,18 @@ object interpreter {
       }
       
       st
+      
+    case Evals(exprs) =>
+      val State(local, imported) = st
+      
+      for(expr <- exprs) {
+        println(expr)
+        print("  == ")
+        print(eval(expr, imported, local))
+        println(";")
+      }
+      
+      st
   }
 
   def add(mod: Module, st: State): State = mod match {

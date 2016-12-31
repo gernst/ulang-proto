@@ -10,12 +10,7 @@ import arse._
 object Main {
   def main(args: Array[String]) {
     import parser._
-    
     val mod = parse(grammar.module, new File("src/ulang/small.txt"))
     val res = interpreter.add(mod, State.default)
-
-    for ((name, value) <- res.local.get) {
-      println(name + " == " + value)
-    }
   }
 }

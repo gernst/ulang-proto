@@ -85,7 +85,9 @@ object grammar {
   val df = Def.from(lhs, rhs)
   val defs = "definitions" ~ Defs.from(df *) ~ "end"
   
-  val cmd = imports | defs;
+  val evals = "eval" ~ Evals.from(rhs *) ~ "end"
+  
+  val cmd = imports | defs | evals;
   val cmds = cmd *
 
   val module = Module.from(cmds)

@@ -1,38 +1,40 @@
-import bool;
-import nat;
+import
+  bool nat;
 
 definitions
+  foldl f z (x :: xs) == foldl f (f z x) xs;
+  foldl f z [] == z;
+  
+  unfoldl f (f y x) xs == unfoldl f y (x :: xs);
+  unfoldl f z xs == (z, xs);
+  
+  foldr f z (x :: xs) == f x (foldr f z xs);
+  foldr f z [] == z;
+  
+  unfoldr f (f x y) == x :: (unfoldr f y);
+  unfoldr f z == z;
+  
+  list == A :: B :: C :: [];
+  
+  a == foldl App F list;
+  b == unfoldl App a [];
+  
+  c == foldr App F list;
+  d == unfoldr App c;
 
-foldl f z (x :: xs) == foldl f (f z x) xs;
-foldl f z [] == z;
+  curry f == \x. \y. f x y;
+end
 
-unfoldl f (f y x) xs == unfoldl f y (x :: xs);
-unfoldl f z xs == (z, xs);
-
-foldr f z (x :: xs) == f x (foldr f z xs);
-foldr f z [] == z;
-
-unfoldr f (f x y) == x :: (unfoldr f y);
-unfoldr f z == z;
-
-list == A :: B :: C :: [];
-
-a == foldl App F list;
-b == unfoldl App a [];
-
-c == foldr App F list;
-d == unfoldr App c;
-
-e == let (x :: xs) = list in (x,xs);
-
-curry f == \x. \y. f x y;
-
-g == A , B;
-h == (((curry (,)) A) B);
-
-j == if X = Y then A else B;
-
-z == not True;
-4 == 2 + 2;
-
+eval
+  let (x :: xs) = list in
+  let (y :: ys) = list in
+  (x,y), (xs,ys);
+  
+  A , B;
+  (((curry (,)) A) B);
+  
+  if X = Y then A else B;
+  
+  not True;
+  2 + 2;
 end

@@ -11,11 +11,11 @@ object printer {
     case Atom(name) =>
       name
       
-    case Apply(Id(name), List(arg)) if operators.prefix_ops contains name =>
+    case Apply(Atom(name), List(arg)) if operators.prefix_ops contains name =>
       "(" + name + " " + arg + ")"
-    case Apply(Id(name), List(arg)) if operators.postfix_ops contains name =>
+    case Apply(Atom(name), List(arg)) if operators.postfix_ops contains name =>
       "(" + arg + " " + name + ")"
-    case Apply(Id(name), List(arg1, arg2)) if operators.infix_ops contains name =>
+    case Apply(Atom(name), List(arg1, arg2)) if operators.infix_ops contains name =>
       "(" + arg1 + " " + name + " " + arg2 + ")"
     case Apply(fun, args) =>
       (fun :: args).mkString("(", " ", ")")
