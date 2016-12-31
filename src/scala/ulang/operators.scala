@@ -29,6 +29,6 @@ object operators extends Syntax[String] {
     "and" -> (Left, 4),
     "or" -> (Left, 3),
     "==>" -> (Right, 2),
-    "<==>" -> (Non, 1),
+    "<=>" -> (Non, 1),
     "," -> (Right, 0))
 }

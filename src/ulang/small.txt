@@ -29,4 +29,6 @@ curry f == \x. \y. f x y;
 g == A , B;
 h == (((curry (,)) A) B);
 
+j == if X = Y then A else B;
+
 end

@@ -21,6 +21,28 @@ case class Obj(id: Id, args: List[Val]) extends Val {
   }
 }
 
+object Env {
+  val empty: Env = Map.empty
+  val default: Env = Map("=" -> builtin.equal)
+}
+
+object builtin {
+  def reify(b: Boolean) = if (b) True else False
+
+  val equal = Prim({ case List(obj1, obj2) => reify(_equal(obj1, obj2)) })
+
+  def _equal(obj1: Val, obj2: Val): Boolean = (obj1, obj2) match {
+    case (Id(name1), Id(name2)) =>
+      name1 == name2
+    case (Obj(data1, args1), Obj(data2, args2)) =>
+      if (!_equal(data1, data2)) false
+      if (args1.length != args2.length) false
+      else (args1, args2).zipped.forall((_equal _).tupled)
+    case _ =>
+      sys.error("cannot compare " + obj1 + " and " + obj2)
+  }
+}
+
 object interpreter {
   def bind(pat: Expr, arg: Val, env: Env): Env = pat match {
     case Wildcard =>
@@ -48,7 +70,6 @@ object interpreter {
     case _ =>
       fail
   }
-  
 
   def bind(pats: List[Expr], args: List[Val], env: Env): Env = (pats, args) match {
     case (Nil, Nil) =>
@@ -69,7 +90,6 @@ object interpreter {
       val env = bind(pats, args, Env.empty)
       eval(body, lex ++ env, dyn)
   }
-  
 
   def apply(cases: List[Case], args: List[Val], lex: Env, dyn: Env): Val = cases match {
     case Nil =>
@@ -79,27 +99,24 @@ object interpreter {
       apply(cs, args, lex, dyn) or apply(rest, args, lex, dyn)
   }
 
-  
   def apply(fun: Val, args: List[Val], dyn: Env): Val = fun match {
     case id @ Tag(_) =>
       Obj(id, args)
 
     case Clos(cases, lex) =>
       apply(cases, args, lex, dyn)
-      
+
     case Prim(f) =>
       f(args)
 
     case _ =>
       sys.error("not a function " + fun)
   }
-  
 
   def eval(exprs: List[Expr], lex: Env, dyn: Env): List[Val] = {
     exprs map (eval(_, lex, dyn))
   }
 
-  
   def eval(expr: Expr, lex: Env, dyn: Env): Val = expr match {
     case id @ Tag(_) =>
       id
@@ -150,7 +167,7 @@ object interpreter {
           (name, rhs)
       }
 
-      for ((name, cases) <- _root_.ulang.group(funs)) {
+      for ((name, cases) <- group(funs)) {
         val rhs = Bind(cases)
         val fun = eval(rhs, lex, dyn)
         dyn += (name -> fun)
