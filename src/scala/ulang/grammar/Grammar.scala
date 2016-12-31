@@ -13,9 +13,13 @@ case class Grammar(name: String, rules: List[Rule]) extends Source {
 object Grammar extends ((String, List[Rule]) => Grammar) with Language {
   import arse.Parser._
   import arse.Recognizer._
+
+  def compile(parts: List[Source]) = {
+    Nil
+  }
   
-  def build(parts: List[Source]) = {
-    null
+  def link(compiled: Map[Language, Compiled]): List[Linked] = {
+    Nil
   }
 
   val keywords = Set(";", "(", ")", "{", "}", "::=", "*", "+", "|", "end")
@@ -41,6 +45,6 @@ object Grammar extends ((String, List[Rule]) => Grammar) with Language {
   val rhs = expr ~ expect(";")
   val rule = Rule.from(lhs, rhs)
   val rules = rule *
-  
+
   val parser = "grammar" ~ Grammar.from(string, rules) ~ "end"
 }

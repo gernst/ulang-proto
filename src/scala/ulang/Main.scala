@@ -9,14 +9,11 @@ import arse._
 
 import ulang.core.Defs
 import ulang.core.Import
-import ulang.grammar.Grammar
 
 object Main {
   def main(args: Array[String]) {
-    import Language._
     import Parser._
     
-    val languages = List(Import, Defs, Grammar)
     val part = parse((in: List[String]) => alt(languages.map(_.parser), in))
     val parts = part *
     
@@ -25,7 +22,7 @@ object Main {
     */
     val in = tokenize(new File("src/ulang/small.txt"))
     val (ps, out) = parts(in);
-    val res = languages.map(_.build(ps))
+    val res = languages.map(_.compile(ps))
     
     /*
     println(state)

@@ -6,11 +6,6 @@ package object core {
   val True = Tag("True")
   val False = Tag("False")
 
-  object Pair extends Binary(",")
-
-  val Empty = Tag("[]")
-  object Cons extends Binary("::")
-
   type Val = Any
   type Fun = (List[Val], Env) => Val
 

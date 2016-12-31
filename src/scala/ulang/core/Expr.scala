@@ -46,3 +46,27 @@ case class IfThenElse(test: Expr, iftrue: Expr, iffalse: Expr) extends Expr {
 case class Def(lhs: Expr, rhs: Expr) {
   override def toString = lhs + " == " + rhs + ";"
 }
+
+abstract class IdPred extends (String => Id) {
+  def test(name: String): Boolean
+
+  def apply(name: String) = {
+    assert(test(name))
+    Id(name)
+  }
+
+  def unapply(id: Id): Option[String] = id match {
+    case Id(name) if test(name) =>
+      Some(name)
+    case _ =>
+      None
+  }
+}
+
+object Op extends IdPred {
+  def test(str: String) = Operators contains str
+}
+
+object Tag extends IdPred {
+  def test(str: String) = str.head.isUpper || Operators.constrs(str)
+}
