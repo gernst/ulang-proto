@@ -1,4 +1,4 @@
-package ulang.core
+package ulang
 
 import arse._
 import ulang._

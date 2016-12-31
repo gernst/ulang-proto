@@ -1,6 +1,4 @@
-package ulang.core
-
-import ulang.core._
+package ulang
 
 case class Obj(id: Id, args: List[Val]) {
   //  override def toString = "(" + data + " " + arg + ")"
