@@ -41,15 +41,15 @@ object grammar {
   val name = string filterNot keywords
   val nonmixfix = name filterNot operators.contains
 
-  val expr: Parser[List[String], Expr] = mixfix(inner, Id, Apply, operators)
+  val expr: Parser[List[String], Expr] = mixfix(inner, Atom, Apply, operators)
   val exprs = expr +
 
   val closed: Parser[List[String], Expr] = Parser.rec(parens(open) | fun | matches | ite | let | id)
   val closeds = closed +
 
   // grammar
-  val id = Id.from(nonmixfix)
-  val anyid = Id.from(name)
+  val id = Atom.from(nonmixfix)
+  val anyid = Atom.from(name)
 
   def cases(dot: String) = {
     val dot_ = dot ~ expr

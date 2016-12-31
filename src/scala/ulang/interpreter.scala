@@ -3,23 +3,11 @@ package ulang
 import arse._
 import ulang._
 
-trait Val
+trait Val extends Pretty
 
 case class Clos(cases: List[Case], lex: Env) extends Val
-case class Prim(f: List[Val] => Val) extends Val
-
-case class Obj(id: Id, args: List[Val]) extends Val {
-  override def toString = this match {
-    case Obj(Op(name), List(arg)) if operators.prefix_ops contains name =>
-      "(" + name + " " + arg + ")"
-    case Obj(Op(name), List(arg)) if operators.postfix_ops contains name =>
-      "(" + arg + " " + name + ")"
-    case Obj(Op(name), List(arg1, arg2)) if operators.infix_ops contains name =>
-      "(" + arg1 + " " + name + " " + arg2 + ")"
-    case _ =>
-      (id :: args).mkString("(", " ", ")")
-  }
-}
+case class Prim(name: String, f: List[Val] => Val) extends Val
+case class Obj(tag: Tag, args: List[Val]) extends Val
 
 object Env {
   val empty: Env = Map.empty
@@ -29,10 +17,10 @@ object Env {
 object builtin {
   def reify(b: Boolean) = if (b) True else False
 
-  val equal = Prim({ case List(obj1, obj2) => reify(_equal(obj1, obj2)) })
+  val equal = Prim("=", { case List(obj1, obj2) => reify(_equal(obj1, obj2)) })
 
   def _equal(obj1: Val, obj2: Val): Boolean = (obj1, obj2) match {
-    case (Id(name1), Id(name2)) =>
+    case (Tag(name1), Tag(name2)) =>
       name1 == name2
     case (Obj(data1, args1), Obj(data2, args2)) =>
       if (!_equal(data1, data2)) false
@@ -100,13 +88,13 @@ object interpreter {
   }
 
   def apply(fun: Val, args: List[Val], dyn: Env): Val = fun match {
-    case id @ Tag(_) =>
-      Obj(id, args)
+    case tag: Tag =>
+      Obj(tag, args)
 
     case Clos(cases, lex) =>
       apply(cases, args, lex, dyn)
 
-    case Prim(f) =>
+    case Prim(_, f) =>
       f(args)
 
     case _ =>
@@ -118,8 +106,8 @@ object interpreter {
   }
 
   def eval(expr: Expr, lex: Env, dyn: Env): Val = expr match {
-    case id @ Tag(_) =>
-      id
+    case tag: Tag =>
+      tag
 
     case Id(name) if lex contains name =>
       lex(name)
