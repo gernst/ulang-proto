@@ -44,14 +44,13 @@ package object ulang {
   val True = Tag("True")
   val False = Tag("False")
 
-  type Val = Any
   type Fun = (List[Val], Env) => Val
 
   type Env = Map[String, Val]
 
   object Env {
     val empty: Env = Map.empty
-    val default: Env = Map("=" -> builtin_equal _)
+    // val default: Env = Map("=" -> builtin_equal _)
   }
 
   def test(b: Boolean) = if (b) True else False

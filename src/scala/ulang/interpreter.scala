@@ -3,7 +3,11 @@ package ulang
 import arse._
 import ulang._
 
-case class Obj(id: Id, args: List[Val]) {
+trait Val
+
+case class Clos(cases: List[Case], lex: Env) extends Val
+
+case class Obj(id: Id, args: List[Val]) extends Val {
   override def toString = this match {
     case Obj(Op(name), List(arg)) if operators.prefix_ops contains name =>
       "(" + name + " " + arg + ")"
@@ -43,6 +47,7 @@ object interpreter {
     case _ =>
       fail
   }
+  
 
   def bind(pats: List[Expr], args: List[Val], env: Env): Env = (pats, args) match {
     case (Nil, Nil) =>
@@ -63,6 +68,7 @@ object interpreter {
       val env = bind(pats, args, Env.empty)
       eval(body, lex ++ env, dyn)
   }
+  
 
   def apply(cases: List[Case], args: List[Val], lex: Env, dyn: Env): Val = cases match {
     case Nil =>
@@ -72,21 +78,24 @@ object interpreter {
       apply(cs, args, lex, dyn) or apply(rest, args, lex, dyn)
   }
 
+  
   def apply(fun: Val, args: List[Val], dyn: Env): Val = fun match {
     case id @ Tag(_) =>
       Obj(id, args)
 
-    case fun: Fun @unchecked =>
-      fun(args, dyn) or sys.error("cannot apply " + fun + " to " + args.mkString(" "))
+    case Clos(cases, lex) =>
+      apply(cases, args, lex, dyn) or sys.error("cannot apply " + fun + " to " + args.mkString(" "))
 
     case _ =>
       sys.error("not a function " + fun)
   }
+  
 
   def eval(exprs: List[Expr], lex: Env, dyn: Env): List[Val] = {
     exprs map (eval(_, lex, dyn))
   }
 
+  
   def eval(expr: Expr, lex: Env, dyn: Env): Val = expr match {
     case id @ Tag(_) =>
       id
@@ -120,7 +129,7 @@ object interpreter {
       apply(cases, eval(args, lex, dyn), lex, dyn)
 
     case Bind(cases) =>
-      (args: List[Val], dyn: Env) => apply(cases, args, lex, dyn)
+      Clos(cases, lex)
   }
 
   def eval(mod: Module, lex: Env, _dyn: Env): Env = mod match {

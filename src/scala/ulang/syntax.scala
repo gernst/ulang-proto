@@ -2,7 +2,7 @@ package ulang
 
 sealed trait Expr
 
-case class Id(name: String) extends Expr {
+case class Id(name: String) extends Expr with Val {
   assert(!name.isEmpty)
   override def toString = this match {
     case Op(name) => "(" + name + ")"
