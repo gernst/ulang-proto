@@ -1,58 +1,40 @@
 definitions
-
-curry f x y == f (x, y);
-uncurry f (x, y) == f x y;
-
-fail _
-  == Failure;
-
-return a src
-  == Success a src;
-
-map f (Success a src) == f a src;
-map f  Failure == Failure;
-
-bind p f src
-  == map f (p src);
-
-orelse (Success a src) p _ == (Success a src);
-orelse Failure p src == p src;
-
-alt p q src
-  == orelse (p src) q src;
-
-item (a :: src) == Success a src;
-item [] == Failure;
-
-test a (b :: src)
-  == if a = b
-     then Success a src
-     else Failure;
-
-test a [] == Failure;
-
-seq f p q src
-  == (bind p function x ->
-      bind q function y ->
-      return (f x y));
-
-pair p q == seq (,) p q;
-
-input == A :: B :: C :: [];
-blubb == pair (test A) item input;
-blabb == alt (test B) (test C) input;
-
-x == function a b -> (a, b);
-y == x A B;
-
-z == function
-    A a -> K
-  | B b -> b;
-
-w == z A C;
-
-o == match input, C :: [] with
-  | [], _ -> []
-  | (A :: rest), (C :: x) -> rest, x;
   
+  curry f x y == f (x, y);
+  uncurry f (x, y) == f x y;
   
+  fail _
+    == Failure;
+  
+  return a src
+    == Success a src;
+  
+  map f (Success a src) == f a src;
+  map f  Failure == Failure;
+  
+  bind p f src
+    == map f (p src);
+  
+  orelse (Success a src) p _ == (Success a src);
+  orelse Failure p src == p src;
+  
+  alt p q src
+    == orelse (p src) q src;
+  
+  item (a :: src) == Success a src;
+  item [] == Failure;
+  
+  test a (b :: src)
+    == if a = b
+       then Success a src
+       else Failure;
+  
+  test a [] == Failure;
+  
+  seq f p q src
+    == (bind p function x ->
+        bind q function y ->
+        return (f x y));
+  
+  pair p q == seq (,) p q;
+end

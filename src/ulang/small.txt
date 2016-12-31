@@ -36,5 +36,5 @@ eval
   if X = Y then A else B;
   
   not True;
-  2 + 2;
+  2 + 2 = 0 +1 +1 +1 +1;
 end
