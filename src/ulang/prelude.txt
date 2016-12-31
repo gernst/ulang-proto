@@ -1,6 +1,5 @@
 definitions
 
-
 put k v xs == (k,v) :: xs;
 
 get k ((k, v) :: xs) == v;

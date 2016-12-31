@@ -1,4 +1,5 @@
-// import prelude;
+import bool;
+import nat;
 
 definitions
 
@@ -30,5 +31,8 @@ g == A , B;
 h == (((curry (,)) A) B);
 
 j == if X = Y then A else B;
+
+z == not True;
+4 == 2 + 2;
 
 end

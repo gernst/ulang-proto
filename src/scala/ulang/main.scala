@@ -12,9 +12,9 @@ object Main {
     import parser._
     
     val mod = parse(grammar.module, new File("src/ulang/small.txt"))
-    val res = interpreter.add(State.default, mod)
+    val res = interpreter.add(mod, State.default)
 
-    for ((name, value) <- res.local) {
+    for ((name, value) <- res.local.get) {
       println(name + " == " + value)
     }
   }

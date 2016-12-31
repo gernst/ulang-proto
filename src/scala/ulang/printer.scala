@@ -35,7 +35,7 @@ object printer {
     case Module(defs) =>
       defs.map(_ + ";\n").mkString
     
-    case Clos(cases, lex) =>
+    case Clos(cases, lex, _) =>
       "\\ " + cases.mkString(" | ") + lex.keys.mkString(" [", ", ", "]")
     case Prim(name, _) =>
       name
