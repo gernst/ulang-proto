@@ -8,7 +8,7 @@ package ulang;
  * <a href="http://www.jflex.de/">JFlex</a> 1.6.1
  * from the specification file <tt>/home/ernst/workspace/ulang-proto/src/ulang/Scanner.flex</tt>
  */
-class Scanner {
+class scanner {
 
   /** This character denotes the end of file */
   public static final int YYEOF = -1;
@@ -259,7 +259,7 @@ class Scanner {
    *
    * @param   in  the java.io.Reader to read input from.
    */
-  Scanner(java.io.Reader in) {
+  scanner(java.io.Reader in) {
     this.zzReader = in;
   }
 

@@ -2,7 +2,7 @@ package ulang;
 
 %%
 
-%class Scanner
+%class scanner
 %function next
 %type String
 %unicode

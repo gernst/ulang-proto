@@ -12,11 +12,11 @@ case class Id(name: String) extends Expr {
 
 case class Apply(fun: Expr, args: List[Expr]) extends Expr {
   override def toString = this match {
-    case Apply(Op(name), List(arg)) if Operators.prefix_ops contains name =>
+    case Apply(Op(name), List(arg)) if operators.prefix_ops contains name =>
       "(" + name + " " + arg + ")"
-    case Apply(Op(name), List(arg)) if Operators.postfix_ops contains name =>
+    case Apply(Op(name), List(arg)) if operators.postfix_ops contains name =>
       "(" + arg + " " + name + ")"
-    case Apply(Op(name), List(arg1, arg2)) if Operators.infix_ops contains name =>
+    case Apply(Op(name), List(arg1, arg2)) if operators.infix_ops contains name =>
       "(" + arg1 + " " + name + " " + arg2 + ")"
     case _ =>
       (fun :: args).mkString("(", " ", ")")
@@ -47,6 +47,10 @@ case class Def(lhs: Expr, rhs: Expr) {
   override def toString = lhs + " == " + rhs + ";"
 }
 
+case class Module(defs: List[Def]) {
+  override def toString = defs.map(_ + ";\n").mkString
+}
+
 abstract class IdPred extends (String => Id) {
   def test(name: String): Boolean
 
@@ -64,9 +68,9 @@ abstract class IdPred extends (String => Id) {
 }
 
 object Op extends IdPred {
-  def test(str: String) = Operators contains str
+  def test(str: String) = operators contains str
 }
 
 object Tag extends IdPred {
-  def test(str: String) = str.head.isUpper || Operators.constrs(str)
+  def test(str: String) = str.head.isUpper || operators.constrs(str)
 }

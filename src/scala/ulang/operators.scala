@@ -2,7 +2,7 @@ package ulang
 
 import arse._
 
-object Operators extends Syntax[String] {
+object operators extends Syntax[String] {
   val constrs = Set("0", "+1", ",", "::", "[]")
 
   val prefix_ops: Map[String, Int] = Map(

@@ -29,7 +29,7 @@ package object ulang {
   }
 
   def tokenize(reader: Reader): List[String] = {
-    val scanner = new Scanner(reader)
+    val scanner = new scanner(reader)
     val res = new ListBuffer[String]()
     var tok = scanner.next()
     while (tok != null) {

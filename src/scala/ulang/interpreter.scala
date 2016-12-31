@@ -3,7 +3,20 @@ package ulang
 import arse._
 import ulang._
 
-object Eval {
+case class Obj(id: Id, args: List[Val]) {
+  override def toString = this match {
+    case Obj(Op(name), List(arg)) if operators.prefix_ops contains name =>
+      "(" + name + " " + arg + ")"
+    case Obj(Op(name), List(arg)) if operators.postfix_ops contains name =>
+      "(" + arg + " " + name + ")"
+    case Obj(Op(name), List(arg1, arg2)) if operators.infix_ops contains name =>
+      "(" + arg1 + " " + name + " " + arg2 + ")"
+    case _ =>
+      (id :: args).mkString("(", " ", ")")
+  }
+}
+
+object interpreter {
   def bind(pat: Expr, arg: Val, env: Env): Env = pat match {
     case Wildcard =>
       env
@@ -34,13 +47,13 @@ object Eval {
   def bind(pats: List[Expr], args: List[Val], env: Env): Env = (pats, args) match {
     case (Nil, Nil) =>
       env
-      
+
     case (pat :: pats, arg :: args) =>
       bind(pats, args, bind(pat, arg, env))
-      
+
     case (_, Nil) =>
       sys.error("missing arguments for " + pats.mkString(" "))
-      
+
     case (Nil, _) =>
       sys.error("extra arguments " + args.mkString(" "))
   }
@@ -90,7 +103,7 @@ object Eval {
 
     case LetIn(pat, _arg, body) =>
       val arg = eval(_arg, lex, dyn)
-      val env = bind(pat, arg, lex) or sys.error("cannot bind " + pat + " to "+ arg)
+      val env = bind(pat, arg, lex) or sys.error("cannot bind " + pat + " to " + arg)
       eval(body, env, dyn)
 
     case IfThenElse(test, arg1, arg2) =>
@@ -108,5 +121,33 @@ object Eval {
 
     case Bind(cases) =>
       (args: List[Val], dyn: Env) => apply(cases, args, lex, dyn)
+  }
+
+  def eval(mod: Module, lex: Env, _dyn: Env): Env = mod match {
+    case Module(defs) =>
+      var dyn = _dyn
+
+      val funs = defs.collect {
+        case Def(Apply(Id(name), args), rhs) if !args.isEmpty =>
+          (name, Case(args, rhs))
+      }
+
+      val consts = defs.collect {
+        case Def(Id(name), rhs) =>
+          (name, rhs)
+      }
+
+      for ((name, cases) <- _root_.ulang.group(funs)) {
+        val rhs = Bind(cases)
+        val fun = eval(rhs, lex, dyn)
+        dyn += (name -> fun)
+      }
+
+      for ((name, rhs) <- consts) {
+        val const = eval(rhs, lex, dyn)
+        dyn += (name -> const)
+      }
+
+      dyn
   }
 }

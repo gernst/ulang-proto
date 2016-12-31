@@ -6,7 +6,7 @@ import arse._
 
 import ulang._
 
-object Grammar {
+object grammar {
   import arse.Parser._
   import arse.Recognizer._
   import arse.Mixfix._
@@ -15,9 +15,9 @@ object Grammar {
     "if", "then", "else", "let", "in", "match", "with", "end")
 
   val name = string filterNot keywords
-  val nonmixfix = name filterNot Operators.contains
+  val nonmixfix = name filterNot operators.contains
 
-  val expr: Parser[List[String], Expr] = mixfix(inner, Id, Apply, Operators)
+  val expr: Parser[List[String], Expr] = mixfix(inner, Id, Apply, operators)
   val exprs = expr +
   
   val closed: Parser[List[String], Expr] = Parser.rec(parens(open) | fun | matches | ite | let | id)
