@@ -8,12 +8,14 @@ import scala.collection.mutable.ListBuffer
 import arse._
 
 object parser {
-  def tokenize(file: File): List[String] = {
-    tokenize(new FileReader(file))
-  }
+  implicit def toFileReader(file: File) = new FileReader(file)
+  implicit def toStringReader(line: String) = new StringReader(line)
 
-  def tokenize(line: String): List[String] = {
-    tokenize(new StringReader(line))
+  def parse[A](p: Parser[List[String], A], reader: Reader): A = {
+    val (res, out) = p(tokenize(reader))
+    if (!out.isEmpty)
+      sys.error("remaining input: " + out.mkString(" "))
+    res
   }
 
   def tokenize(reader: Reader): List[String] = {
@@ -81,7 +83,7 @@ object grammar {
   val df = Def.from(lhs, rhs)
   val defs = df *
 
-  val module = Module.from(defs)
+  val module = "definitions" ~ Module.from(defs) ~ "end"
 }
 
 
