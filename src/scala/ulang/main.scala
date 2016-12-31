@@ -12,9 +12,9 @@ object Main {
     import Parser._
     import Recognizer._
 
-    val parts = Module.from("definitions" ~ grammar.defs ~ "end")
+    val parts = "definitions" ~ grammar.module ~ "end"
 
-    val in = tokenize(new File("src/ulang/small.txt"))
+    val in = parser.tokenize(new File("src/ulang/small.txt"))
     val (ps, out) = parts(in);
     val res = interpreter.eval(ps, Env.empty, Env.empty)
 

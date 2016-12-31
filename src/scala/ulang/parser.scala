@@ -1,10 +1,32 @@
 package ulang
 
+import java.io._
+
 import scala.language.postfixOps
+import scala.collection.mutable.ListBuffer
 
 import arse._
 
-import ulang._
+object parser {
+  def tokenize(file: File): List[String] = {
+    tokenize(new FileReader(file))
+  }
+
+  def tokenize(line: String): List[String] = {
+    tokenize(new StringReader(line))
+  }
+
+  def tokenize(reader: Reader): List[String] = {
+    val scanner = new scanner(reader)
+    val res = new ListBuffer[String]()
+    var tok = scanner.next()
+    while (tok != null) {
+      res += tok
+      tok = scanner.next()
+    }
+    res.toList
+  }
+}
 
 object grammar {
   import arse.Parser._
@@ -19,7 +41,7 @@ object grammar {
 
   val expr: Parser[List[String], Expr] = mixfix(inner, Id, Apply, operators)
   val exprs = expr +
-  
+
   val closed: Parser[List[String], Expr] = Parser.rec(parens(open) | fun | matches | ite | let | id)
   val closeds = closed +
 
@@ -58,6 +80,8 @@ object grammar {
   val rhs = expr ~ expect(";")
   val df = Def.from(lhs, rhs)
   val defs = df *
+
+  val module = Module.from(defs)
 }
 
 

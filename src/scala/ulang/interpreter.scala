@@ -6,6 +6,7 @@ import ulang._
 trait Val
 
 case class Clos(cases: List[Case], lex: Env) extends Val
+case class Prim(f: List[Val] => Val) extends Val
 
 case class Obj(id: Id, args: List[Val]) extends Val {
   override def toString = this match {
@@ -84,7 +85,10 @@ object interpreter {
       Obj(id, args)
 
     case Clos(cases, lex) =>
-      apply(cases, args, lex, dyn) or sys.error("cannot apply " + fun + " to " + args.mkString(" "))
+      apply(cases, args, lex, dyn)
+      
+    case Prim(f) =>
+      f(args)
 
     case _ =>
       sys.error("not a function " + fun)

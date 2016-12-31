@@ -24,4 +24,9 @@ d == unfoldr App c;
 
 e == let (x :: xs) = list in (x,xs);
 
+curry f == \x. \y. f x y;
+
+g == A , B;
+h == (((curry (,)) A) B);
+
 end

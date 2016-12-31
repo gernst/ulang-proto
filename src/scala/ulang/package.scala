@@ -20,26 +20,7 @@ package object ulang {
     }
   }
 
-  def tokenize(file: File): List[String] = {
-    tokenize(new FileReader(file))
-  }
-
-  def tokenize(line: String): List[String] = {
-    tokenize(new StringReader(line))
-  }
-
-  def tokenize(reader: Reader): List[String] = {
-    val scanner = new scanner(reader)
-    val res = new ListBuffer[String]()
-    var tok = scanner.next()
-    while (tok != null) {
-      res += tok
-      tok = scanner.next()
-    }
-    res.toList
-  }
-  
-    val Wildcard = Id("_")
+  val Wildcard = Id("_")
 
   val True = Tag("True")
   val False = Tag("False")
@@ -64,9 +45,9 @@ package object ulang {
     case (Id(name1), Id(name2)) =>
       name1 == name2
     case (Obj(data1, args1), Obj(data2, args2)) =>
-      if(!equal(data1, data2)) false
-      if(args1.length != args2.length) false
-      else (args1,args2).zipped.forall((equal _).tupled)
+      if (!equal(data1, data2)) false
+      if (args1.length != args2.length) false
+      else (args1, args2).zipped.forall((equal _).tupled)
     case _ =>
       sys.error("cannot compare " + obj1 + " and " + obj2)
   }
