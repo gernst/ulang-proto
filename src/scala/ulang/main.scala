@@ -10,6 +10,6 @@ import arse._
 object Main {
   def main(args: Array[String]) {
     import parser._
-    val res = shell.exec(Imports(List("compiler")))
+    shell.exec(Imports(List("compiler")))
   }
 }

@@ -60,7 +60,7 @@ object shell {
       import parser._
 
       for (name <- names) {
-        load(new File("src/ulang/" + name + ".txt"))
+        load(new File("src/ulang/" + name + ".u"))
       }
 
     case Nots(nots) =>
