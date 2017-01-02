@@ -33,7 +33,12 @@ definitions
   filter p (x :: xs)
     == let ys = (filter p xs)
        in if (p x) then (x :: ys) else ys;
+       
+  get _ [] == None;
+  get 0      (x :: xs) == Some x;
+  get (n +1) (x :: xs) == get n xs;
 
-  index x (x :: xs) == 0;
+  index x [] == None;
+  index x (x :: xs) == Some 0;
   index y (x :: xs) == index y xs +1;
 end
