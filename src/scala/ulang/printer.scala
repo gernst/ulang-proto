@@ -34,7 +34,7 @@ object printer {
 
     case Def(lhs, rhs) =>
       lhs + " == " + rhs + ";"
-      
+
     case Data(names) =>
       "data " + names.mkString(" ") + ";"
     case Fix(Prefix(prec), names) =>
@@ -51,14 +51,21 @@ object printer {
     case Imports(names) =>
       names.mkString("import\n  ", " ", ";")
     case Nots(fixs) =>
-      fixs.mkString("notation\n  ", "\n  ", "\nend\n\n")
-    case Defs(defs) =>    
-      defs.mkString("definitions\n  ", "\n  ", "\nend\n\n")
-    case Evals(exprs) =>     
-      exprs.mkString("eval\n  ", "\n  ", "\nend\n\n")
+      fixs.mkString("notation\n  ", "\n  ", "\nend\n")
+    case Defs(defs) =>
+      defs.mkString("definitions\n  ", "\n  ", "\nend\n")
+    case Evals(exprs) =>
+      exprs.mkString("eval\n  ", "\n  ", "\nend\n")
 
     case Module(defs) =>
-      defs.map(_ + ";\n").mkString
+      defs.mkString("", "\n", "\n")
+
+    case State(defs) =>
+      defs.mkString("", "\n", "\n")
+
+    case Model(dyn) =>
+      val lines = dyn.map { case (name, rhs) => name + " == " + rhs + ";" }
+      lines.mkString("model\n  ", "\n  ", "\nend\n")
 
     case Clos(cases, lex) =>
       "\\ " + cases.mkString(" | ") + lex.keys.mkString(" [", ", ", "]")
