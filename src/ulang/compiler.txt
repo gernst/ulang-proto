@@ -2,8 +2,6 @@ import
   nat list;
 
 definitions
-  debruijn e == debruijn e [];
-  
   debruijn (Const z) stack
     == Const z;
 
@@ -51,10 +49,11 @@ definitions
     
   compile (Lambda b)
     == list (Close (compile b ++ list Return));
+  
     
   exec [] env (x :: stack)
     == x;
-    
+  
   exec (Const x :: code) env stack
     == exec code env (x :: stack);
     
@@ -74,7 +73,7 @@ definitions
   exec (Return :: _) env (x :: Cont c e :: stack)
     == exec c e (x :: stack);
   
-  ulang e == compile (beta (debruijn e));
+  ulang e == compile (beta (debruijn e []));
   
   prog == (App (Lambda X (Var X)) (Const Y)); 
 end

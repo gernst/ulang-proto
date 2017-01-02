@@ -1,7 +1,3 @@
-// hm what does it mean?
-// there is only one way to prove True : Bool??
-// does not fix _ : Bool itself?
-
 inductive _ : Bool where
   True  : Bool;
   False : Bool;
@@ -23,31 +19,6 @@ inductive _ : _ -> _ where
 inductive _ : forall t where
 (forall a. x : t(a))
   ==> x : forall t
-
-definitions
-
-not True  <==> False;
-not False <==> True;
-
-True  and True  <==> True;
-True  and False <==> False;
-False and True  <==> False;
-False and False <==> False;
-
-True  or  True  <==> True;
-True  or  False <==> True;
-False or  True  <==> True;
-False or  False <==> False;
-
-True  ==> True  <==> True;
-True  ==> False <==> False;
-False ==> True  <==> True;
-False ==> False <==> True;
-
-(True  <==> True)  <==> True;
-(True  <==> False) <==> False;
-(False <==> True)  <==> False;
-(False <==> False) <==> True;
 
 lemmas
 (not) : Bool -> Bool;

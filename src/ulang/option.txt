@@ -1,0 +1,8 @@
+definitions
+  map f None == None;
+  map f (Some x) == Some (f x);
+  
+  flatten None == None;
+  flatten (Some None) == None;
+  flatten (Some (Some x)) == Some x;
+end

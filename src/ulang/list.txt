@@ -16,10 +16,13 @@ definitions
 
   foldr f z [] == z;
   foldr f z (x :: xs) == f x (foldr f z xs);
-
   
   unfoldr f (f x y) == x :: (unfoldr f y);
   unfoldr f z == z;
+
+  flatten [] == [];
+  flatten ([] :: ys) == flatten ys;
+  flatten ((x :: xs) :: ys) == x :: flatten (xs :: ys);
   
   zip [] [] == [];
   zip (x :: xs) (y :: ys) == (x, y) :: zip xs ys;
@@ -33,6 +36,10 @@ definitions
   filter p (x :: xs)
     == let ys = (filter p xs)
        in if (p x) then (x :: ys) else ys;
+  
+  contains x [] == False;
+  contains x (x :: xs) == True;
+  contains x (y :: xs) == contains x xs;
        
   get _ [] == None;
   get 0      (x :: xs) == Some x;
@@ -40,5 +47,5 @@ definitions
 
   index x [] == None;
   index x (x :: xs) == Some 0;
-  index y (x :: xs) == index y xs +1;
+  index x (y :: xs) == index x xs +1;
 end
