@@ -20,13 +20,14 @@ object State {
 
 object Env {
   val empty: Env = Map.empty
-  val default: Env = Map("=" -> builtin.equal)
+  val default: Env = Map("=" -> builtin.equal, "print" -> builtin.print)
 }
 
 object builtin {
   def reify(b: Boolean) = if (b) True else False
 
   val equal = Prim("=", { case List(obj1, obj2) => reify(_equal(obj1, obj2)) })
+  val print = Prim("print", { case List(obj) => println(obj); obj })
 
   def _equal(obj1: Val, obj2: Val): Boolean = (obj1, obj2) match {
     case (Tag(name1), Tag(name2)) =>
@@ -74,12 +75,17 @@ object interpreter {
 
     case (pat :: pats, arg :: args) =>
       bind(pats, args, bind(pat, arg, env))
+      
+    case _ =>
+      fail
 
+      /*
     case (_, Nil) =>
       sys.error("missing arguments for " + pats.mkString(" "))
 
     case (Nil, _) =>
       sys.error("extra arguments " + args.mkString(" "))
+      */
   }
 
   def apply(cs: Case, args: List[Val], lex: Env, dyn: Dyn): Val = cs match {

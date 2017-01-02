@@ -1,31 +1,39 @@
 definitions
+  list a == a :: [];
+  list a b == a :: b :: [];
 
-[] ++ ys == ys;
-(x :: xs) ++ ys == x :: (xs ++ ys);
+  [] ++ ys == ys;
+  (x :: xs) ++ ys == x :: (xs ++ ys);
 
-map f [] == [];
-map f (x :: xs) == (f x) :: (map f xs);
+  map f [] == [];
+  map f (x :: xs) == (f x) :: (map f xs);
 
-foldl f z [] == z;
-foldl f z (x :: xs) == foldl f (f z x) xs;
+  foldl f z [] == z;
+  foldl f z (x :: xs) == foldl f (f z x) xs;
 
-unfoldl f (f y x) xs == unfoldl f y (x :: xs);
-unfoldl f z xs == (z, xs);
+  unfoldl f (f y x) xs == unfoldl f y (x :: xs);
+  unfoldl f z xs == (z, xs);
 
-foldr f z [] == z;
-foldr f z (x :: xs) == f x (foldr f z xs);
+  foldr f z [] == z;
+  foldr f z (x :: xs) == f x (foldr f z xs);
 
-zip [] [] == [];
-zip (x :: xs) (y :: ys) == (x, y) :: zip xs ys;
+  
+  unfoldr f (f x y) == x :: (unfoldr f y);
+  unfoldr f z == z;
+  
+  zip [] [] == [];
+  zip (x :: xs) (y :: ys) == (x, y) :: zip xs ys;
 
-unzip [] == [];
-unzip (x, y) :: zs
-  == let (xs, ys) = unzip zs
-     in (x :: xs, y :: ys);
+  unzip [] == [];
+  unzip (x, y) :: zs
+    == let (xs, ys) = unzip zs
+       in (x :: xs, y :: ys);
 
-filter p [] == [];
-filter p (x :: xs)
-  == let ys = (filter p xs)
-     in if (p x) then (x :: ys) else ys;
+  filter p [] == [];
+  filter p (x :: xs)
+    == let ys = (filter p xs)
+       in if (p x) then (x :: ys) else ys;
 
+  index x (x :: xs) == 0;
+  index y (x :: xs) == index y xs +1;
 end

@@ -1,40 +1,60 @@
 definitions
-  
-  curry f x y == f (x, y);
-  uncurry f (x, y) == f x y;
-  
   fail _
     == Failure;
   
-  return a src
-    == Success a src;
+  return a
+    == Parser \src. Success a src;
   
-  map f (Success a src) == f a src;
-  map f  Failure == Failure;
+  map f (Success a src)
+    == parse (f a) src;
+  map f  Failure
+    == Failure;
+    
+  map f (Parser p)
+    == Parser \src. map f (p src);
   
-  bind p f src
-    == map f (p src);
-  
-  orelse (Success a src) p _ == (Success a src);
-  orelse Failure p src == p src;
-  
-  alt p q src
-    == orelse (p src) q src;
-  
-  item (a :: src) == Success a src;
-  item [] == Failure;
-  
-  test a (b :: src)
-    == if a = b
-       then Success a src
+  filter p (Success a src)
+    == if (p a)
+       then (Success a src)
        else Failure;
+  filter p Failure
+    == Failure;
+
+  filter p (Parser q)
+    == Parser \src. filter p (q src);
   
-  test a [] == Failure;
+  bind (Parser p) f
+    == Parser \src. map f (p src);
   
-  seq f p q src
-    == (bind p function x ->
-        bind q function y ->
-        return (f x y));
+  (Success a src) or p == (Success a src);
+  Failure or p == p;
+  
+  (Parser p) or (Parser q)
+    == Parser \src. match (p src) with
+         | Failure -> q src
+         | res -> res;
+  
+  item
+    == Parser \ []. Failure
+              | (a :: src). Success a src;
+  
+  lit a
+    == filter (\b. a = b) item;
+
+  seq f p q
+    == bind p \a.
+       bind q \b.
+         return (a,b);
   
   pair p q == seq (,) p q;
+  
+  parse (Parser p) src == p src;
+  
+  src == (A :: B :: C :: []);
+end
+
+eval
+  parse item src;
+  parse (lit B) src;
+  parse (pair item item) src;
 end

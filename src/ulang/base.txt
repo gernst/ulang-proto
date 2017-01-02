@@ -1,8 +1,16 @@
 definitions
 
-put k v xs == (k,v) :: xs;
-
-get k ((k, v) :: xs) == v;
-get k (_ :: xs) == get k xs;
-
+  id x = x;
+  const x == \y. x;
+  
+  curry f == \x. \y. f x y;
+  uncurry f == \x y. (f x) y;
+  
+  compose g f = \x. g (f x);
+  
+  // lift f == \p q. \x. f (p x) (q x);
+  
+  put k v xs == (k,v) :: xs;
+  get k ((k, v) :: xs) == v;
+  get k (_ :: xs) == get k xs;
 end

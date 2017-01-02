@@ -21,8 +21,6 @@ definitions
   
   c == foldr App F list;
   d == unfoldr App c;
-
-  curry f == \x. \y. f x y;
 end
 
 eval

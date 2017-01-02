@@ -1,0 +1,25 @@
+import
+  nat list;
+
+definitions
+  debruijn e == debruijn e [];
+
+  debruijn (Var x) stack
+    == Var (index x stack);
+    
+  debruijn (App f a) stack
+    == App (debruijn f stack) (debruijn a stack);
+    
+  debruijn (Lambda x b) stack
+    == Lambda (debruijn b (x :: stack));
+  
+  compile (Var i)
+    == Get i;
+
+  compile (App x y)
+    == (compile x) ++ (compile y) ++ (list Apply);
+end
+
+eval
+  debruijn (Lambda X (Var X));
+end

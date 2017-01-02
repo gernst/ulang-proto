@@ -5,14 +5,8 @@ Minimal untyped functional programming language based on tagged values and patte
 
 See `small.txt` and `parser.txt` for some working examples.
 
-from file to module:
+TODOs
+-----
 
-file
-  tokenize
-list of tokens
-  parse (per lang)
-list of sources
-  compile (per lang)
-list of compiled
-  link (import mechanism)
-module
+- imports shadows pattern matches of extisting functions,
+  need to merge
