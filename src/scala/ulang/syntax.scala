@@ -17,13 +17,13 @@ case class Match(args: List[Expr], cases: List[Case]) extends Expr
 case class LetIn(pat: Expr, arg: Expr, body: Expr) extends Expr
 case class IfThenElse(test: Expr, iftrue: Expr, iffalse: Expr) extends Expr
 
-sealed trait Not // extends Pretty
+sealed trait Not extends Pretty
 case class Data(names: List[String]) extends Not
 case class Fix(fixity: Fixity, names: List[String]) extends Not
 
 case class Def(lhs: Expr, rhs: Expr) extends Pretty
 
-sealed trait Cmd // extends Pretty
+sealed trait Cmd extends Pretty
 case class Imports(names: List[String]) extends Cmd
 case class Nots(fixs: List[Not]) extends Cmd
 case class Defs(defs: List[Def]) extends Cmd

@@ -1,16 +1,18 @@
 package ulang
 
+import arse._
+
 trait Pretty {
   override def toString = printer.print(this)
 }
 
 object printer {
-  def print(any: Any): String = any match {
+  def print(any: Pretty): String = any match {
     case Atom(name) if operators contains name =>
       "(" + name + ")"
     case Atom(name) =>
       name
-      
+
     case Apply(Atom(name), List(arg)) if operators.prefix_ops contains name =>
       "(" + name + " " + arg + ")"
     case Apply(Atom(name), List(arg)) if operators.postfix_ops contains name =>
@@ -29,12 +31,35 @@ object printer {
       "let " + pat + " = " + arg + " in " + body
     case IfThenElse(test, iftrue, iffalse) =>
       "if " + test + " then " + iftrue + " else " + iffalse
-      
+
     case Def(lhs, rhs) =>
       lhs + " == " + rhs + ";"
+      
+    case Data(names) =>
+      "data " + names.mkString(" ") + ";"
+    case Fix(Prefix(prec), names) =>
+      "prefix " + prec + " " + names.mkString(" ") + ";"
+    case Fix(Postfix(prec), names) =>
+      "postfix " + prec + " " + names.mkString(" ") + ";"
+    case Fix(Infix(Non, prec), names) =>
+      "infix " + prec + " " + names.mkString(" ") + ";"
+    case Fix(Infix(Left, prec), names) =>
+      "infix left " + prec + " " + names.mkString(" ") + ";"
+    case Fix(Infix(Right, prec), names) =>
+      "infix right " + prec + " " + names.mkString(" ") + ";"
+
+    case Imports(names) =>
+      names.mkString("import\n  ", " ", ";")
+    case Nots(fixs) =>
+      fixs.mkString("notation\n  ", "\n  ", "\nend\n\n")
+    case Defs(defs) =>    
+      defs.mkString("definitions\n  ", "\n  ", "\nend\n\n")
+    case Evals(exprs) =>     
+      exprs.mkString("eval\n  ", "\n  ", "\nend\n\n")
+
     case Module(defs) =>
       defs.map(_ + ";\n").mkString
-    
+
     case Clos(cases, lex) =>
       "\\ " + cases.mkString(" | ") + lex.keys.mkString(" [", ", ", "]")
     case Prim(name, _) =>
