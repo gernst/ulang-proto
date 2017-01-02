@@ -6,17 +6,9 @@ import java.io.File
 
 trait Val extends Pretty
 
-case class Clos(cases: List[Case], lex: Env, dyn: Dyn) extends Val
+case class Clos(cases: List[Case], lex: Env) extends Val
 case class Prim(name: String, f: List[Val] => Val) extends Val
 case class Obj(tag: Tag, args: List[Val]) extends Val
-
-// imports go to lexical environment
-case class State(local: Dyn, imported: Env)
-
-object State {
-  def empty = State(Ref(Env.empty), Env.empty)
-  def default = State(Ref(Env.empty), Env.default)
-}
 
 object Env {
   val empty: Env = Map.empty
@@ -75,11 +67,11 @@ object interpreter {
 
     case (pat :: pats, arg :: args) =>
       bind(pats, args, bind(pat, arg, env))
-      
+
     case _ =>
       fail
 
-      /*
+    /*
     case (_, Nil) =>
       sys.error("missing arguments for " + pats.mkString(" "))
 
@@ -88,13 +80,13 @@ object interpreter {
       */
   }
 
-  def apply(cs: Case, args: List[Val], lex: Env, dyn: Dyn): Val = cs match {
+  def apply(cs: Case, args: List[Val], lex: Env, dyn: Env): Val = cs match {
     case Case(pats, body) =>
       val env = bind(pats, args, Env.empty)
       eval(body, lex ++ env, dyn)
   }
 
-  def apply(cases: List[Case], args: List[Val], lex: Env, dyn: Dyn): Val = cases match {
+  def apply(cases: List[Case], args: List[Val], lex: Env, dyn: Env): Val = cases match {
     case Nil =>
       sys.error("no case for " + args.mkString(" "))
 
@@ -102,12 +94,12 @@ object interpreter {
       apply(cs, args, lex, dyn) or apply(rest, args, lex, dyn)
   }
 
-  def apply(fun: Val, args: List[Val], dyn: Dyn): Val = fun match {
+  def apply(fun: Val, args: List[Val], dyn: Env): Val = fun match {
     case tag: Tag =>
       Obj(tag, args)
 
-    case Clos(cases, lex, dyn) =>
-      apply(cases, args, lex, dyn)
+    case Clos(cases, lex) =>
+      apply(cases, args, lex, dyn) // switches to different state here
 
     case Prim(_, f) =>
       f(args)
@@ -116,22 +108,22 @@ object interpreter {
       sys.error("not a function " + fun)
   }
 
-  def eval(exprs: List[Expr], lex: Env, dyn: Dyn): List[Val] = {
+  def eval(exprs: List[Expr], lex: Env, dyn: Env): List[Val] = {
     exprs map (eval(_, lex, dyn))
   }
 
-  def eval(expr: Expr, lex: Env, dyn: Dyn): Val = expr match {
+  def eval(expr: Expr, lex: Env, dyn: Env): Val = expr match {
     case tag: Tag =>
       tag
 
     case Id(name) if lex contains name =>
       lex(name)
 
-    case Id(name) if dyn.get contains name =>
-      dyn.get(name)
+    case Id(name) if dyn contains name =>
+      dyn(name)
 
     case Id(name) =>
-      val bound = lex.keys ++ dyn.get.keys
+      val bound = lex.keys ++ dyn.keys
       sys.error("unbound identifier " + name + " in " + bound.mkString("[", " ", "]"))
 
     case LetIn(pat, _arg, body) =>
@@ -153,70 +145,11 @@ object interpreter {
       apply(cases, eval(args, lex, dyn), lex, dyn)
 
     case Bind(cases) =>
-      Clos(cases, lex, dyn)
+      Clos(cases, lex)
   }
 
-  def eval(df: Def, lex: Env, dyn: Dyn): (String, Val) = df match {
+  def eval(df: Def, lex: Env, dyn: Env): (String, Val) = df match {
     case Def(Id(name), rhs) =>
       (name -> eval(rhs, lex, dyn))
-  }
-
-  def add(cmd: Cmd, st: State): State = cmd match {
-    case Imports(names) =>
-      import parser._
-
-      val State(local, in) = st
-
-      val out = names.foldLeft(in) {
-        (dyn, name) =>
-          val mod = parse(grammar.module, new File("src/ulang/" + name + ".txt"))
-          val st = add(mod, State.default)
-          dyn ++ st.local.get
-      }
-
-      State(local, out)
-
-    case Defs(defs) =>
-      val funs = defs.collect {
-        case Def(Apply(id: Id, args), rhs) if !args.isEmpty =>
-          (id, Case(args, rhs))
-      }
-
-      val merged = group(funs).map {
-        case (id, cases) =>
-          Def(id, Bind(cases))
-      }
-
-      val consts = defs.collect {
-        case df @ Def(_: Id, rhs) =>
-          df
-      }
-
-      val State(local, imported) = st
-
-      for (df <- merged ++ consts) {
-        local.map(_ + eval(df, imported, local))
-      }
-      
-      st
-      
-    case Evals(exprs) =>
-      val State(local, imported) = st
-      
-      for(expr <- exprs) {
-        println(expr)
-        print("  == ")
-        print(eval(expr, imported, local))
-        println(";")
-      }
-      
-      st
-  }
-
-  def add(mod: Module, st: State): State = mod match {
-    case Module(cmds) =>
-      cmds.foldLeft(st) {
-        (st, cmd) => add(cmd, st)
-      }
   }
 }

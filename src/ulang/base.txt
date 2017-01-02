@@ -1,5 +1,11 @@
-definitions
+notation
+  data ,;
+  
+  infix       6 =;
+  infix right 0 ,;
+end
 
+definitions
   id x = x;
   const x == \y. x;
   

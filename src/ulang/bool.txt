@@ -1,26 +1,35 @@
+notation
+  infix       6 !=;
+  prefix      5 not;
+  infix left  4 and;
+  infix left  3 or;
+  infix right 2 ==>;
+  infix       1 <=>;
+end
+
 definitions
-
-not True  == False;
-not False == True;
-
-True  and True  == True;
-True  and False == False;
-False and True  == False;
-False and False == False;
-
-True  or  True  == True;
-True  or  False == True;
-False or  True  == True;
-False or  False == False;
-
-True  ==> True  == True;
-True  ==> False == False;
-False ==> True  == True;
-False ==> False == True;
-
-(True  <=> True)  == True;
-(True  <=> False) == False;
-(False <=> True)  == False;
-(False <=> False) == True;
-
+  not True  == False;
+  not False == True;
+  
+  x != y == not x = y;
+  
+  True  and True  == True;
+  True  and False == False;
+  False and True  == False;
+  False and False == False;
+  
+  True  or  True  == True;
+  True  or  False == True;
+  False or  True  == True;
+  False or  False == False;
+  
+  True  ==> True  == True;
+  True  ==> False == False;
+  False ==> True  == True;
+  False ==> False == True;
+  
+  (True  <=> True)  == True;
+  (True  <=> False) == False;
+  (False <=> True)  == False;
+  (False <=> False) == True;
 end

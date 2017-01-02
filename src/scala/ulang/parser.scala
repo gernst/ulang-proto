@@ -39,6 +39,7 @@ object grammar {
     "if", "then", "else", "let", "in", "match", "with", "end")
 
   val name = string filterNot keywords
+  val names = name *
   val nonmixfix = name filterNot operators.contains
 
   val expr: Parser[List[String], Expr] = mixfix(inner, Atom, Apply, operators)
@@ -47,7 +48,21 @@ object grammar {
   val closed: Parser[List[String], Expr] = Parser.rec(parens(open) | fun | matches | ite | let | id)
   val closeds = closed +
 
-  // grammar
+  val left = lit("left", Left)
+  val right = lit("right", Right)
+  val non = ret[List[String], Assoc](Non)
+
+  val assoc = left | right | non
+
+  val prefix = "prefix" ~ Prefix.from(int)
+  val postfix = "postfix" ~ Postfix.from(int)
+  val infix = "infix" ~ Infix.from(assoc, int)
+
+  val fixity = prefix | postfix | infix
+
+  val fix = Fix.from(fixity, names)
+  val data = "data" ~ Data.from(names)
+
   val id = Atom.from(nonmixfix)
   val anyid = Atom.from(name)
 
@@ -78,16 +93,19 @@ object grammar {
   val app = Apply.from(closed, closed +)
   val inner = app | closed
 
-  val imports = "import" ~ Imports.from(name +) ~ expect(";")
+  val imports = "import" ~ Imports.from(names) ~ expect(";")
 
   val lhs = expr ~ expect("==")
   val rhs = expr ~ expect(";")
   val df = Def.from(lhs, rhs)
   val defs = "definitions" ~ Defs.from(df *) ~ "end"
-  
+
+  val not = (fix | data) ~ expect(";")
+  val nots = "notation" ~ Nots.from(not *) ~ "end"
+
   val evals = "eval" ~ Evals.from(rhs *) ~ "end"
-  
-  val cmd = imports | defs | evals;
+
+  val cmd = imports | nots | defs | evals;
   val cmds = cmd *
 
   val module = Module.from(cmds)

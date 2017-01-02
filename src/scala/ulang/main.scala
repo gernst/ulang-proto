@@ -10,7 +10,6 @@ import arse._
 object Main {
   def main(args: Array[String]) {
     import parser._
-    val mod = parse(grammar.module, new File("src/ulang/compiler.txt"))
-    val res = interpreter.add(mod, State.default)
+    val res = shell.exec(Imports(List("compiler")))
   }
 }

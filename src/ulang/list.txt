@@ -1,3 +1,10 @@
+notation
+  data [] ::;
+  
+  infix right 8 ::,
+  infix right 7 ++;
+end
+
 definitions
   list a == a :: [];
   list a b == a :: b :: [];

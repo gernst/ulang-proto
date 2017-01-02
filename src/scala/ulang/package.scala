@@ -29,5 +29,4 @@ package object ulang {
   }
   
   type Env = Map[String, Val]
-  type Dyn = Ref[Env]
 }

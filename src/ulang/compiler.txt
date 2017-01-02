@@ -14,7 +14,7 @@ definitions
 
   debruijn (App f a) stack
     == App (debruijn f stack) (debruijn a stack);
-    
+  
   debruijn (Lambda x b) stack
     == Lambda (debruijn b (x :: stack));
     
