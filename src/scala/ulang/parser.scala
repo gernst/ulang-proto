@@ -66,13 +66,11 @@ object grammar {
   val id = Atom.from(nonmixfix)
   val anyid = Atom.from(name)
 
-  def cases(dot: String) = {
-    val dot_ = dot ~ expr
-    val cs = Case.from(exprs, dot_)
-    "|".? ~ cs.rep(sep = "|")
-  }
+  val arrow_ = "->" ~ expr
+  val cs = Case.from(exprs, arrow_)
+  val cases = "|".? ~ cs.rep(sep = "|")
 
-  val fun = "\\" ~ Bind.from(cases("."))
+  val fun = "\\" ~ Bind.from(cases)
 
   val if_ = "if" ~ expr
   val then_ = expect("then") ~ expr
@@ -85,7 +83,7 @@ object grammar {
   val let = LetIn.from(let_, eq_, in_)
 
   val match_ = "match" ~ closeds
-  val with_ = expect("with") ~ cases("->")
+  val with_ = expect("with") ~ cases
   val matches = Match.from(match_, with_)
 
   val open = expr | anyid

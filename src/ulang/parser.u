@@ -1,9 +1,12 @@
+import
+  list;
+
 definitions
   fail _
     == Failure;
   
   return a
-    == Parser \src. Success a src;
+    == Parser \src -> Success a src;
   
   map f (Success a src)
     == parse (f a) src;
@@ -11,7 +14,7 @@ definitions
     == Failure;
     
   map f (Parser p)
-    == Parser \src. map f (p src);
+    == Parser \src -> map f (p src);
   
   filter p (Success a src)
     == if (p a)
@@ -21,29 +24,29 @@ definitions
     == Failure;
 
   filter p (Parser q)
-    == Parser \src. filter p (q src);
+    == Parser \src -> filter p (q src);
   
   bind (Parser p) f
-    == Parser \src. map f (p src);
+    == Parser \src -> map f (p src);
   
   (Success a src) or p == (Success a src);
   Failure or p == p;
   
   (Parser p) or (Parser q)
-    == Parser \src. match (p src) with
+    == Parser \src -> match (p src) with
          | Failure -> q src
          | res -> res;
   
   item
-    == Parser \ []. Failure
-              | (a :: src). Success a src;
+    == Parser \ [] -> Failure
+              | (a :: src) -> Success a src;
   
   lit a
-    == filter (\b. a = b) item;
+    == filter (\b -> a = b) item;
 
   seq f p q
-    == bind p \a.
-       bind q \b.
+    == bind p \a ->
+       bind q \b ->
          return (a,b);
   
   pair p q == seq (,) p q;

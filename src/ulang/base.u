@@ -7,10 +7,10 @@ end
 
 definitions
   id x = x;
-  const x == \y. x;
+  const x == \y -> x;
   
-  curry   f == \x. \y.  f x y;
-  uncurry f == \x   y. (f x) y;
+  curry   f == \x -> \y ->  f x y;
+  uncurry f == \x     y -> (f x) y;
   
-  compose g f = \x. g (f x);
+  compose g f = \x -> g (f x);
 end

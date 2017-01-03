@@ -26,7 +26,7 @@ object shell {
   def commands: Map[String, () => Any] = Map(
     ":clear" -> cmd(st = State.empty),
     ":state" -> cmd(out(st)),
-    ":model" -> cmd(out(model(st))),
+    ":model" -> cmd(out(model(merged(st)))),
     ":check" -> cmd(check()))
 
   def prompt: String = "u> "
@@ -93,7 +93,7 @@ object shell {
           err("fatal: stack overflow")
         case e: Throwable =>
           err("fatal: " + e.getMessage)
-        // e.printStackTrace()
+          e.printStackTrace()
       }
     }
   }
@@ -112,7 +112,7 @@ object shell {
 
   def merged(st: State) = st match {
     case State(defs) =>
-      val funs = defs.collect {
+      val funs = defs.distinct.collect {
         case Def(Apply(id: Id, args), rhs) if !args.isEmpty =>
           (id, Case(args, rhs))
       }

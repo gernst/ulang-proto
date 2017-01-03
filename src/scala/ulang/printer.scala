@@ -22,7 +22,7 @@ object printer {
     case Apply(fun, args) =>
       (fun :: args).mkString("(", " ", ")")
     case Case(pats, body) =>
-      pats.mkString(" ") + ". " + body
+      pats.mkString(" ") + " -> " + body
     case Bind(cases) =>
       "\\ " + cases.mkString(" | ")
     case Match(args, cases) =>
