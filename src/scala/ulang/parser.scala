@@ -7,6 +7,13 @@ import scala.collection.mutable.ListBuffer
 
 import arse._
 
+object operators extends Syntax[String] {
+  var data: Set[String] = Set()
+  var prefix_ops: Map[String, Int] = Map()
+  var postfix_ops: Map[String, Int] = Map()
+  var infix_ops: Map[String, (Assoc, Int)] = Map()
+}
+
 object parser {
   implicit def toFileReader(file: File) = new FileReader(file)
   implicit def toStringReader(line: String) = new StringReader(line)
@@ -35,7 +42,7 @@ object grammar {
   import arse.Recognizer._
   import arse.Mixfix._
 
-  val keywords = Set(";", "(", ")", "{", "}", ".", "->", "==", "|", "\\",
+  val keywords = Set(";", "(", ")", "{", "}", "[", "]", "->", "==", "|", "\\",
     "if", "then", "else", "let", "in", "match", "with", "end")
 
   val name = string filterNot keywords

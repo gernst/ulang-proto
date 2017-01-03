@@ -2,15 +2,15 @@ notation
   data ,;
   
   infix       6 =;
-  infix right 9 ,;
+  infix right 9 , .;
 end
 
 definitions
-  id x = x;
+  id x == x;
   const x == \y -> x;
   
   curry   f == \x -> \y ->  f x y;
   uncurry f == \x     y -> (f x) y;
   
-  compose g f = \x -> g (f x);
+  g . f == \x -> g (f x);
 end
