@@ -10,6 +10,7 @@ package object ulang {
   import arse.Recognizer._
 
   def expect(s: String) = s ! "expected '" + s + "'"
+  def expect[A](s: String, p: Parser[List[String], A]) = p ! "expected "
   def parens[A](s0: String, p: Parser[List[String], A], s1: String) = s0 ~ p ~ expect(s1)
 
 
@@ -18,8 +19,6 @@ package object ulang {
       case (x, ys) => (x, ys.map(_._2))
     }
   }
-
-  val Wildcard = Id("_")
 
   case class Ref[A](var get: A) {
     def set(a: A) { get = a }

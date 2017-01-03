@@ -51,7 +51,7 @@ object builtin {
 
 object interpreter {
   def bind(pat: Expr, arg: Val, dyn: Env, env: Env): Env = pat match {
-    case Wildcard =>
+    case Id("_") =>
       env
 
     case Lazy(pat) =>
@@ -106,9 +106,15 @@ object interpreter {
   }
 
   def apply(cs: Case, args: List[Val], lex: Env, dyn: Env): Val = cs match {
-    case Case(pats, body) =>
+    case Case(pats, cond, body) =>
       val env = bind(pats, args, dyn, Env.empty)
-      eval(body, lex ++ env, dyn)
+      val newlex = lex ++ env
+      cond.map(eval(_, newlex, dyn)).foreach {
+        case builtin.True =>
+        case builtin.False => fail
+        case res => sys.error("not a condition in pattern: " +res) 
+      }
+      eval(body, newlex, dyn)
   }
 
   def apply(cases: List[Case], args: List[Val], lex: Env, dyn: Env): Val = cases match {
@@ -160,7 +166,7 @@ object interpreter {
       eval(test, lex, dyn) match {
         case builtin.True => eval(arg1, lex, dyn)
         case builtin.False => eval(arg2, lex, dyn)
-        case res => sys.error("not a boolean value: " + res)
+        case res => sys.error("not a condition in test: " + res)
       }
 
     case Lazy(body) =>
@@ -177,7 +183,7 @@ object interpreter {
   }
 
   def eval(df: Def, lex: Env, dyn: Env): (String, Val) = df match {
-    case Def(Id(name), rhs) =>
+    case Def(Id(name), None, rhs) =>
       (name -> eval(rhs, lex, dyn))
   }
 }

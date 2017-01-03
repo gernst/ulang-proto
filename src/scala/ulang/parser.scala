@@ -52,6 +52,8 @@ object grammar {
   val expr: Parser[List[String], Expr] = mixfix(inner, Atom, App, operators)
   val exprs = expr +
 
+  val strict_expr = expect("expression", expr)
+
   val closed: Parser[List[String], Expr] = Parser.rec(parens("(", open, ")") | fun | matches | ite | let | lzy | list | id)
   val closeds = closed +
 
@@ -73,49 +75,57 @@ object grammar {
   val id = Atom.from(nonmixfix)
   val anyid = Atom.from(name)
 
-  val arrow_ = "->" ~ expr
-  val cs = Case.from(exprs, arrow_)
+  val if_ = "if" ~ strict_expr
+  val then_ = expect("then") ~ strict_expr
+  val else_ = expect("else") ~ strict_expr
+  val ite = IfThenElse.from(if_, then_, else_)
+  val cond = if_ ?
+
+  val let_ = "let" ~ closed
+  val eq_ = expect("=") ~ strict_expr
+  val in_ = expect("in") ~ strict_expr
+  val let = LetIn.from(let_, eq_, in_)
+
+  val arrow_ = "->" ~ strict_expr
+  val cs = Case.from(exprs, cond, arrow_) // why not closeds
   val cases = "|".? ~ cs.rep(sep = "|")
 
   val fun = "\\" ~ Bind.from(cases)
 
-  val if_ = "if" ~ expr
-  val then_ = expect("then") ~ expr
-  val else_ = expect("else") ~ expr
-  val ite = IfThenElse.from(if_, then_, else_)
-
-  val let_ = "let" ~ closed
-  val eq_ = expect("=") ~ expr
-  val in_ = expect("in") ~ expr
-  val let = LetIn.from(let_, eq_, in_)
-
   val match_ = "match" ~ closeds
   val with_ = expect("with") ~ cases
   val matches = Match.from(match_, with_)
-  
+
   val lzy = "$" ~ Lazy.from(expr)
 
   val open = expr | anyid
 
   val app = App.from(closed, closeds)
   val inner = app | closed
-  
+
   val list = parens("[", closeds, "]") map builtin.reify
 
   val imports = "import" ~ Imports.from(names) ~ expect(";")
 
-  val lhs = expr ~ expect("==")
-  val rhs = expr ~ expect(";")
-  val df = Def.from(lhs, rhs)
-  val defs = "define" ~ Defs.from(df *) ~ "end" 
-  val tests = "test" ~ Tests.from(df *) ~ "end"
+  val rhs = expect("==") ~ strict_expr ~ expect(";")
+
+  val df = Def.from(expr, ret(None), rhs)
+  val dfs = df *
+
+  val df_cond = Def.from(expr, cond, rhs)
+  val dfs_cond = df_cond *
+
+  val pats = "pattern" ~ Pats.from(dfs) ~ "end"
+  val defs = "define" ~ Defs.from(dfs_cond) ~ "end"
+  val tests = "test" ~ Tests.from(dfs) ~ "end"
 
   val not = (fix | data) ~ expect(";")
   val nots = "notation" ~ Nots.from(not *) ~ "end"
 
-  val evals = "eval" ~ Evals.from(rhs *) ~ "end"
+  val eval = expr ~ expect(";")
+  val evals = "eval" ~ Evals.from(eval *) ~ "end"
 
-  val cmd = imports | nots | defs | tests | evals;
+  val cmd = imports | nots | pats | defs | tests | evals;
   val cmds = cmd *
 
   val module = Module.from(cmds)

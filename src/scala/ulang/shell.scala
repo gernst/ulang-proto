@@ -6,20 +6,24 @@ import java.io.Reader
 import arse._
 import scala.io.StdIn
 
-case class State(mods: Set[String], defs: List[Def]) extends Pretty {
+case class State(mods: Set[String], pats: List[Def], defs: List[Def]) extends Pretty {
   def +(ctx: String) = {
-    State(mods + ctx, defs)
+    State(mods + ctx, pats, defs)
   }
-  
-  def ++(that: List[Def]) = {
-    State(mods, defs ++ that)
+
+  def pattern(that: List[Def]) = {
+    State(mods, pats ++ that, defs)
+  }
+
+  def define(that: List[Def]) = {
+    State(mods, pats, defs ++ that)
   }
 }
 
 case class Model(dyn: Env) extends Pretty
 
 object State {
-  def empty = State(Set(), List())
+  def empty = State(Set(), Nil, Nil)
 }
 
 object shell {
@@ -54,7 +58,6 @@ object shell {
 
   def main(args: Array[String]) {
     load("base")
-    load("stream")
     // repl()
   }
 
@@ -66,10 +69,10 @@ object shell {
 
   def check() {
     merged(st).defs.collect {
-      case Def(fun, Bind(cases)) =>
+      case Def(fun, _, Bind(cases)) =>
         cases.tails.foreach {
-          case Case(pat1, _) :: xs =>
-            for (Case(pat2, _) <- xs) {
+          case Case(pat1, _, _) :: xs =>
+            for (Case(pat2, _, _) <- xs) {
               if (!compatible(pat1, pat2))
                 err("patterns " + App(fun, pat1) + " and " + App(fun, pat2) + " overlap")
             }
@@ -126,27 +129,27 @@ object shell {
   }
 
   def merged(st: State) = st match {
-    case State(mods, defs) =>
+    case State(mods, pats, defs) =>
       val funs = defs.distinct.collect {
-        case Def(App(id: Id, args), rhs) if !args.isEmpty =>
-          (id, Case(args, rhs))
+        case Def(App(id: Id, args), cond, rhs) if !args.isEmpty =>
+          (id, Case(args, cond, rhs))
       }
 
       val merged = group(funs).map {
         case (id, cases) =>
-          Def(id, Bind(cases))
+          Def(id, None, Bind(cases))
       }
 
       val consts = defs.collect {
-        case df @ Def(_: Id, rhs) =>
+        case df @ Def(_: Id, None, rhs) =>
           df
       }
 
-      State(mods, merged.toList ++ consts)
+      State(mods, pats, merged.toList ++ consts)
   }
 
   def model(st: State) = st match {
-    case State(_, defs) =>
+    case State(_, _, defs) =>
 
       val dyn = defs.foldLeft(Env.default) {
         case (dyn, df) =>
@@ -178,26 +181,29 @@ object shell {
           sys.error("unknown notation: " + not)
       }
 
+    case Pats(pats) =>
+      st = st pattern pats
+
     case Defs(defs) =>
       // out("checking " + existing.length + " existing patterns against " + defs.length + " new ones from " + ctx)
       st.defs.collect {
-        case Def(App(fun: Id, pat1), _) =>
+        case Def(App(fun: Id, pat1), _, _) =>
           defs.collect {
-            case Def(App(`fun`, pat2), _) =>
+            case Def(App(`fun`, pat2), _, _) =>
               // out("checking " + App(fun, pat1) + " and " + App(fun, pat2))
               if (!compatible(pat1, pat2))
                 err("patterns " + App(fun, pat1) + " and " + App(fun, pat2) + " overlap")
           }
       }
 
-      st ++= defs
+      st = st define defs
 
     case Tests(tests) =>
       val Model(dyn) = model(merged(st))
 
       new tst.Test {
         test(ctx) {
-          for (Def(lhs, rhs) <- tests) {
+          for (Def(lhs, None, rhs) <- tests) {
             eval(lhs, lex, dyn) expect eval(rhs, lex, dyn)
           }
         }
