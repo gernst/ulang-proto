@@ -22,11 +22,12 @@ package object ulang {
 
   val True = Tag("True")
   val False = Tag("False")
-  
+
   case class Ref[A](var get: A) {
     def set(a: A) { get = a }
     def map(f: A => A) { get = f(get) }
   }
-  
+
   type Env = Map[String, Val]
+  type Subst = Map[Expr, Expr]
 }

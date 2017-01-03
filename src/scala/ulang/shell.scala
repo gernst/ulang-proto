@@ -24,8 +24,10 @@ object shell {
   var st = State.empty
 
   def commands: Map[String, () => Any] = Map(
-    ":state" -> cmd(println(st)),
-    ":model" -> cmd(println(model(st))))
+    ":clear" -> cmd(st = State.empty),
+    ":state" -> cmd(out(st)),
+    ":model" -> cmd(out(model(st))),
+    ":check" -> cmd(check()))
 
   def prompt: String = "u> "
 
@@ -37,8 +39,8 @@ object shell {
     Console.out.flush
   }
 
-  def err(text: String) {
-    Console.err.println(text)
+  def err(obj: Any) {
+    Console.err.println(obj)
     Console.err.flush
   }
 
@@ -46,6 +48,26 @@ object shell {
 
   def main(args: Array[String]) {
     repl()
+  }
+
+  def check() {
+    merged(st).defs.collect {
+      case Def(fun, Bind(cases)) =>
+        cases.tails.foreach {
+          case Case(pat1, _) :: xs =>
+            for (Case(pat2, _) <- xs) {
+              val u = new unify
+
+              {
+                u.unify(pat1, pat2)
+                err("patterns " + Apply(fun, pat1) + " and " + Apply(fun, pat2) + " overlap")
+              } or {
+                // out("patterns " + Apply(fun, pat1) + " and " + Apply(fun, pat2) + " are disjoint")
+              }
+            }
+          case Nil =>
+        }
+    }
   }
 
   def repl() {
@@ -88,7 +110,7 @@ object shell {
     }
   }
 
-  def model(st: State) = st match {
+  def merged(st: State) = st match {
     case State(defs) =>
       val funs = defs.collect {
         case Def(Apply(id: Id, args), rhs) if !args.isEmpty =>
@@ -105,11 +127,17 @@ object shell {
           df
       }
 
-      val dyn = (merged ++ consts).foldLeft(Env.default) {
+      State(merged.toList ++ consts)
+  }
+
+  def model(st: State) = st match {
+    case State(defs) =>
+
+      val dyn = defs.foldLeft(Env.default) {
         case (dyn, df) =>
           dyn + eval(df, lex, dyn)
       }
-      
+
       Model(dyn)
   }
 
@@ -139,13 +167,10 @@ object shell {
       st ++= defs
 
     case Evals(exprs) =>
-      val Model(dyn) = model(st)
+      val Model(dyn) = model(merged(st))
 
       for (expr <- exprs) {
-        println(expr)
-        print("  == ")
-        print(eval(expr, lex, dyn))
-        println(";")
+        out(expr + " == " + eval(expr, lex, dyn) + ";")
       }
   }
 }
