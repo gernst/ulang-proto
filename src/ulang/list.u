@@ -6,11 +6,18 @@ notation
 end
 
 define
+  list None == [];
+  list (Some x) == [x];
+
   [] ++ ys == ys;
   (x :: xs) ++ ys == x :: (xs ++ ys);
 
   map f [] == [];
   map f (x :: xs) == (f x) :: (map f xs);
+  
+  collect f [] == [];
+  collect f (x :: xs)
+    == list (f x) ++ collect f xs;
 
   foldl f z [] == z;
   foldl f z (x :: xs) == foldl f (f z x) xs;

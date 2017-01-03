@@ -31,6 +31,8 @@ object printer {
       "let " + pat + " = " + arg + " in " + body
     case IfThenElse(test, iftrue, iffalse) =>
       "if " + test + " then " + iftrue + " else " + iffalse
+    case Lazy(body) =>
+      "$ " + body
 
     case Def(lhs, rhs) =>
       lhs + " == " + rhs + ";"
@@ -81,5 +83,12 @@ object printer {
       "(" + arg1 + " " + name + " " + arg2 + ")"
     case Obj(Tag(name), args) =>
       (name :: args).mkString("(", " ", ")")
+    case susp @ Susp(body, lex) =>
+      susp.memo match {
+        case Some(v) =>
+          "$ " + v
+        case None =>
+          "$ " + body + lex.keys.mkString(" [", ", ", "]")
+      }
   }
 }

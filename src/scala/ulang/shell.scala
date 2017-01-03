@@ -54,7 +54,7 @@ object shell {
 
   def main(args: Array[String]) {
     load("base")
-    repl()
+    // repl()
   }
 
   def compatible(pat1: List[Expr], pat2: List[Expr]) = {

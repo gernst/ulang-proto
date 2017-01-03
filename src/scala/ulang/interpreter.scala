@@ -10,6 +10,15 @@ case class Clos(cases: List[Case], lex: Env) extends Val
 case class Prim(name: String, f: List[Val] => Val) extends Val
 case class Obj(tag: Tag, args: List[Val]) extends Val
 
+case class Susp(body: Expr, lex: Env) extends Val {
+  var memo: Option[Val] = None
+  def getOrElseUpdate(f: => Val) = {
+    if (memo == None)
+      memo = Some(f)
+    memo.get
+  }
+}
+
 object Env {
   val empty: Env = Map.empty
   val default: Env = Map("=" -> builtin.equal, "print" -> builtin.print)
@@ -41,9 +50,18 @@ object builtin {
 }
 
 object interpreter {
-  def bind(pat: Expr, arg: Val, env: Env): Env = pat match {
+  def bind(pat: Expr, arg: Val, dyn: Env, env: Env): Env = pat match {
     case Wildcard =>
       env
+
+    case Lazy(pat) =>
+      arg match {
+        case arg @ Susp(body, lex) =>
+          val inner = arg.getOrElseUpdate(eval(body, lex, dyn))
+            bind(pat, inner, dyn, env)
+        case _ =>
+          fail
+      }
 
     case id @ Tag(_) =>
       if (id == arg) env
@@ -59,7 +77,7 @@ object interpreter {
     case App(pfun, parg) =>
       arg match {
         case Obj(vfun, varg) =>
-          bind(parg, varg, bind(pfun, vfun, env))
+          bind(parg, varg, dyn, bind(pfun, vfun, dyn, env))
         case _ =>
           fail
       }
@@ -68,12 +86,12 @@ object interpreter {
       fail
   }
 
-  def bind(pats: List[Expr], args: List[Val], env: Env): Env = (pats, args) match {
+  def bind(pats: List[Expr], args: List[Val], dyn: Env, env: Env): Env = (pats, args) match {
     case (Nil, Nil) =>
       env
 
     case (pat :: pats, arg :: args) =>
-      bind(pats, args, bind(pat, arg, env))
+      bind(pats, args, dyn, bind(pat, arg, dyn, env))
 
     case _ =>
       fail
@@ -89,7 +107,7 @@ object interpreter {
 
   def apply(cs: Case, args: List[Val], lex: Env, dyn: Env): Val = cs match {
     case Case(pats, body) =>
-      val env = bind(pats, args, Env.empty)
+      val env = bind(pats, args, dyn, Env.empty)
       eval(body, lex ++ env, dyn)
   }
 
@@ -135,7 +153,7 @@ object interpreter {
 
     case LetIn(pat, _arg, body) =>
       val arg = eval(_arg, lex, dyn)
-      val env = bind(pat, arg, lex) or sys.error("cannot bind " + pat + " to " + arg)
+      val env = bind(pat, arg, dyn, lex) or sys.error("cannot bind " + pat + " to " + arg)
       eval(body, env, dyn)
 
     case IfThenElse(test, arg1, arg2) =>
@@ -144,6 +162,9 @@ object interpreter {
         case builtin.False => eval(arg2, lex, dyn)
         case res => sys.error("not a boolean value: " + res)
       }
+
+    case Lazy(body) =>
+      Susp(body, lex)
 
     case App(fun, args) =>
       apply(eval(fun, lex, dyn), eval(args, lex, dyn), dyn)

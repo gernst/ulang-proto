@@ -42,7 +42,7 @@ object grammar {
   import arse.Recognizer._
   import arse.Mixfix._
 
-  val keywords = Set(";", "(", ")", "{", "}", "[", "]", "->", "==", "|", "\\",
+  val keywords = Set(";", "(", ")", "{", "}", "[", "]", "->", "==", "$", "|", "\\",
     "if", "then", "else", "let", "in", "match", "with", "end")
 
   val name = string filterNot keywords
@@ -52,7 +52,7 @@ object grammar {
   val expr: Parser[List[String], Expr] = mixfix(inner, Atom, App, operators)
   val exprs = expr +
 
-  val closed: Parser[List[String], Expr] = Parser.rec(parens("(", open, ")") | fun | matches | ite | let | list | id)
+  val closed: Parser[List[String], Expr] = Parser.rec(parens("(", open, ")") | fun | matches | ite | let | lzy | list | id)
   val closeds = closed +
 
   val left = lit("left", Left)
@@ -92,6 +92,8 @@ object grammar {
   val match_ = "match" ~ closeds
   val with_ = expect("with") ~ cases
   val matches = Match.from(match_, with_)
+  
+  val lzy = "$" ~ Lazy.from(expr)
 
   val open = expr | anyid
 

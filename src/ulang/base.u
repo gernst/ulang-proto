@@ -13,6 +13,8 @@ define
   uncurry f == \x     y -> (f x) y;
   
   g . f == \x -> g (f x);
+  
+  force $ x == x;
 end
 
 test
@@ -22,3 +24,24 @@ end
 
 import
   bool nat option list;
+
+define
+  flatmap f xs == flatten (map f xs);
+end
+
+eval
+  flatten [[A B] [C D]];
+  flatten (Some (Some A));
+  
+  $ x;
+  let z = $ X
+  in [z (force z) z];
+  
+  flatmap (\x -> [X x]) [A B C];
+  collect (\x -> if x = B then None else Some x) [A B C];
+  /* [ if x = B then None else Some x
+     | x <- [A B C]
+     ] */
+     
+     
+end
