@@ -52,7 +52,7 @@ object grammar {
   val expr: Parser[List[String], Expr] = mixfix(inner, Atom, App, operators)
   val exprs = expr +
 
-  val closed: Parser[List[String], Expr] = Parser.rec(parens(open) | fun | matches | ite | let | id)
+  val closed: Parser[List[String], Expr] = Parser.rec(parens("(", open, ")") | fun | matches | ite | let | list | id)
   val closeds = closed +
 
   val left = lit("left", Left)
@@ -95,8 +95,10 @@ object grammar {
 
   val open = expr | anyid
 
-  val app = App.from(closed, closed +)
+  val app = App.from(closed, closeds)
   val inner = app | closed
+  
+  val list = parens("[", closeds, "]") map builtin.reify
 
   val imports = "import" ~ Imports.from(names) ~ expect(";")
 

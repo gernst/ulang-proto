@@ -16,7 +16,14 @@ object Env {
 }
 
 object builtin {
+  val True = Tag("True")
+  val False = Tag("False")
   def reify(b: Boolean) = if (b) True else False
+
+  val Nil = Tag("[]")
+  val Cons = Tag("::")
+  def cons(h: Expr, t: Expr) = App(Cons, List(h, t))
+  def reify(es: List[Expr]) = es.foldRight(Nil: Expr)(cons)
 
   val equal = Prim("=", { case List(obj1, obj2) => reify(_equal(obj1, obj2)) })
   val print = Prim("print", { case List(obj) => println(obj); obj })
@@ -133,8 +140,8 @@ object interpreter {
 
     case IfThenElse(test, arg1, arg2) =>
       eval(test, lex, dyn) match {
-        case True => eval(arg1, lex, dyn)
-        case False => eval(arg2, lex, dyn)
+        case builtin.True => eval(arg1, lex, dyn)
+        case builtin.False => eval(arg2, lex, dyn)
         case res => sys.error("not a boolean value: " + res)
       }
 

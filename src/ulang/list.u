@@ -59,3 +59,7 @@ definitions
   index x (x :: xs) == Some 0;
   index x (y :: xs) == index x xs +1;
 end
+
+eval
+  map (+1) [0 1 2];
+end

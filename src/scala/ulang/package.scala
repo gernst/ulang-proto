@@ -10,7 +10,8 @@ package object ulang {
   import arse.Recognizer._
 
   def expect(s: String) = s ! "expected '" + s + "'"
-  def parens[A](p: Parser[List[String], A]) = "(" ~ p ~ expect(")")
+  def parens[A](s0: String, p: Parser[List[String], A], s1: String) = s0 ~ p ~ expect(s1)
+
 
   def group[A, B](xs: List[(A, B)]) = {
     xs.groupBy(_._1).map {
@@ -19,9 +20,6 @@ package object ulang {
   }
 
   val Wildcard = Id("_")
-
-  val True = Tag("True")
-  val False = Tag("False")
 
   case class Ref[A](var get: A) {
     def set(a: A) { get = a }
