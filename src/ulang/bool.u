@@ -7,7 +7,7 @@ notation
   infix       1 <=>;
 end
 
-defines
+define
   not True  == False;
   not False == True;
   

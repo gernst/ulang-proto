@@ -62,7 +62,7 @@ object printer {
     case Module(defs) =>
       defs.mkString("", "\n", "\n")
 
-    case State(defs) =>
+    case State(_, defs) =>
       defs.mkString("", "\n", "\n")
 
     case Model(dyn) =>

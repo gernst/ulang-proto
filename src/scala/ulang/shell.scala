@@ -6,14 +6,20 @@ import java.io.Reader
 import arse._
 import scala.io.StdIn
 
-case class State(defs: List[Def]) extends Pretty {
-  def ++(that: List[Def]) = State(defs ++ that)
+case class State(mods: Set[String], defs: List[Def]) extends Pretty {
+  def +(ctx: String) = {
+    State(mods + ctx, defs)
+  }
+  
+  def ++(that: List[Def]) = {
+    State(mods, defs ++ that)
+  }
 }
 
 case class Model(dyn: Env) extends Pretty
 
 object State {
-  def empty = State(Nil)
+  def empty = State(Set(), List())
 }
 
 object shell {
@@ -47,7 +53,14 @@ object shell {
   def cmd(c: => Any) = { () => c }
 
   def main(args: Array[String]) {
+    load("base")
     repl()
+  }
+
+  def compatible(pat1: List[Expr], pat2: List[Expr]) = {
+    val u = new unify
+
+    { u.unify(pat1, pat2); false } or { true }
   }
 
   def check() {
@@ -56,14 +69,8 @@ object shell {
         cases.tails.foreach {
           case Case(pat1, _) :: xs =>
             for (Case(pat2, _) <- xs) {
-              val u = new unify
-
-              {
-                u.unify(pat1, pat2)
+              if (!compatible(pat1, pat2))
                 err("patterns " + App(fun, pat1) + " and " + App(fun, pat2) + " overlap")
-              } or {
-                // out("patterns " + App(fun, pat1) + " and " + App(fun, pat2) + " are disjoint")
-              }
             }
           case Nil =>
         }
@@ -86,7 +93,7 @@ object shell {
           case line if line startsWith ":" =>
             sys.error("unknown command " + line)
           case line =>
-            read(line)
+            read("", line)
         }
       } catch {
         case e: StackOverflowError =>
@@ -98,20 +105,27 @@ object shell {
     }
   }
 
-  def read(reader: Reader): Unit = {
+  def load(name: String) {
+    if (!(st.mods contains name)) {
+      st += name
+      read(name, new File("src/ulang/" + name + ".u"))
+    }
+  }
+
+  def read(ctx: String, reader: Reader): Unit = {
     var in = tokenize(reader)
 
     while (!in.isEmpty) {
       val (cmd, rest) = grammar.cmd(in)
       if (rest.length == in.length)
         sys.error("syntax error at " + rest.mkString(" "))
-      exec(cmd)
+      exec(ctx, cmd)
       in = rest
     }
   }
 
   def merged(st: State) = st match {
-    case State(defs) =>
+    case State(mods, defs) =>
       val funs = defs.distinct.collect {
         case Def(App(id: Id, args), rhs) if !args.isEmpty =>
           (id, Case(args, rhs))
@@ -127,11 +141,11 @@ object shell {
           df
       }
 
-      State(merged.toList ++ consts)
+      State(mods, merged.toList ++ consts)
   }
 
   def model(st: State) = st match {
-    case State(defs) =>
+    case State(_, defs) =>
 
       val dyn = defs.foldLeft(Env.default) {
         case (dyn, df) =>
@@ -141,12 +155,12 @@ object shell {
       Model(dyn)
   }
 
-  def exec(cmd: Cmd): Unit = cmd match {
+  def exec(ctx: String, cmd: Cmd): Unit = cmd match {
     case Imports(names) =>
       import parser._
 
       for (name <- names) {
-        read(new File("src/ulang/" + name + ".u"))
+        load(name)
       }
 
     case Nots(nots) =>
@@ -164,7 +178,29 @@ object shell {
       }
 
     case Defs(defs) =>
+      // out("checking " + existing.length + " existing patterns against " + defs.length + " new ones from " + ctx)
+      st.defs.collect {
+        case Def(App(fun: Id, pat1), _) =>
+          defs.collect {
+            case Def(App(`fun`, pat2), _) =>
+              // out("checking " + App(fun, pat1) + " and " + App(fun, pat2))
+              if (!compatible(pat1, pat2))
+                err("patterns " + App(fun, pat1) + " and " + App(fun, pat2) + " overlap")
+          }
+      }
+
       st ++= defs
+
+    case Tests(tests) =>
+      val Model(dyn) = model(merged(st))
+
+      new tst.Test {
+        test(ctx) {
+          for (Def(lhs, rhs) <- tests) {
+            eval(lhs, lex, dyn) expect eval(rhs, lex, dyn)
+          }
+        }
+      }
 
     case Evals(exprs) =>
       val Model(dyn) = model(merged(st))

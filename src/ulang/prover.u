@@ -1,4 +1,4 @@
-defines
+define
 
 triv (Not False) == True;
 triv (Not True)  == False;

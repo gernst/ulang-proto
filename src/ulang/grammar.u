@@ -1,6 +1,6 @@
 import prelude;
 
-defines
+define
   ulang defs
     == map split defs;
   

@@ -5,7 +5,7 @@ notation
   infix right 9 , .;
 end
 
-defines
+define
   id x == x;
   const x == \y -> x;
   
@@ -14,3 +14,11 @@ defines
   
   g . f == \x -> g (f x);
 end
+
+test
+  id A == A;
+  (const A) B == A;
+end
+
+import
+  bool nat option list;

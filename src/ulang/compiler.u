@@ -1,7 +1,4 @@
-import
-  nat list;
-
-defines
+define
   debruijn (Const z) stack
     == Const z;
 
@@ -36,19 +33,19 @@ defines
     
     
   compile (Const z)
-    == list (Const z);
+    == [(Const z)];
   
   compile (Var i)
-    == list (Get i);
+    == [(Get i)];
     
   compile (Let a b)
-    == compile a ++ list Store ++ compile b;
+    == compile a ++ [Store] ++ compile b;
 
   compile (App f a)
-    == compile a ++ compile f ++ list Apply;
+    == compile a ++ compile f ++ [Apply];
     
   compile (Lambda b)
-    == list (Close (compile b ++ list Return));
+    == [ (Close (compile b ++ [Return])) ];
   
     
   exec [] env (x :: stack)
