@@ -213,7 +213,7 @@ object shell {
       val Model(dyn) = model(merged(st))
 
       for (expr <- exprs) {
-        out(expr + " == " + eval(expr, lex, dyn) + ";")
+        out(expr + "\n  == " + eval(expr, lex, dyn) + ";")
       }
   }
 }
