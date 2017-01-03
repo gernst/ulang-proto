@@ -21,7 +21,9 @@ case class Bind(cases: List[Case]) extends Expr
 case class Match(args: List[Expr], cases: List[Case]) extends Expr
 case class LetIn(pat: Expr, arg: Expr, body: Expr) extends Expr
 case class IfThenElse(test: Expr, iftrue: Expr, iffalse: Expr) extends Expr
-case class Lazy(body: Expr) extends Expr
+
+case class Force(body: Pat) extends Pat
+case class Susp(body: Expr) extends Expr
 
 sealed trait Not extends Pretty
 case class Data(names: List[String]) extends Not

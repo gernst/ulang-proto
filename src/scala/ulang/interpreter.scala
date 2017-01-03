@@ -10,7 +10,7 @@ case class Clos(cases: List[Case], lex: Env) extends Val
 case class Prim(name: String, f: List[Val] => Val) extends Val
 case class Obj(tag: Tag, args: List[Val]) extends Val
 
-case class Susp(body: Expr, lex: Env) extends Val {
+case class Lazy(body: Expr, lex: Env) extends Val {
   var memo: Option[Val] = None
   def getOrElseUpdate(f: => Val) = {
     if (memo == None)
@@ -54,9 +54,9 @@ object interpreter {
     case Id("_") =>
       env
 
-    case Lazy(pat) =>
+    case Susp(pat) =>
       arg match {
-        case arg @ Susp(body, lex) =>
+        case arg @ Lazy(body, lex) =>
           val inner = arg.getOrElseUpdate(eval(body, lex, dyn))
             bind(pat, inner, dyn, env)
         case _ =>
@@ -169,8 +169,8 @@ object interpreter {
         case res => sys.error("not a condition in test: " + res)
       }
 
-    case Lazy(body) =>
-      Susp(body, lex)
+    case Susp(body) =>
+      Lazy(body, lex)
 
     case App(fun, args) =>
       apply(eval(fun, lex, dyn), eval(args, lex, dyn), dyn)

@@ -45,27 +45,27 @@ object grammar {
   val keywords = Set(";", "(", ")", "{", "}", "[", "]", "->", "==", "$", "|", "\\",
     "if", "then", "else", "let", "in", "match", "with", "end")
 
+  val strict_int = expect("number", int)
   val name = string filterNot keywords
   val names = name *
   val nonmixfix = name filterNot operators.contains
 
   val expr: Parser[List[String], Expr] = mixfix(inner, Atom, App, operators)
-  val exprs = expr +
-
   val strict_expr = expect("expression", expr)
 
-  val closed: Parser[List[String], Expr] = Parser.rec(parens("(", open, ")") | fun | matches | ite | let | lzy | list | id)
-  val closeds = closed +
+  val arg: Parser[List[String], Expr] = Parser.rec(parens("(", open, ")") | fun | matches | ite | let | susp | list | id)
+  // val pats = expect("patterns", arg +)
+  val args = arg +
+  val strict_arg = expect("closed expression", arg)
+  val strict_args = expect("list of expressions", args)
 
   val left = lit("left", Left)
   val right = lit("right", Right)
-  val non = ret[List[String], Assoc](Non)
+  val assoc = left | right | ret(Non)
 
-  val assoc = left | right | non
-
-  val prefix = "prefix" ~ Prefix.from(int)
-  val postfix = "postfix" ~ Postfix.from(int)
-  val infix = "infix" ~ Infix.from(assoc, int)
+  val prefix = "prefix" ~ Prefix.from(strict_int)
+  val postfix = "postfix" ~ Postfix.from(strict_int)
+  val infix = "infix" ~ Infix.from(assoc, strict_int)
 
   val fixity = prefix | postfix | infix
 
@@ -81,49 +81,45 @@ object grammar {
   val ite = IfThenElse.from(if_, then_, else_)
   val cond = if_ ?
 
-  val let_ = "let" ~ closed
+  val let_ = "let" ~ strict_arg
   val eq_ = expect("=") ~ strict_expr
   val in_ = expect("in") ~ strict_expr
   val let = LetIn.from(let_, eq_, in_)
 
   val arrow_ = "->" ~ strict_expr
-  val cs = Case.from(exprs, cond, arrow_) // why not closeds
+  val cs = Case.from(args, cond, arrow_)
   val cases = "|".? ~ cs.rep(sep = "|")
 
   val fun = "\\" ~ Bind.from(cases)
 
-  val match_ = "match" ~ closeds
+  val match_ = "match" ~ strict_args
   val with_ = expect("with") ~ cases
   val matches = Match.from(match_, with_)
 
-  val lzy = "$" ~ Lazy.from(expr)
+  val susp = "$" ~ Susp.from(strict_expr)
 
   val open = expr | anyid
 
-  val app = App.from(closed, closeds)
-  val inner = app | closed
+  val app = App.from(arg, args)
+  val inner = app | arg
 
-  val list = parens("[", closeds, "]") map builtin.reify
+  val list = parens("[", arg *, "]") map builtin.reify
 
-  val imports = "import" ~ Imports.from(names) ~ expect(";")
+  def section[A, B](s0: String, c: List[A] => B, p: Parser[List[String], A], s1: String) = {
+    val q = p ~ expect(";")
+    parens(s0, c.from(q *), s1)
+  }
 
-  val rhs = expect("==") ~ strict_expr ~ expect(";")
+  val eqq_ = expect("==") ~ strict_expr
+  val df = Def.from(expr, ret(None), eqq_)
+  val df_cond = Def.from(expr, cond, eqq_)
 
-  val df = Def.from(expr, ret(None), rhs)
-  val dfs = df *
-
-  val df_cond = Def.from(expr, cond, rhs)
-  val dfs_cond = df_cond *
-
-  val pats = "pattern" ~ Pats.from(dfs) ~ "end"
-  val defs = "define" ~ Defs.from(dfs_cond) ~ "end"
-  val tests = "test" ~ Tests.from(dfs) ~ "end"
-
-  val not = (fix | data) ~ expect(";")
-  val nots = "notation" ~ Nots.from(not *) ~ "end"
-
-  val eval = expr ~ expect(";")
-  val evals = "eval" ~ Evals.from(eval *) ~ "end"
+  val imports = parens("import", Imports.from(names), ";")
+  val pats = section("pattern", Pats, df, "end")
+  val defs = section("define", Defs, df_cond, "end")
+  val tests = section("test", Tests, df, "end")
+  val nots = section("notation", Nots, fix | data, "end")
+  val evals = section("eval", Evals, expr, "end")
 
   val cmd = imports | nots | pats | defs | tests | evals;
   val cmds = cmd *

@@ -8,10 +8,22 @@ trait Pretty {
 
 object printer {
   def print(any: Pretty): String = any match {
+    case Wildcard =>
+      "_"
+
     case Atom(name) if operators contains name =>
       "(" + name + ")"
     case Atom(name) =>
       name
+
+    case UnApp(Atom(name), List(arg)) if operators.prefix_ops contains name =>
+      "(" + name + " " + arg + ")"
+    case UnApp(Atom(name), List(arg)) if operators.postfix_ops contains name =>
+      "(" + arg + " " + name + ")"
+    case UnApp(Atom(name), List(arg1, arg2)) if operators.infix_ops contains name =>
+      "(" + arg1 + " " + name + " " + arg2 + ")"
+    case UnApp(fun, args) =>
+      (fun :: args).mkString("(", " ", ")")
 
     case App(Atom(name), List(arg)) if operators.prefix_ops contains name =>
       "(" + name + " " + arg + ")"
@@ -21,10 +33,12 @@ object printer {
       "(" + arg1 + " " + name + " " + arg2 + ")"
     case App(fun, args) =>
       (fun :: args).mkString("(", " ", ")")
+
     case Case(pats, None, body) =>
       pats.mkString(" ") + " -> " + body
     case Case(pats, Some(cond), body) =>
       pats.mkString(" ") + " if " + cond + " -> " + body
+
     case Bind(cases) =>
       "\\ " + cases.mkString(" | ")
     case Match(args, cases) =>
@@ -33,7 +47,7 @@ object printer {
       "let " + pat + " = " + arg + " in " + body
     case IfThenElse(test, iftrue, iffalse) =>
       "if " + test + " then " + iftrue + " else " + iffalse
-    case Lazy(body) =>
+    case Susp(body) =>
       "$ " + body
 
     case Def(lhs, None, rhs) =>
@@ -89,8 +103,8 @@ object printer {
       "(" + arg1 + " " + name + " " + arg2 + ")"
     case Obj(Tag(name), args) =>
       (name :: args).mkString("(", " ", ")")
-    case susp @ Susp(body, lex) =>
-      susp.memo match {
+    case lzy @ Lazy(body, lex) =>
+      lzy.memo match {
         case Some(v) =>
           "$ " + v
         case None =>
