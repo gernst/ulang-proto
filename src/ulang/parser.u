@@ -1,20 +1,13 @@
-import
-  list;
-
 define
-  fail _
-    == Failure;
-  
-  return a
-    == Parser \src -> Success a src;
-  
-  map f (Success a src)
+  bind f (Success a src)
     == parse (f a) src;
+  bind f Failure
+    == Failure;
+
+  map f (Success a src)
+    == Success (f a) src;
   map f  Failure
     == Failure;
-    
-  map f (Parser p)
-    == Parser \src -> map f (p src);
   
   filter p (Success a src)
     == if (p a)
@@ -22,42 +15,52 @@ define
        else Failure;
   filter p Failure
     == Failure;
+end
 
-  filter p (Parser q)
-    == Parser \src -> filter p (q src);
+
+define
+  parse (Parser p) src
+    == p src;
   
-  bind (Parser p) f
-    == Parser \src -> map f (p src);
+  fail
+    == Parser \_ -> Failure;
   
-  (Success a src) or p == (Success a src);
-  Failure or p == p;
-  
-  (Parser p) or (Parser q)
-    == Parser \src -> match (p src) with
-         | Failure -> q src
-         | res -> res;
+  return a
+    == Parser \src -> Success a src;
   
   item
     == Parser \ [] -> Failure
               | (a :: src) -> Success a src;
   
-  lit a
+  literal a
     == filter (\b -> a = b) item;
+    
+  bind (Parser p) f
+    == Parser \src -> bind f (p src);
+
+  map f (Parser p)
+    == Parser \src -> map f (p src);
+
+  filter p (Parser q)
+    == Parser \src -> filter p (q src);
+  
+  (Parser p) or (Parser q)
+    == Parser \src -> match (p src) with
+         | Failure -> q src
+         | res -> res;
 
   seq f p q
     == bind p \a ->
        bind q \b ->
          return (a,b);
-  
+
   pair p q == seq (,) p q;
-  
-  parse (Parser p) src == p src;
   
   src == (A :: B :: C :: []);
 end
 
 eval
   parse item src;
-  parse (lit B) src;
+  parse (literal B) src;
   parse (pair item item) src;
 end
