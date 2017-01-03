@@ -1,7 +1,7 @@
 import
   nat list;
 
-definitions
+defines
   debruijn (Const z) stack
     == Const z;
 

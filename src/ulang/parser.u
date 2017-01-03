@@ -1,7 +1,7 @@
 import
   list;
 
-definitions
+defines
   fail _
     == Failure;
   

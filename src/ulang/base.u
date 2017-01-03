@@ -5,7 +5,7 @@ notation
   infix right 9 , .;
 end
 
-definitions
+defines
   id x == x;
   const x == \y -> x;
   

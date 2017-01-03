@@ -105,14 +105,15 @@ object grammar {
   val lhs = expr ~ expect("==")
   val rhs = expr ~ expect(";")
   val df = Def.from(lhs, rhs)
-  val defs = "definitions" ~ Defs.from(df *) ~ "end"
+  val defs = "define" ~ Defs.from(df *) ~ "end" 
+  val tests = "test" ~ Tests.from(df *) ~ "end"
 
   val not = (fix | data) ~ expect(";")
   val nots = "notation" ~ Nots.from(not *) ~ "end"
 
   val evals = "eval" ~ Evals.from(rhs *) ~ "end"
 
-  val cmd = imports | nots | defs | evals;
+  val cmd = imports | nots | defs | tests | evals;
   val cmds = cmd *
 
   val module = Module.from(cmds)

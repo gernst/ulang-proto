@@ -26,6 +26,7 @@ case class Def(lhs: Expr, rhs: Expr) extends Pretty
 sealed trait Cmd extends Pretty
 case class Imports(names: List[String]) extends Cmd
 case class Nots(fixs: List[Not]) extends Cmd
+case class Tests(tests: List[Def]) extends Cmd
 case class Defs(defs: List[Def]) extends Cmd
 case class Evals(exprs: List[Expr]) extends Cmd
 

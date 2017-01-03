@@ -53,7 +53,9 @@ object printer {
     case Nots(fixs) =>
       fixs.mkString("notation\n  ", "\n  ", "\nend\n")
     case Defs(defs) =>
-      defs.mkString("definitions\n  ", "\n  ", "\nend\n")
+      defs.mkString("define\n  ", "\n  ", "\nend\n")
+    case Tests(tests) =>
+      tests.mkString("test\n  ", "\n  ", "\nend\n")
     case Evals(exprs) =>
       exprs.mkString("eval\n  ", "\n  ", "\nend\n")
 

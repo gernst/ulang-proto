@@ -8,7 +8,7 @@ notation
   infix right 7 ++;
 end
 
-definitions
+defines
   list a == a :: [];
   list a b == a :: b :: [];
 
