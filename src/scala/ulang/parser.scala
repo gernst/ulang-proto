@@ -46,23 +46,13 @@ object grammar {
     "if", "then", "else", "let", "in", "match", "with", "end")
 
   val strict_int = expect("number", int)
+
   val name = string filterNot keywords
   val names = name *
   val nonmixfix = name filterNot operators.contains
 
-  val pat: Parser[List[String], Pat] = ??? //mixfix(inner, Atom, App, operators)
-  val pats = pat +
-  val strict_pat = expect("pattern", pat)
-
-
-  val expr: Parser[List[String], Expr] = mixfix(inner, Atom, App, operators)
-  val strict_expr = expect("expression", expr)
-
-  val arg: Parser[List[String], Expr] = Parser.rec(parens("(", open, ")") | fun | matches | ite | let | susp | list | id)
-  // val pats = expect("patterns", arg +)
-  val args = arg +
-  val strict_arg = expect("closed expression", arg)
-  val strict_args = expect("list of expressions", args)
+  val atom = Atom.from(nonmixfix)
+  val anyatom = Atom.from(name)
 
   val left = lit("left", Left)
   val right = lit("right", Right)
@@ -77,8 +67,22 @@ object grammar {
   val fix = Fix.from(fixity, names)
   val data = "data" ~ Data.from(names)
 
-  val id = Atom.from(nonmixfix)
-  val anyid = Atom.from(name)
+  val pat: Parser[List[String], Pat] = mixfix(inner_pat, Atom, UnApp, operators)
+  val pats = pat +
+  val strict_pat = expect("pattern", pat)
+
+  val patarg: Parser[List[String], Pat] = Parser.rec(parens("(", patopen, ")") | force | patlist | atom)
+  val patargs = patarg +
+  val strict_patarg = expect("closed pattern", patarg)
+  val strict_patargs = expect("list of patterns", patargs)
+
+  val expr: Parser[List[String], Expr] = mixfix(inner_expr, Atom, App, operators)
+  val strict_expr = expect("expression", expr)
+
+  val arg: Parser[List[String], Expr] = Parser.rec(parens("(", open, ")") | fun | matches | ite | let | susp | list | atom)
+  val args = arg +
+  val strict_arg = expect("closed expression", arg)
+  val strict_args = expect("list of expressions", args)
 
   val if_ = "if" ~ strict_expr
   val then_ = expect("then") ~ strict_expr
@@ -86,7 +90,7 @@ object grammar {
   val ite = IfThenElse.from(if_, then_, else_)
   val cond = if_ ?
 
-  val let_ = "let" ~ strict_pat
+  val let_ = "let" ~ strict_patarg
   val eq_ = expect("=") ~ strict_expr
   val in_ = expect("in") ~ strict_expr
   val let = LetIn.from(let_, eq_, in_)
@@ -101,14 +105,20 @@ object grammar {
   val with_ = expect("with") ~ cases
   val matches = Match.from(match_, with_)
 
+  val force = "$" ~ Force.from(strict_pat)
   val susp = "$" ~ Susp.from(strict_expr)
 
-  val open = expr | anyid
+  val open = expr | anyatom
+  val patopen = pat | anyatom
 
+  val unapp = UnApp.from(patarg, patargs)
   val app = App.from(arg, args)
-  val inner = app | arg
+
+  val inner_pat = unapp | patarg
+  val inner_expr = app | arg
 
   val list = parens("[", arg *, "]") map builtin.reify
+  val patlist = parens("[", patarg *, "]") map builtin.reify
 
   def section[A, B](s0: String, c: List[A] => B, p: Parser[List[String], A], s1: String) = {
     val q = p ~ expect(";")
@@ -118,7 +128,7 @@ object grammar {
   val eqq_ = expect("==") ~ strict_expr
   val df = Def.from(pat, ret(None), eqq_)
   val df_cond = Def.from(pat, cond, eqq_)
-  
+
   val test = Test.from(expr, eqq_)
 
   val imports = parens("import", Imports.from(names), ";")

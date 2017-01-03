@@ -44,7 +44,7 @@ case class Module(cmds: List[Cmd]) extends Pretty {
   def ++(that: Module) = Module(this.cmds ++ that.cmds)
 }
 
-object Atom extends (String => Expr) {
+object Atom extends (String => Atom) {
   def isTag(name: String) = {
     name.head.isUpper || (operators.data contains name)
   }

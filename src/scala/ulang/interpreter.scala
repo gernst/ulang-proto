@@ -30,8 +30,12 @@ object builtin {
   def reify(b: Boolean) = if (b) True else False
 
   val Nil = Tag("[]")
-  val Cons = Tag("::")
+  val Cons = Tag("::") 
+  
+  def uncons(h: Pat, t: Pat) = UnApp(Cons, List(h, t))
   def cons(h: Expr, t: Expr) = App(Cons, List(h, t))
+  
+  def reify(ps: List[Pat]) = ps.foldRight(Nil: Pat)(uncons)
   def reify(es: List[Expr]) = es.foldRight(Nil: Expr)(cons)
 
   val equal = Prim("=", { case List(obj1, obj2) => reify(_equal(obj1, obj2)) })
