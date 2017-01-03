@@ -50,18 +50,9 @@ object builtin {
 }
 
 object interpreter {
-  def bind(pat: Expr, arg: Val, dyn: Env, env: Env): Env = pat match {
-    case Id("_") =>
+  def bind(pat: Pat, arg: Val, dyn: Env, env: Env): Env = pat match {
+    case Wildcard =>
       env
-
-    case Susp(pat) =>
-      arg match {
-        case arg @ Lazy(body, lex) =>
-          val inner = arg.getOrElseUpdate(eval(body, lex, dyn))
-            bind(pat, inner, dyn, env)
-        case _ =>
-          fail
-      }
 
     case id @ Tag(_) =>
       if (id == arg) env
@@ -74,19 +65,25 @@ object interpreter {
         case _ => fail
       }
 
-    case App(pfun, parg) =>
+    case Force(pat) =>
+      arg match {
+        case arg @ Lazy(body, lex) =>
+          val inner = arg.getOrElseUpdate(eval(body, lex, dyn))
+            bind(pat, inner, dyn, env)
+        case _ =>
+          fail
+      }
+      
+    case UnApp(pfun, parg) =>
       arg match {
         case Obj(vfun, varg) =>
           bind(parg, varg, dyn, bind(pfun, vfun, dyn, env))
         case _ =>
           fail
       }
-
-    case _ =>
-      fail
   }
 
-  def bind(pats: List[Expr], args: List[Val], dyn: Env, env: Env): Env = (pats, args) match {
+  def bind(pats: List[Pat], args: List[Val], dyn: Env, env: Env): Env = (pats, args) match {
     case (Nil, Nil) =>
       env
 

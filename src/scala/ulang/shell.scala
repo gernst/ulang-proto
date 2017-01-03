@@ -61,7 +61,7 @@ object shell {
     // repl()
   }
 
-  def compatible(pat1: List[Expr], pat2: List[Expr]) = {
+  def compatible(pat1: List[Pat], pat2: List[Pat]) = {
     val u = new unify
 
     { u.unify(pat1, pat2); false } or { true }
@@ -74,7 +74,7 @@ object shell {
           case Case(pat1, _, _) :: xs =>
             for (Case(pat2, _, _) <- xs) {
               if (!compatible(pat1, pat2))
-                err("patterns " + App(fun, pat1) + " and " + App(fun, pat2) + " overlap")
+                err("patterns " + UnApp(fun, pat1) + " and " + UnApp(fun, pat2) + " overlap")
             }
           case Nil =>
         }
@@ -131,8 +131,8 @@ object shell {
   def merged(st: State) = st match {
     case State(mods, pats, defs) =>
       val funs = defs.distinct.collect {
-        case Def(App(id: Id, args), cond, rhs) if !args.isEmpty =>
-          (id, Case(args, cond, rhs))
+        case Def(UnApp(id: Id, pats), cond, rhs) if !pats.isEmpty =>
+          (id, Case(pats, cond, rhs))
       }
 
       val merged = group(funs).map {
@@ -187,12 +187,12 @@ object shell {
     case Defs(defs) =>
       // out("checking " + existing.length + " existing patterns against " + defs.length + " new ones from " + ctx)
       st.defs.collect {
-        case Def(App(fun: Id, pat1), _, _) =>
+        case Def(UnApp(fun: Id, pats1), _, _) =>
           defs.collect {
-            case Def(App(`fun`, pat2), _, _) =>
+            case Def(UnApp(`fun`, pats2), _, _) =>
               // out("checking " + App(fun, pat1) + " and " + App(fun, pat2))
-              if (!compatible(pat1, pat2))
-                err("patterns " + App(fun, pat1) + " and " + App(fun, pat2) + " overlap")
+              if (!compatible(pats1, pats2))
+                err("patterns " + UnApp(fun, pats1) + " and " + UnApp(fun, pats2) + " overlap")
           }
       }
 
@@ -203,7 +203,7 @@ object shell {
 
       new tst.Test {
         test(ctx) {
-          for (Def(lhs, None, rhs) <- tests) {
+          for (Test(lhs, rhs) <- tests) {
             eval(lhs, lex, dyn) expect eval(rhs, lex, dyn)
           }
         }

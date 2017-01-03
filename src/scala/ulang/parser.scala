@@ -50,6 +50,11 @@ object grammar {
   val names = name *
   val nonmixfix = name filterNot operators.contains
 
+  val pat: Parser[List[String], Pat] = ??? //mixfix(inner, Atom, App, operators)
+  val pats = pat +
+  val strict_pat = expect("pattern", pat)
+
+
   val expr: Parser[List[String], Expr] = mixfix(inner, Atom, App, operators)
   val strict_expr = expect("expression", expr)
 
@@ -81,13 +86,13 @@ object grammar {
   val ite = IfThenElse.from(if_, then_, else_)
   val cond = if_ ?
 
-  val let_ = "let" ~ strict_arg
+  val let_ = "let" ~ strict_pat
   val eq_ = expect("=") ~ strict_expr
   val in_ = expect("in") ~ strict_expr
   val let = LetIn.from(let_, eq_, in_)
 
   val arrow_ = "->" ~ strict_expr
-  val cs = Case.from(args, cond, arrow_)
+  val cs = Case.from(pats, cond, arrow_)
   val cases = "|".? ~ cs.rep(sep = "|")
 
   val fun = "\\" ~ Bind.from(cases)
@@ -111,17 +116,19 @@ object grammar {
   }
 
   val eqq_ = expect("==") ~ strict_expr
-  val df = Def.from(expr, ret(None), eqq_)
-  val df_cond = Def.from(expr, cond, eqq_)
+  val df = Def.from(pat, ret(None), eqq_)
+  val df_cond = Def.from(pat, cond, eqq_)
+  
+  val test = Test.from(expr, eqq_)
 
   val imports = parens("import", Imports.from(names), ";")
-  val pats = section("pattern", Pats, df, "end")
+  val patdefs = section("pattern", Pats, df, "end")
   val defs = section("define", Defs, df_cond, "end")
-  val tests = section("test", Tests, df, "end")
+  val tests = section("test", Tests, test, "end")
   val nots = section("notation", Nots, fix | data, "end")
   val evals = section("eval", Evals, expr, "end")
 
-  val cmd = imports | nots | pats | defs | tests | evals;
+  val cmd = imports | nots | patdefs | defs | tests | evals;
   val cmds = cmd *
 
   val module = Module.from(cmds)

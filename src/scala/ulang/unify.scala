@@ -9,7 +9,7 @@ object Subst {
 class unify {
   var rep = Subst.empty
 
-  def find(a: Expr): Expr = {
+  def find(a: Pat): Pat = {
     val b = rep.getOrElse(a, a)
     if (a == b) {
       a
@@ -20,19 +20,19 @@ class unify {
     }
   }
 
-  def union(e1: Id, e2: Expr) {
-    rep += (find(e1) -> find(e2))
+  def union(p1: Id, p2: Pat) {
+    rep += (find(p1) -> find(p2))
   }
 
-  def unify(es1: List[Expr], es2: List[Expr]): Unit = {
-    if (es1.length != es2.length)
+  def unify(ps1: List[Pat], ps2: List[Pat]): Unit = {
+    if (ps1.length != ps2.length)
       fail
 
-    for ((e1, e2) <- (es1, es2).zipped)
-      unify(e1, e2)
+    for ((p1, p2) <- (ps1, ps2).zipped)
+      unify(p1, p2)
   }
 
-  def unify(e1: Expr, e2: Expr): Unit = (find(e1), find(e2)) match {
+  def unify(p1: Pat, p2: Pat): Unit = (find(p1), find(p2)) match {
     case (r1, r2) if r1 == r2 =>
 
     case (id: Id, a) =>
@@ -40,8 +40,11 @@ class unify {
 
     case (a, id: Id) =>
       unify(id, a)
+      
+    case (Force(body1), Force(body2)) =>
+      unify(body1, body2)
 
-    case (App(fun1, args1), App(fun2, args2)) =>
+    case (UnApp(fun1, args1), UnApp(fun2, args2)) =>
       unify(fun1, fun2)
       unify(args1, args2)
 
@@ -49,5 +52,5 @@ class unify {
       fail
   }
 
-  // Option({ unify(e1, e2); rep } or { null })
+  // Option({ unify(p1, p2); rep } or { null })
 }
