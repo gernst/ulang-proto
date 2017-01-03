@@ -37,7 +37,7 @@ definitions
   zip [] [] == [];
   zip (x :: xs) (y :: ys) == (x, y) :: zip xs ys;
 
-  unzip [] == [];
+  unzip [] == ([], []);
   unzip (x, y) :: zs
     == let (xs, ys) = unzip zs
        in (x :: xs, y :: ys);
