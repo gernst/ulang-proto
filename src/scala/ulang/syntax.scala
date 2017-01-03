@@ -8,7 +8,7 @@ sealed trait Atom extends Expr { def name: String }
 case class Tag(name: String) extends Atom with Val
 case class Id(name: String) extends Atom
 
-case class Apply(fun: Expr, args: List[Expr]) extends Expr
+case class App(fun: Expr, args: List[Expr]) extends Expr
 
 case class Case(pats: List[Expr], body: Expr) extends Pretty
 case class Bind(cases: List[Case]) extends Expr

@@ -60,9 +60,9 @@ object shell {
 
               {
                 u.unify(pat1, pat2)
-                err("patterns " + Apply(fun, pat1) + " and " + Apply(fun, pat2) + " overlap")
+                err("patterns " + App(fun, pat1) + " and " + App(fun, pat2) + " overlap")
               } or {
-                // out("patterns " + Apply(fun, pat1) + " and " + Apply(fun, pat2) + " are disjoint")
+                // out("patterns " + App(fun, pat1) + " and " + App(fun, pat2) + " are disjoint")
               }
             }
           case Nil =>
@@ -113,7 +113,7 @@ object shell {
   def merged(st: State) = st match {
     case State(defs) =>
       val funs = defs.distinct.collect {
-        case Def(Apply(id: Id, args), rhs) if !args.isEmpty =>
+        case Def(App(id: Id, args), rhs) if !args.isEmpty =>
           (id, Case(args, rhs))
       }
 

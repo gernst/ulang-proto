@@ -49,7 +49,7 @@ object interpreter {
         case _ => fail
       }
 
-    case Apply(pfun, parg) =>
+    case App(pfun, parg) =>
       arg match {
         case Obj(vfun, varg) =>
           bind(parg, varg, bind(pfun, vfun, env))
@@ -138,7 +138,7 @@ object interpreter {
         case res => sys.error("not a boolean value: " + res)
       }
 
-    case Apply(fun, args) =>
+    case App(fun, args) =>
       apply(eval(fun, lex, dyn), eval(args, lex, dyn), dyn)
 
     case Match(args, cases) =>

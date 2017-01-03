@@ -42,7 +42,7 @@ object grammar {
   val names = name *
   val nonmixfix = name filterNot operators.contains
 
-  val expr: Parser[List[String], Expr] = mixfix(inner, Atom, Apply, operators)
+  val expr: Parser[List[String], Expr] = mixfix(inner, Atom, App, operators)
   val exprs = expr +
 
   val closed: Parser[List[String], Expr] = Parser.rec(parens(open) | fun | matches | ite | let | id)
@@ -88,7 +88,7 @@ object grammar {
 
   val open = expr | anyid
 
-  val app = Apply.from(closed, closed +)
+  val app = App.from(closed, closed +)
   val inner = app | closed
 
   val imports = "import" ~ Imports.from(names) ~ expect(";")
