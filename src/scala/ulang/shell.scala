@@ -54,6 +54,7 @@ object shell {
 
   def main(args: Array[String]) {
     load("base")
+    load("stream")
     // repl()
   }
 

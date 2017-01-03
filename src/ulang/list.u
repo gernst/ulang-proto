@@ -8,6 +8,12 @@ end
 define
   list None == [];
   list (Some x) == [x];
+  
+  head (x :: xs) == x;
+  tail (x :: xs) == xs;
+  
+  take 0 xs == [];
+  take (n +1) (x :: xs) == x :: take n xs;
 
   [] ++ ys == ys;
   (x :: xs) ++ ys == x :: (xs ++ ys);

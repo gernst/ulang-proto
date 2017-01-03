@@ -124,7 +124,7 @@ object interpreter {
       Obj(tag, args)
 
     case Clos(cases, lex) =>
-      apply(cases, args, lex, dyn) // switches to different state here
+      apply(cases, args, lex, dyn)
 
     case Prim(_, f) =>
       f(args)
