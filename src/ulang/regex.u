@@ -1,0 +1,40 @@
+notation
+  infix 7 ~;
+end
+
+define
+  nullable Empty
+    == False;
+  nullable Eps
+    == True;
+  nullable (Char _)
+    == False;
+  nullable (Rep _)
+    == True;
+  nullable (Alt r s)
+    == nullable r or nullable s;
+  nullable (Seq r s)
+    == nullable r and nullable s;
+  
+  derive c Eps
+    == Empty;
+  derive c (Char a)
+    == if a = c then Eps else Empty;
+  derive c (Rep r)
+    == Seq (derive c r) (Rep r);
+  derive c (Alt r s)
+    == Alt (derive c r) (derive c s);
+  derive c (Seq r s)
+    == if nullable r
+       then Alt (Seq (derive c r) s) (derive c s)
+       else                          (derive c s);
+
+  r ~ []
+    == nullable r;
+  r ~ c :: cs
+    == derive c r ~ cs;
+end
+
+eval
+  Seq (Char A) (Rep (Char B)) ~ [A B B];
+end

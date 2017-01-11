@@ -3,7 +3,11 @@ define
   map f (Some x) == Some (f x);
   
   filter p None == None;
-  filter p (Some x) == if (p x) then (Some x) else None;
+  // filter p (Some x) == if (p x) then (Some x) else None;
+  filter p (Some x) if p x
+    == Some x;
+  filter p _
+    == None;
   
   flatten None == None;
   flatten (Some None) == None;

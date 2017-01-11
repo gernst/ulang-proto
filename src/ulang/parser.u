@@ -3,11 +3,6 @@ define
     == parse (f a) src;
   bind f Failure
     == Failure;
-
-  map f (Success a src)
-    == Success (f a) src;
-  map f  Failure
-    == Failure;
   
   filter p (Success a src)
     == if (p a)
@@ -38,9 +33,6 @@ define
   bind (Parser p) f
     == Parser \src -> bind f (p src);
 
-  map f (Parser p)
-    == Parser \src -> map f (p src);
-
   filter p (Parser q)
     == Parser \src -> filter p (q src);
   
@@ -48,19 +40,28 @@ define
     == Parser \src -> match (p src) with
          | Failure -> q src
          | res -> res;
-
-  seq f p q
-    == bind p \a ->
-       bind q \b ->
-         return (a,b);
-
-  pair p q == seq (,) p q;
-  
-  src == (A :: B :: C :: []);
 end
 
-eval
-  parse item src;
-  parse (literal B) src;
-  parse (pair item item) src;
+define
+  map f p1
+    == bind p1 \a1 ->
+         return f a1;
+
+  map f p1 p2
+    == bind p1 \a1 ->
+       bind p2 \a2 ->
+         return f a1 a2;
+
+  map f p1 p2 p3
+    == bind p1 \a1 ->
+       bind p2 \a2 ->
+       bind p3 \a3 ->
+         return f a1 a2 a3;
+
+  map f p1 p2 p3 p4
+    == bind p1 \a1 ->
+       bind p2 \a2 ->
+       bind p3 \a3 ->
+       bind p4 \a4 ->
+         return f a1 a2 a3 a4;
 end

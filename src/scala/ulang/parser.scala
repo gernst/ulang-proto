@@ -103,10 +103,12 @@ object grammar {
 
   val match_ = "match" ~ strict_args
   val with_ = expect("with") ~ cases
-  val matches = Match.from(match_, with_)
+  val matches = MatchWith.from(match_, with_)
 
   val force = "$" ~ Force.from(strict_pat)
   val susp = "$" ~ Susp.from(strict_expr)
+  
+  val escape = parens("`", strict_expr, "`")
 
   val open = expr | anyatom
   val patopen = pat | anyatom
@@ -117,8 +119,8 @@ object grammar {
   val inner_pat = unapp | patarg
   val inner_expr = app | arg
 
-  val list = parens("[", arg *, "]") map builtin.reify
-  val patlist = parens("[", patarg *, "]") map builtin.reify
+  val list = parens("[", arg *, "]") map builtin.reify_list
+  val patlist = parens("[", patarg *, "]") map builtin.reify_list
 
   def section[A, B](s0: String, c: List[A] => B, p: Parser[List[String], A], s1: String) = {
     val q = p ~ expect(";")
@@ -139,7 +141,8 @@ object grammar {
   val evals = section("eval", Evals, expr, "end")
 
   val cmd = imports | nots | patdefs | defs | tests | evals;
-  val cmds = cmd *
+  val strict_cmd = expect("top level section", cmd)
+  val cmds = strict_cmd *
 
   val module = Module.from(cmds)
 }

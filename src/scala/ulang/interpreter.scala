@@ -29,14 +29,56 @@ object builtin {
   val False = Tag("False")
   def reify(b: Boolean) = if (b) True else False
 
-  val Nil = Tag("[]")
-  val Cons = Tag("::") 
-  
-  def uncons(h: Pat, t: Pat) = UnApp(Cons, List(h, t))
-  def cons(h: Expr, t: Expr) = App(Cons, List(h, t))
-  
-  def reify(ps: List[Pat]) = ps.foldRight(Nil: Pat)(uncons)
-  def reify(es: List[Expr]) = es.foldRight(Nil: Expr)(cons)
+  def uncons(h: Pat, t: Pat) = UnApp(Tag("::"), List(h, t))
+  def cons(h: Expr, t: Expr) = App(Tag("::"), List(h, t))
+
+  def reify_option(e: Option[Expr]) = e match {
+    case None => Tag("None")
+    case Some(e) => App(Tag("Some"), List(e))
+  }
+
+  def reify_list(ps: List[Pat]) = ps.foldRight(Tag("[]"): Pat)(uncons)
+  def reify_list(es: List[Expr]) = es.foldRight(Tag("[]"): Expr)(cons)
+
+  def reify_atom(atom: Atom): Expr = atom match {
+    case tag: Tag =>
+      App(Tag("Tag"), List(tag))
+    case id: Id =>
+      App(Tag("Id"), List(id))
+  }
+
+  def reify(cs: Case): Expr = cs match {
+    case Case(pats, cond, body) =>
+      App(Tag("Case"), List(reify_list(pats map reify), reify_option(cond map reify), reify(body)))
+  }
+
+  def reify(pat: Pat): Expr = pat match {
+    case Wildcard =>
+      Tag("_")
+    case atom: Atom =>
+      reify_atom(atom)
+    case Force(pat) =>
+      App(Tag("Force"), List(reify(pat)))
+    case UnApp(fun, args) =>
+      App(Tag("App"), List(reify(fun), reify_list(args map reify)))
+  }
+
+  def reify(expr: Expr): Expr = expr match {
+    case atom: Atom =>
+      reify_atom(atom)
+    case Susp(pat) =>
+      App(Tag("Susp"), List(reify(pat)))
+    case App(fun, args) =>
+      App(Tag("App"), List(reify(fun), reify_list(args map reify)))
+    case Bind(cases) =>
+      App(Tag("Bind"), List(reify_list(cases map reify)))
+    case IfThenElse(test, iftrue, iffalse) =>
+      App(Tag("IfThenElse"), List(reify(test), reify(iftrue), reify(iffalse)))
+    case LetIn(pat, arg, body) =>
+      App(Tag("LetIn"), List(reify(pat), reify(arg), reify(body)))
+    case MatchWith(args, cases) =>
+      App(Tag("MatchWith"), List(reify_list(args map reify), reify_list(cases map reify)))
+  }
 
   val equal = Prim("=", { case List(obj1, obj2) => reify(_equal(obj1, obj2)) })
   val print = Prim("print", { case List(obj) => println(obj); obj })
@@ -73,11 +115,11 @@ object interpreter {
       arg match {
         case arg @ Lazy(body, lex) =>
           val inner = arg.getOrElseUpdate(eval(body, lex, dyn))
-            bind(pat, inner, dyn, env)
+          bind(pat, inner, dyn, env)
         case _ =>
           fail
       }
-      
+
     case UnApp(pfun, parg) =>
       arg match {
         case Obj(vfun, varg) =>
@@ -113,7 +155,7 @@ object interpreter {
       cond.map(eval(_, newlex, dyn)).foreach {
         case builtin.True =>
         case builtin.False => fail
-        case res => sys.error("not a condition in pattern: " +res) 
+        case res => sys.error("not a condition in pattern: " + res)
       }
       eval(body, newlex, dyn)
   }
@@ -176,7 +218,7 @@ object interpreter {
     case App(fun, args) =>
       apply(eval(fun, lex, dyn), eval(args, lex, dyn), dyn)
 
-    case Match(args, cases) =>
+    case MatchWith(args, cases) =>
       apply(cases, eval(args, lex, dyn), lex, dyn)
 
     case Bind(cases) =>

@@ -33,15 +33,16 @@ object shell {
   val lex = Env.empty
   var st = State.empty
 
+  def cmd(c: => Any) = { () => c }
   def commands: Map[String, () => Any] = Map(
     ":clear" -> cmd(st = State.empty),
     ":state" -> cmd(out(st)),
     ":model" -> cmd(out(model(merged(st)))),
     ":check" -> cmd(check()))
 
-  def prompt: String = "u> "
+  val Prompt = "u> "
 
-  def input(): String = input(prompt)
+  def input(): String = input(Prompt)
   def input(p: String): String = StdIn.readLine(p)
 
   def out(obj: Any) {
@@ -54,10 +55,9 @@ object shell {
     Console.err.flush
   }
 
-  def cmd(c: => Any) = { () => c }
-
   def main(args: Array[String]) {
     load("base")
+    load("regex")
     // repl()
   }
 
@@ -127,7 +127,7 @@ object shell {
       in = rest
     }
   }
-
+  
   def merged(st: State) = st match {
     case State(mods, pats, defs) =>
       val funs = defs.distinct.collect {

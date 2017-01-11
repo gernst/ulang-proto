@@ -1,0 +1,10 @@
+import
+  parser;
+  
+define
+  in == [A A A A A];
+  
+  lp == literal LP;
+  rp == literal RP;
+  app == map APP id lp 
+end

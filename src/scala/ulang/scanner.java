@@ -38,7 +38,7 @@ class scanner {
     "\11\0\1\3\1\2\1\20\1\21\1\1\22\0\1\3\1\0\1\12"+
     "\1\0\1\13\2\0\1\14\1\6\1\7\1\17\1\0\1\13\1\0"+
     "\1\13\1\16\12\0\1\10\1\13\1\0\1\11\35\0\1\4\1\15"+
-    "\1\5\47\0\1\20\u1fa2\0\1\20\1\20\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\udfe6\0";
+    "\1\5\2\0\1\13\44\0\1\20\u1fa2\0\1\20\1\20\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\uffff\0\udfe6\0";
 
   /** 
    * Translates characters to character classes
@@ -274,7 +274,7 @@ class scanner {
     char [] map = new char[0x110000];
     int i = 0;  /* index in packed string  */
     int j = 0;  /* index in unpacked array */
-    while (i < 106) {
+    while (i < 110) {
       int  count = packed.charAt(i++);
       char value = packed.charAt(i++);
       do map[j++] = value; while (--count > 0);

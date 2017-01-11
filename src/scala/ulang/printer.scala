@@ -41,7 +41,7 @@ object printer {
 
     case Bind(cases) =>
       "\\ " + cases.mkString(" | ")
-    case Match(args, cases) =>
+    case MatchWith(args, cases) =>
       "match " + args.mkString(" ") + " with " + cases.mkString(" | ")
     case LetIn(pat, arg, body) =>
       "let " + pat + " = " + arg + " in " + body

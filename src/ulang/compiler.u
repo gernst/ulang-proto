@@ -36,7 +36,7 @@ define
     == [(Const z)];
   
   compile (Var i)
-    == [(Get i)];
+    == [(Load i)];
     
   compile (Let a b)
     == compile a ++ [Store] ++ compile b;
@@ -57,7 +57,7 @@ define
   exec (Store :: code) env (x :: stack)
     == exec code (x :: env) stack;
     
-  exec (Get i :: code) env stack
+  exec (Load i :: code) env stack
     == match (get i env) with
        | Some x -> exec code env (x :: stack);
 
