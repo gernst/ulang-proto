@@ -42,7 +42,7 @@ object grammar {
   import arse.Recognizer._
   import arse.Mixfix._
 
-  val keywords = Set(";", "(", ")", "{", "}", "[", "]", "->", "==", "$", "|", "\\",
+  val keywords = Set(";", "(", ")", "{", "}", "[", "]", "->", "==", "$", "`", "|", "\\",
     "if", "then", "else", "let", "in", "match", "with", "end")
 
   val strict_int = expect("number", int)
@@ -79,7 +79,7 @@ object grammar {
   val expr: Parser[List[String], Expr] = mixfix(inner_expr, Atom, App, operators)
   val strict_expr = expect("expression", expr)
 
-  val arg: Parser[List[String], Expr] = Parser.rec(parens("(", open, ")") | fun | matches | ite | let | susp | list | atom)
+  val arg: Parser[List[String], Expr] = Parser.rec(parens("(", open, ")") | fun | matches | ite | let | susp | escape | list | atom)
   val args = arg +
   val strict_arg = expect("closed expression", arg)
   val strict_args = expect("list of expressions", args)
@@ -107,8 +107,6 @@ object grammar {
 
   val force = "$" ~ Force.from(strict_pat)
   val susp = "$" ~ Susp.from(strict_expr)
-  
-  val escape = parens("`", strict_expr, "`")
 
   val open = expr | anyatom
   val patopen = pat | anyatom
@@ -118,7 +116,8 @@ object grammar {
 
   val inner_pat = unapp | patarg
   val inner_expr = app | arg
-
+  
+  val escape = "`" ~ strict_expr map builtin.reify
   val list = parens("[", arg *, "]") map builtin.reify_list
   val patlist = parens("[", patarg *, "]") map builtin.reify_list
 

@@ -41,10 +41,10 @@ object builtin {
   def reify_list(es: List[Expr]) = es.foldRight(Tag("[]"): Expr)(cons)
 
   def reify_atom(atom: Atom): Expr = atom match {
-    case tag: Tag =>
-      App(Tag("Tag"), List(tag))
-    case id: Id =>
-      App(Tag("Id"), List(id))
+    case Tag(name) =>
+      App(Tag("Tag"), List(Lit(name)))
+    case Id(name) =>
+      App(Tag("Id"), List(Lit(name)))
   }
 
   def reify(cs: Case): Expr = cs match {
@@ -55,6 +55,8 @@ object builtin {
   def reify(pat: Pat): Expr = pat match {
     case Wildcard =>
       Tag("_")
+    case l: Lit =>
+      l
     case atom: Atom =>
       reify_atom(atom)
     case Force(pat) =>
@@ -64,6 +66,8 @@ object builtin {
   }
 
   def reify(expr: Expr): Expr = expr match {
+    case l: Lit =>
+      l
     case atom: Atom =>
       reify_atom(atom)
     case Susp(pat) =>
@@ -84,6 +88,8 @@ object builtin {
   val print = Prim("print", { case List(obj) => println(obj); obj })
 
   def _equal(obj1: Val, obj2: Val): Boolean = (obj1, obj2) match {
+    case (Lit(any1), Lit(any2)) =>
+      any1 == any2
     case (Tag(name1), Tag(name2)) =>
       name1 == name2
     case (Obj(data1, args1), Obj(data2, args2)) =>
@@ -99,6 +105,10 @@ object interpreter {
   def bind(pat: Pat, arg: Val, dyn: Env, env: Env): Env = pat match {
     case Wildcard =>
       env
+      
+    case _: Lit =>
+      if(pat == arg) env
+      else fail
 
     case id @ Tag(_) =>
       if (id == arg) env
@@ -189,6 +199,9 @@ object interpreter {
   def eval(expr: Expr, lex: Env, dyn: Env): Val = expr match {
     case tag: Tag =>
       tag
+      
+    case l: Lit =>
+      l
 
     case Id(name) if lex contains name =>
       lex(name)

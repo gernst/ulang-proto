@@ -10,6 +10,9 @@ object printer {
   def print(any: Pretty): String = any match {
     case Wildcard =>
       "_"
+      
+    case Lit(s: String) =>
+      "\"" + s + "\""
 
     case Atom(name) if operators contains name =>
       "(" + name + ")"

@@ -41,5 +41,8 @@ eval
   collect (\x -> if x = B then None else Some x) [A B C];
   /* [ if x = B then None else Some x
      | x <- [A B C]
-     ] */     
+     ] */
+
+  ` x;
+  ` f x;  
 end
