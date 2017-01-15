@@ -45,4 +45,7 @@ eval
 
   ` x;
   ` f x;  
+  
+  "hello";
+  'x';
 end

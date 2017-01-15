@@ -47,6 +47,16 @@ object grammar {
 
   val strict_int = expect("number", int)
 
+  val str = string collect {
+    case s if s.head == '"' && s.last == '"' =>
+      s.substring(1, s.length - 1)
+  }
+
+  val chr = string collect {
+    case s if s.length == 3 && s.head == '\'' && s.last == '\'' =>
+      s(1)
+  }
+
   val name = string filterNot keywords
   val names = name *
   val nonmixfix = name filterNot operators.contains
@@ -71,7 +81,7 @@ object grammar {
   val pats = pat +
   val strict_pat = expect("pattern", pat)
 
-  val patarg: Parser[List[String], Pat] = Parser.rec(parens("(", patopen, ")") | force | patlist | atom)
+  val patarg: Parser[List[String], Pat] = Parser.rec(parens("(", patopen, ")") | force |  any | patlist | atom)
   val patargs = patarg +
   val strict_patarg = expect("closed pattern", patarg)
   val strict_patargs = expect("list of patterns", patargs)
@@ -79,7 +89,7 @@ object grammar {
   val expr: Parser[List[String], Expr] = mixfix(inner_expr, Atom, App, operators)
   val strict_expr = expect("expression", expr)
 
-  val arg: Parser[List[String], Expr] = Parser.rec(parens("(", open, ")") | fun | matches | ite | let | susp | escape | list | atom)
+  val arg: Parser[List[String], Expr] = Parser.rec(parens("(", open, ")") | fun | matches | ite | let | susp | escape | any | list | atom)
   val args = arg +
   val strict_arg = expect("closed expression", arg)
   val strict_args = expect("list of expressions", args)
@@ -96,7 +106,7 @@ object grammar {
   val let = LetIn.from(let_, eq_, in_)
 
   val arrow_ = "->" ~ strict_expr
-  val cs = Case.from(pats, cond, arrow_)
+  val cs = Case.from(patargs, cond, arrow_)
   val cases = "|".? ~ cs.rep(sep = "|")
 
   val fun = "\\" ~ Bind.from(cases)
@@ -108,6 +118,8 @@ object grammar {
   val force = "$" ~ Force.from(strict_pat)
   val susp = "$" ~ Susp.from(strict_expr)
 
+  val any = Lit.from(str | chr)
+
   val open = expr | anyatom
   val patopen = pat | anyatom
 
@@ -116,7 +128,7 @@ object grammar {
 
   val inner_pat = unapp | patarg
   val inner_expr = app | arg
-  
+
   val escape = "`" ~ strict_expr map builtin.reify
   val list = parens("[", arg *, "]") map builtin.reify_list
   val patlist = parens("[", patarg *, "]") map builtin.reify_list

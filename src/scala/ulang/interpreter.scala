@@ -4,13 +4,11 @@ import arse._
 import ulang._
 import java.io.File
 
-trait Val extends Pretty
+case class Clos(cases: List[Case], lex: Env) extends Pretty
+case class Prim(name: String, f: List[Val] => Val) extends Pretty
+case class Obj(tag: Tag, args: List[Val]) extends Pretty
 
-case class Clos(cases: List[Case], lex: Env) extends Val
-case class Prim(name: String, f: List[Val] => Val) extends Val
-case class Obj(tag: Tag, args: List[Val]) extends Val
-
-case class Lazy(body: Expr, lex: Env) extends Val {
+case class Lazy(body: Expr, lex: Env) extends Pretty {
   var memo: Option[Val] = None
   def getOrElseUpdate(f: => Val) = {
     if (memo == None)
@@ -59,6 +57,8 @@ object builtin {
       l
     case atom: Atom =>
       reify_atom(atom)
+    case SubPat(name, pat) =>
+      App(Tag("SubPat"), List(Lit(name), reify(pat)))
     case Force(pat) =>
       App(Tag("Force"), List(reify(pat)))
     case UnApp(fun, args) =>
@@ -105,9 +105,9 @@ object interpreter {
   def bind(pat: Pat, arg: Val, dyn: Env, env: Env): Env = pat match {
     case Wildcard =>
       env
-      
-    case _: Lit =>
-      if(pat == arg) env
+
+    case Lit(any) =>
+      if (any == arg) env
       else fail
 
     case id @ Tag(_) =>
@@ -120,6 +120,9 @@ object interpreter {
         case None => env + (name -> arg)
         case _ => fail
       }
+      
+    case SubPat(name, pat) =>
+      bind(pat, arg, dyn, env + (name -> arg))
 
     case Force(pat) =>
       arg match {
@@ -172,7 +175,7 @@ object interpreter {
 
   def apply(cases: List[Case], args: List[Val], lex: Env, dyn: Env): Val = cases match {
     case Nil =>
-      sys.error("no case for " + args.mkString(" "))
+      fail // sys.error("no case for " + args.mkString(" "))
 
     case cs :: rest =>
       apply(cs, args, lex, dyn) or apply(rest, args, lex, dyn)
@@ -183,7 +186,7 @@ object interpreter {
       Obj(tag, args)
 
     case Clos(cases, lex) =>
-      apply(cases, args, lex, dyn)
+      apply(cases, args, lex, dyn) or { sys.error(cases.map(_.pats).mkString(" ") + " mismatches " + args.mkString(" ")) }
 
     case Prim(_, f) =>
       f(args)
@@ -199,9 +202,9 @@ object interpreter {
   def eval(expr: Expr, lex: Env, dyn: Env): Val = expr match {
     case tag: Tag =>
       tag
-      
-    case l: Lit =>
-      l
+
+    case Lit(any) =>
+      any
 
     case Id(name) if lex contains name =>
       lex(name)

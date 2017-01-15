@@ -9,6 +9,8 @@ import java.io.File
 package object ulang {
   import arse.Recognizer._
 
+  type Val = Any
+  
   def expect(s: String) = s ! "expected '" + s + "'"
   def expect[A](s: String, p: Parser[List[String], A]) = p ! "expected "
   def parens[A](s0: String, p: Parser[List[String], A], s1: String) = s0 ~ p ~ expect(s1)

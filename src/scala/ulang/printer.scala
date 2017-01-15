@@ -10,14 +10,21 @@ object printer {
   def print(any: Pretty): String = any match {
     case Wildcard =>
       "_"
-      
+
     case Lit(s: String) =>
       "\"" + s + "\""
+    case Lit(i: Int) =>
+      i.toString
+    case Lit(c: Char) =>
+      "\'" + c + "\'"
 
     case Atom(name) if operators contains name =>
       "(" + name + ")"
     case Atom(name) =>
       name
+
+    case SubPat(name, pat) =>
+      name + " @ " + pat
 
     case UnApp(Atom(name), List(arg)) if operators.prefix_ops contains name =>
       "(" + name + " " + arg + ")"
