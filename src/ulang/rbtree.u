@@ -20,8 +20,8 @@ define
   balance BB a x (T R (T R b y c) z d) == T B (T B a x b) y (T B c z d);
   balance BB a x (T R b y (T R c z d)) == T B (T B a x b) y (T B c z d);
 
-  balance BB a x (T NB (T B b y c) z d) if isTB d == T B (T B a x b) y (balance B c z (redden d));
-  balance BB (T NB a x (T B b y c)) z d if isTB a == T B (balance B (redden a) x b) y (T B c z d);
+  balance BB a x (T NB (T B b y c) z d@(T B _ _ _)) == T B (T B a x b) y (balance B c z (redden d));
+  balance BB (T NB a@(T B _ _ _) x (T B b y c)) z d == T B (balance B (redden a) x b) y (T B c z d);
   
   balance color a x b == T color a x b;
   
@@ -91,7 +91,9 @@ define
   remove (T B (T R a x b) _ E) == T B a x b;
   remove (T color a y b) == bubble color (removeMax a) (max a) b;
 
-  removeMax (T color a x E) == remove (T color a x E);
+  max (T _ _ x E) == x;
+  max (T _ _ _ b) == max x;
+  removeMax s@(T color a x E) == remove s;
   removeMax (T color a x b) == bubble color a x (removeMax b);
 
   insertm xs t

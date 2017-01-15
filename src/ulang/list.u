@@ -11,6 +11,12 @@ pattern
 end
 
 define
+  []: List a == True;
+  x :: xs: List a == x: a and xs: List a;
+  _: List a == False;
+end
+
+define
   list None == [];
   list (Some x) == [x];
   
@@ -84,4 +90,7 @@ test
   [0 1 2] ++ [3 4] == [0 1 2 3 4]; 
   map (+1) [0 1 2 3] == [1 2 3 4];
   filter even [0 1 2 3 4] == [0 2 4];
+  
+  [0 1 2 3 4]: List Nat == True;
+  [A]: List Nat == False;
 end

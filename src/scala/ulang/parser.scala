@@ -81,10 +81,16 @@ object grammar {
   val pats = pat +
   val strict_pat = expect("pattern", pat)
 
-  val patarg: Parser[List[String], Pat] = Parser.rec(parens("(", patopen, ")") | force |  any | patlist | atom)
+  val patarg: Parser[List[String], Pat] = Parser.rec(parens("(", patopen, ")") | force |  any | patlist | patatom)
   val patargs = patarg +
   val strict_patarg = expect("closed pattern", patarg)
   val strict_patargs = expect("list of patterns", patargs)
+  
+  val patnamed = "@" ~ strict_patarg
+  val patatom = nonmixfix ~ patnamed.? map {
+    case (name, None) => Atom(name)
+    case (name, Some(pat)) => SubPat(name, pat)
+  }
 
   val expr: Parser[List[String], Expr] = mixfix(inner_expr, Atom, App, operators)
   val strict_expr = expect("expression", expr)

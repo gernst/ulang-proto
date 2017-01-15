@@ -1,8 +1,11 @@
 notation
   data ,;
   
+  infix 6 :;
+
+  infix right 6 ,;
   infix       6 =;
-  infix right 9 , .;
+  infix right 9 .;
 end
 
 define
@@ -27,11 +30,16 @@ import
 
 define
   flatmap f xs == flatten (map f xs);
+  test p@(x,y) == p;
+  test l@(x :: y) == l;
 end
 
 eval
   flatten [[A B] [C D]];
   flatten (Some (Some A));
+  
+  test (1,2);
+  test (A :: []);
   
   $ x;
   let z = $ X

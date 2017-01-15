@@ -9,6 +9,12 @@ notation
 end
 
 define
+  0: Nat == True;
+  n +1: Nat == n: Nat;
+  _: Nat == False;
+end
+
+define
   1 == 0 +1;
   2 == 0 +1 +1;
   3 == 0 +1 +1 +1;
@@ -38,8 +44,10 @@ define
   n >= m == m <= n;
   
   even  0 == True;
-  even (0 +1) == False;
-  even (n +1 +1) == even n;
+  even (n +1) == odd n;
+
+  odd  0 == False;
+  odd (n +1) == even n;
 end
 
 test
@@ -52,4 +60,6 @@ test
   1 + 2 == 3;
   2 + 1 == 3;
   2 + 2 == 4;
+  
+  4: Nat == True;
 end

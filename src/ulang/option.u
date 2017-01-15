@@ -1,4 +1,10 @@
 define
+  None: Option a == True;
+  Some x: Option a == x: a;
+  _: Option a == False;
+end
+
+define
   map f None == None;
   map f (Some x) == Some (f x);
   
@@ -6,7 +12,7 @@ define
     == None;
   filter p (Some x)
     == if (p x)
-       then (Some x)
+       then Some x
        else None;
   
   flatten None == None;

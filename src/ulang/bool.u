@@ -8,6 +8,12 @@ notation
 end
 
 define
+  False: Bool == True;
+  True:  Bool == True;
+  _: Bool == False;
+end
+
+define
   not True  == False;
   not False == True;
   
