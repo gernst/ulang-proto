@@ -1,0 +1,120 @@
+notation
+  infix 6 <;
+end
+
+define
+  isBB EE == True;
+  isBB (T BB _ _ _) == True;
+  isBB _ == False;
+  
+  isTB (T B _ _ _) == True;
+  isTB _ == False;
+  
+  balance B (T R (T R a x b) y c) z d == T R (T B a x b) y (T B c z d);
+  balance B (T R a x (T R b y c)) z d == T R (T B a x b) y (T B c z d);
+  balance B a x (T R (T R b y c) z d) == T R (T B a x b) y (T B c z d);
+  balance B a x (T R b y (T R c z d)) == T R (T B a x b) y (T B c z d);
+
+  balance BB (T R (T R a x b) y c) z d == T B (T B a x b) y (T B c z d);
+  balance BB (T R a x (T R b y c)) z d == T B (T B a x b) y (T B c z d);
+  balance BB a x (T R (T R b y c) z d) == T B (T B a x b) y (T B c z d);
+  balance BB a x (T R b y (T R c z d)) == T B (T B a x b) y (T B c z d);
+
+  balance BB a x (T NB (T B b y c) z d) if isTB d == T B (T B a x b) y (balance B c z (redden d));
+  balance BB (T NB a x (T B b y c)) z d if isTB a == T B (balance B (redden a) x b) y (T B c z d);
+  
+  balance color a x b == T color a x b;
+  
+  redden (T _ a x b) == T R a x b;
+  
+  redder R == NB;
+  redder B == R;
+  redder BB == b;
+  redder EE == E;
+  redder (T c a x b) == T (redder c) a x b;
+  
+  blacken E == E;
+  blacken EE == E;
+  blacken (T _ a x b) == T B a x b;
+  
+  blacker NB == R;
+  blacker R == B;
+  blacker B == BB;
+  blacker E == EE;
+  blacker (T c a x b) == T (blacker c) a x b;
+  
+  bubble color a x b if (isBB b) or (isBB b) 
+    == balance (blacker color) (redder a) x (redder b);
+  bubble color a x b
+    == balance color a x b;
+end
+
+define
+  contains (<) x E
+    == False;
+  contains (<) x (T _ a x b)
+    == True;
+  contains (<) x (T _ a y b) if x < y
+    == member (<) x a;
+  contains (<) x (T _ a y b) if y < x
+    == member (<) x b;
+  
+  flatten E
+    == [];
+  flatten (T _ a x b)
+    == flatten a ++ [x] ++ flatten b;
+  
+  insert (<) x E
+    == T R E x E;
+  insert (<) x (T color a y b) if x < y
+    == balance color (insert (<) x a) y b;
+  insert (<) x (T color a y b) if y < x
+    == balance color a y (insert (<) x b);
+  insert (<) x t
+    == t;
+    
+  delete (<) x E
+    == E;
+  delete (<) x (T color a y b) if x < y
+    == bubble color (delete (<) x a) y b;
+  delete (<) x (T color a y b) if y < x
+    == bubble color a y (delete (<) x b);
+  delete (<) x t
+    == remove t;
+    
+  remove E
+    == E;
+  remove E = E
+  remove (T R E _ E) == E;
+  remove (T B E _ E) == EE;
+  remove (T B E _ (T R a x b)) == T B a x b;
+  remove (T B (T R a x b) _ E) == T B a x b;
+  remove (T color a y b) == bubble color (removeMax a) (max a) b;
+
+  removeMax (T color a x E) == remove (T color a x E);
+  removeMax (T color a x b) == bubble color a x (removeMax b);
+
+  insertm xs t
+    == foldr insert t xs;
+
+  tree == insertm [0 2 1 3] (rbtree (<));
+end
+
+define
+  rbtree (<)
+    == RBTree (<) E;
+  flatten (RBTree _ t)
+    == flatten t;
+  contains x (RBTree (<) t)
+    == contains (<) x t;
+  insert x (RBTree (<) t)
+    == RBTree (<) (blacken (insert (<) x t));
+  delete x (RBTree (<) t)
+    == RBTree (<) (blacken (delete (<) x t));
+end
+
+eval
+  flatten tree;
+  contains 2 tree;
+  flatten (delete 1 tree);
+end
