@@ -57,7 +57,7 @@ object shell {
 
   def main(args: Array[String]) {
     load("base")
-    load("rbtree")
+    load("prover")
     // load("regex")
     // repl()
   }

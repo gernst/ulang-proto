@@ -8,10 +8,10 @@ case object Wildcard extends Pat
 
 sealed trait Expr extends Pretty
 
-case class Lit(any: Any) extends Expr with Pat
+case class Lit(any: Any) extends Expr with Pat with Eq
 
 sealed trait Atom extends Expr with Pat { def name: String }
-case class Tag(name: String) extends Atom
+case class Tag(name: String) extends Atom with Eq
 case class Id(name: String) extends Atom
 
 case class SubPat(name: String, pat: Pat) extends Pat

@@ -4,9 +4,11 @@ import arse._
 import ulang._
 import java.io.File
 
+trait Eq
+
 case class Clos(cases: List[Case], lex: Env) extends Pretty
 case class Prim(name: String, f: List[Val] => Val) extends Pretty
-case class Obj(tag: Tag, args: List[Val]) extends Pretty
+case class Obj(tag: Tag, args: List[Val]) extends Pretty with Eq
 
 case class Lazy(body: Expr, lex: Env) extends Pretty {
   var memo: Option[Val] = None
@@ -96,6 +98,8 @@ object builtin {
       if (!_equal(data1, data2)) false
       if (args1.length != args2.length) false
       else (args1, args2).zipped.forall((_equal _).tupled)
+    case (_: Eq, _: Eq) =>
+      false
     case _ =>
       sys.error("cannot compare " + obj1 + " and " + obj2)
   }
@@ -120,7 +124,7 @@ object interpreter {
         case None => env + (name -> arg)
         case _ => fail
       }
-      
+
     case SubPat(name, pat) =>
       bind(pat, arg, dyn, env + (name -> arg))
 
@@ -186,7 +190,7 @@ object interpreter {
       Obj(tag, args)
 
     case Clos(cases, lex) =>
-      apply(cases, args, lex, dyn) or { sys.error(cases.map(_.pats).mkString(" ") + " mismatches " + args.mkString(" ")) }
+      apply(cases, args, lex, dyn) or sys.error(fun + " mismatches " + args.mkString(" "))
 
     case Prim(_, f) =>
       f(args)
@@ -231,8 +235,11 @@ object interpreter {
     case Susp(body) =>
       Lazy(body, lex)
 
-    case App(fun, args) =>
-      apply(eval(fun, lex, dyn), eval(args, lex, dyn), dyn)
+    case App(fun, args) =>     
+      // println("eval " + expr + " in " + lex.mkString(" "))
+      val res = apply(eval(fun, lex, dyn), eval(args, lex, dyn), dyn)
+      // println("eval " + expr + " in " + lex.mkString(" ") + " = " + res)
+      res
 
     case MatchWith(args, cases) =>
       apply(cases, eval(args, lex, dyn), lex, dyn)

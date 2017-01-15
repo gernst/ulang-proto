@@ -84,6 +84,13 @@ define
   index x [] == None;
   index x (x :: xs) == Some 0;
   index x (y :: xs) == index x xs +1;
+  
+  lookup _ [] == None;
+  lookup x ((x,y) :: xs) == Some y;
+  lookup x (_ :: xs) == lookup x xs;
+
+  store x z xs
+    == (x,z) :: xs;
 end
 
 test

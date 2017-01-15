@@ -6,5 +6,5 @@ define
   
   lp == literal LP;
   rp == literal RP;
-  app == map APP id lp 
+  app == map App id lp (expr *) rp;
 end

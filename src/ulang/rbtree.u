@@ -59,10 +59,10 @@ define
   contains (<) x (T _ a y b) if y < x
     == member (<) x b;
   
-  flatten E
+  list E
     == [];
-  flatten (T _ a x b)
-    == flatten a ++ [x] ++ flatten b;
+  list (T _ a x b)
+    == list a ++ [x] ++ list b;
   
   insert (<) x E
     == T R E x E;
@@ -103,10 +103,13 @@ define
 end
 
 define
+  RBTree _ t: Set a
+    == (list t): List a;
+
   rbtree (<)
     == RBTree (<) E;
-  flatten (RBTree _ t)
-    == flatten t;
+  list (RBTree _ t)
+    == list t;
   contains x (RBTree (<) t)
     == contains (<) x t;
   insert x (RBTree (<) t)
@@ -116,7 +119,7 @@ define
 end
 
 eval
-  flatten tree;
+  list tree;
   contains 2 tree;
-  flatten (delete 1 tree);
+  list (delete 1 tree);
 end

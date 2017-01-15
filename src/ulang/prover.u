@@ -1,36 +1,182 @@
 define
+  triv (Not False) == True;
+  triv (Not True)  == False;
+  triv (Not (Not phi)) == phi;
+  
+  triv (And True psi)  == psi;
+  triv (And False psi) == False;
+  triv (And phi True)  == phi;
+  triv (And phi False) == False;
+  triv (And phi phi)   == phi;
+  
+  triv (Or True psi)   == True;
+  triv (Or False psi)  == psi;
+  triv (Or phi True)   == True;
+  triv (Or phi False)  == phi;
+  triv (Or phi phi)    == phi;
+  
+  triv (Imp True psi)  == psi;
+  triv (Imp False psi) == True;
+  triv (Imp phi True)  == True;
+  triv (Imp phi False) == Not phi;
+  triv (Imp phi phi)   == True;
+  
+  triv (Eqv True psi)  == psi;
+  triv (Eqv False psi) == Not psi;
+  triv (Eqv phi True)  == phi;
+  triv (Eqv phi False) == Not phi;
+  triv (Eqv phi phi)   == True;
+  triv (Eqv phi (Not phi)) == False;
+  triv (Eqv (Not phi) phi) == False;
+  triv (Eqv (Not phi) (Not psi)) == Eqv phi psi;
+  
+  triv (Eq expr expr) == True;
 
-triv (Not False) == True;
-triv (Not True)  == False;
-triv (Not (Not phi)) == phi;
+  triv phi == phi;
+end
 
-triv (And True psi)) == psi;
-triv (And False psi) == False;
-triv (And phi True)  == phi;
-triv (And phi False) == False;
-triv (And phi phi)   == phi;
+define
+  assume True ctx
+    == ctx;
+  assume False ctx
+    == [False];
+  assume (Not phi) ctx
+    == assert phi ctx;
+  assume (And phi psi) ctx
+    == assume phi (assume psi ctx);
+  assume phi ctx
+    == phi :: ctx;
+    
+  assumes phis ctx
+    == foldr assume ctx phis;
+    
+  assert True ctx
+    == [False];
+  assert False ctx
+    == ctx;
+  assert (Not phi) ctx
+    == assume phi ctx;
+  assert (Imp phi psi) ctx
+    == assert psi (assume phi ctx);
+  assert (Or phi psi) ctx
+    == assert phi (assert psi ctx);
+  assert phi ctx
+    == triv (Not phi) :: ctx;
+    
+  asserts phis ctx
+    == foldr assert ctx phis;
 
-triv (Or True psi)   == True;
-triv (Or False psi)  == psi;
-triv (Or phi True)   == True;
-triv (Or phi False)  == phi;
-triv (Or phi phi)    == phi;
+  binary phi phi_pos? phi_prove?
+         psi psi_pos? psi_prove?
+         ctx ==
+  binary phi phi_pos? phi_prove?
+         psi psi_pos? psi_prove? False
+         ctx False;
 
-triv (Imp True psi)  == psi;
-triv (Imp False psi) == True;
-triv (Imp phi True)  == True;
-triv (Imp phi False) == Not phi;
-triv (Imp phi phi)   == True;
+  binary phi phi_pos? phi_prove?
+         psi psi_pos? psi_prove? psi_done?
+         ctx swap?
+    ==  let newctx = if psi_pos? then (assume psi ctx) else (assert psi ctx) in
+        let newphi = simp phi phi_prove? newctx in
+        let phi_done? = (phi = newphi) in
 
-triv (Eqv True psi)  == psi;
-triv (Eqv False psi) == Not psi;
-triv (Eqv phi True)  == phi;
-triv (Eqv phi False) == Not phi;
-triv (Eqv phi phi)   == True;
-triv (Eqv phi (Not phi)) == False;
-triv (Eqv (Not phi) phi) == False;
-triv (Eqv (Not phi) (Not psi)) == Eqv phi psi;
+        if phi_done? and psi_done?
+        then if swap? then (psi, phi) else (phi, psi)
+        else binary psi psi_pos? psi_prove?
+                    newphi phi_pos? phi_prove? phi_done?
+                    ctx (not swap?);
+end
 
-triv phi == phi;
+define
+  simp (Not phi) prove? ctx
+    == let newphi = (simp phi (not prove?) ctx)
+       in triv (Not newphi);
+  
+  simp (And phi psi) prove? ctx
+    == let (newphi, newpsi) = binary phi True prove? psi True prove? ctx
+       in triv (And newphi newpsi);
+  
+  simp (Or phi psi) prove? ctx
+    == let (newphi, newpsi) = binary phi False prove? psi False prove? ctx
+       in triv (Or newphi newpsi);
+  
+  simp (Imp phi psi) prove? ctx
+    == let (newphi, newpsi) = binary phi True (not prove?) psi False prove? ctx
+       in triv (Imp newphi newpsi);
 
+  simp (Eqv phi psi) prove? ctx
+    == match (simp (Imp phi psi) prove? ctx)
+             (simp (Imp psi phi) prove? ctx)
+       with False _ -> False
+          | _ False -> False
+          | True rl -> rl
+          | lr True -> lr
+          | _ -> let newphi = simp phi False ctx in
+                 let newpsi = simp psi False ctx in
+                 triv (Eqv newphi newpsi);
+
+  simp (Eq lhs rhs) prove? ctx
+    == let newlhs = simp phi False ctx in
+       let newrhs = simp psi False ctx in
+       triv (Eq newlhs newrhs);
+  
+  simp phi _ ctx if contains phi ctx
+    == True;
+  simp phi _ ctx if contains (Not phi) ctx
+    == False;
+  simp phi _ ctx
+    == phi;
+end
+
+define
+  find x s
+    == match (lookup x s) with
+         | None -> x
+         | Some y -> find y s;
+
+  union x y s
+    == store (find x s) (find y s) s;
+end
+
+define
+  prove phi
+    == simp phi True [];
+end
+
+eval
+  // Pelletier's problems
+  prove (Eqv (Imp P Q) (Imp (Not Q) (Not P)));
+  prove (Eqv (Not (Not P)) P);
+  prove (Imp (Not (Imp P Q)) (Imp Q P));
+  prove (Eqv (Imp (Not P) Q) (Imp (Not Q) P));
+  prove (Imp (Imp (Or P Q) (Or P R))
+             (Or (P (Imp Q R))));
+  prove (Or P (Not P));
+  prove (Or P (Not (Not (Not P))));
+  prove (Imp (Imp (Imp P Q) P) P);
+  prove (Imp (And  (Or P Q)
+              (And (Or (Not P) (Q))
+                   (Or P (Not Q))))
+             (Not (Or (Not P) (Not Q))));
+  prove (Imp   (Imp Q R)
+         (Imp  (Imp R (And P Q))
+          (Imp (Imp P (Or Q R))
+           (Eqv P Q))));
+  prove (Eqv P P);
+  prove (Eqv (Eqv (Eqv P Q) R)
+             (Eqv P (Eqv Q R)));
+  prove (Eqv (Or P (And Q R))
+             (And (Or P Q)
+                  (Or P R)));
+  prove (Eqv (Eqv P Q)
+             (And (Or Q (Not P))
+                  (Or (Not Q) P)));
+  prove (Eqv (Imp P Q)
+             (Or (Not P) Q));
+  prove (Or (Imp P Q)
+            (Imp Q P));
+  prove (Eqv (Imp (And P (Imp Q R))
+                  S)
+             (And (Or (Not P) (Or Q S))
+                  (Or (Not P) (Or (Not R) S))));
 end

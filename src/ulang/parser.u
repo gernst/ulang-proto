@@ -1,3 +1,7 @@
+notation
+  postfix 11 * +;
+end
+
 define
   bind f (Success a src)
     == parse (f a) src;
@@ -11,7 +15,6 @@ define
   filter p Failure
     == Failure;
 end
-
 
 define
   parse (Parser p) src

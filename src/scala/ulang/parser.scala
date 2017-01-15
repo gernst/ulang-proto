@@ -88,7 +88,9 @@ object grammar {
   
   val patnamed = "@" ~ strict_patarg
   val patatom = nonmixfix ~ patnamed.? map {
+    case ("_", None) => Wildcard
     case (name, None) => Atom(name)
+    case ("_", Some(pat)) => pat
     case (name, Some(pat)) => SubPat(name, pat)
   }
 
