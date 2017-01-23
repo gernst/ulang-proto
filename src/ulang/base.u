@@ -13,7 +13,8 @@ define
   const x == \y -> x;
   
   curry   f == \x -> \y ->  f x y;
-  uncurry f == \x     y -> (f x) y;
+  uncurry f == \x y -> (f x) y;
+  tupled  f == \(x,y) -> f x y;
   
   g . f == \x -> g (f x);
   

@@ -1,8 +1,9 @@
 notation
   data [] ::;
   
-  infix right 8 ::,
-  infix right 7 ++;
+  infix right 10 ::;
+  infix right 9 **;
+  infix right 8 ++;
 end
 
 pattern
@@ -23,11 +24,17 @@ define
   head (x :: xs) == x;
   tail (x :: xs) == xs;
   
+  length [] == 0;
+  length (_ :: xs) == length xs +1;
+  
   take 0 xs == [];
   take (n +1) (x :: xs) == x :: take n xs;
 
   [] ++ ys == ys;
   (x :: xs) ++ ys == x :: (xs ++ ys);
+  
+  [] ** ys == [];
+  (x :: xs) ** ys == map (\y -> (x,y)) ys ++ (xs ** ys);
 
   map f [] == [];
   map f (x :: xs) == (f x) :: (map f xs);
@@ -88,9 +95,19 @@ define
   lookup _ [] == None;
   lookup x ((x,y) :: xs) == Some y;
   lookup x (_ :: xs) == lookup x xs;
-
-  store x z xs
-    == (x,z) :: xs;
+  
+  store x z xs == (x,z) :: xs;
+  
+  reverse [] ys == ys;
+  reverse (x :: xs) ys == reverse xs (x :: ys);
+  reverse xs == reverse xs [];
+  
+  qsort (<) []
+    == [];
+  qsort (<) (x :: xs)
+    == let lesser  = filter (\y -> y < x) xs in
+       let greater = filter (\y -> not y < x) xs in
+       (qsort (<) lesser) ++ [x] ++ (qsort (<) greater);
 end
 
 test
@@ -100,4 +117,12 @@ test
   
   [0 1 2 3 4]: List Nat == True;
   [A]: List Nat == False;
+  
+  [1] ** [A] == [(1,A)];
+  
+  [1 2 3] ** [A B C] == [(1,A) (1,B) (1,C)
+                         (2,A) (2,B) (2,C)
+                         (3,A) (3,B) (3,C)];
+  
+  qsort (<) [3 2 1 4 2 3 1] == [1 1 2 2 3 3 4];
 end

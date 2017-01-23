@@ -139,8 +139,31 @@ define
 end
 
 define
+  con [] ctx
+    == reverse ctx;
+  con (phi :: todo) ctx
+    == let newctx = assume todo ctx in
+       let newphi = simp phi False newctx in
+       con todo (assume newphi ctx);
+end
+
+define
+  rule_cut phi
+    == Rule "cut" \seq@(Seq phis) ->
+      [(Seq     (phi :: phis))
+       (Seq (Not phi :: phis))];
+
+  rule_simp
+    == Rule "simplify" \seq@(Seq phis) ->
+      [(Seq (con phis []))];
+
+  apply (Rule name prems) concl
+    == Step (prems concl) concl name;
+end
+
+define
   prove phi
-    == simp phi True [];
+    == apply rule_simp (Seq (Not phi :: []));
 end
 
 eval

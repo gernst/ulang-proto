@@ -1,8 +1,16 @@
 notation
   infix 7 ~;
+  postfix 11 * +;
 end
 
 define
+  /* NOTE: Capturing submatches seems complicated due to nondeterminism.
+           However, in scanners, the top-level regex is
+             P1 | P2 | ...
+           and given that the Alt case forks off both subexpressions anyway,
+           it is equally efficient just to try them all for the longest match.
+  */
+
   nullable Empty
     == False;
   nullable Eps
@@ -35,6 +43,40 @@ define
     == derive c r ~ cs;
 end
 
+define
+  dnf (Or a b)
+    == (dnf a) ++ (dnf b);
+  dnf (And a b)
+    == map (tupled (++)) (dnf a ** dnf b);
+  dnf a
+    == [a];
+end
+
+define
+  init == 0;
+  next st == st +1;
+  fin == const [Accept];
+  
+  close eps
+  
+  nfa Eps depth cont
+    == cont depth;
+  nfa (Char a) depth cont
+    == Char a :: cont (depth +1);
+  nfa (Alt r s) depth cont
+    == let nr = (nfa r (depth +1) cont) in
+       let ns = (nfa s (depth +1) cont) in
+       [(Split nr ns)];
+  nfa (Seq r s) depth cont
+    == let ns = \depth -> nfa s depth cont
+       in nfa r depth ns;
+  nfa (Rep r) depth cont
+    == let ne = (cont depth) in
+       let nb = (const [(Backtrack depth)]) in
+       let nr = (nfa r (depth +1) nb) in
+       [(Split ne nr)];
+end
+
 eval
-  Seq (Char A) (Rep (Char B)) ~ [A B B];
+  nfa (Rep (Seq (Char A) (Char B))) init fin;
 end
