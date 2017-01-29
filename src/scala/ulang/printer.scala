@@ -82,8 +82,6 @@ object printer {
       names.mkString("import\n  ", " ", ";")
     case Nots(fixs) =>
       fixs.mkString("notation\n  ", "\n  ", "\nend\n")
-    case Pats(pats) =>
-      pats.mkString("pattern\n  ", "\n  ", "\nend\n")
     case Defs(defs) =>
       defs.mkString("define\n  ", "\n  ", "\nend\n")
     case Tests(tests) =>
@@ -94,8 +92,8 @@ object printer {
     case Module(defs) =>
       defs.mkString("", "\n", "\n")
 
-    case State(_, pats, defs) =>
-      (pats ++ defs).mkString("", "\n", "\n")
+    case State(_, defs) =>
+      defs.mkString("", "\n", "\n")
 
     case Model(dyn) =>
       val lines = dyn.map { case (name, rhs) => name + " == " + rhs + ";" }

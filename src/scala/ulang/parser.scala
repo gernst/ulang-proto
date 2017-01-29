@@ -130,7 +130,7 @@ object grammar {
 
   val open = expr | anyatom
   val patopen = pat | anyatom
-
+  
   val unapp = UnApp.from(patarg, patargs)
   val app = App.from(arg, args)
 
@@ -153,13 +153,12 @@ object grammar {
   val test = Test.from(expr, eqq_)
 
   val imports = parens("import", Imports.from(names), ";")
-  val patdefs = section("pattern", Pats, df, "end")
   val defs = section("define", Defs, df_cond, "end")
   val tests = section("test", Tests, test, "end")
   val nots = section("notation", Nots, fix | data, "end")
   val evals = section("eval", Evals, expr, "end")
 
-  val cmd = imports | nots | patdefs | defs | tests | evals;
+  val cmd = imports | nots | defs | tests | evals;
   val strict_cmd = expect("top level section", cmd)
   val cmds = strict_cmd *
 

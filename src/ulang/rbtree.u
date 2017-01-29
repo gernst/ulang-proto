@@ -2,6 +2,10 @@ notation
   infix 6 <;
 end
 
+/* Okasaki's functional RB trees
+ * with Might's extension for deletion
+ */
+
 define
   isBB EE == True;
   isBB (T BB _ _ _) == True;

@@ -6,24 +6,20 @@ import java.io.Reader
 import arse._
 import scala.io.StdIn
 
-case class State(mods: Set[String], pats: List[Def], defs: List[Def]) extends Pretty {
+case class State(mods: Set[String], defs: List[Def]) extends Pretty {
   def +(ctx: String) = {
-    State(mods + ctx, pats, defs)
-  }
-
-  def pattern(that: List[Def]) = {
-    State(mods, pats ++ that, defs)
+    State(mods + ctx, defs)
   }
 
   def define(that: List[Def]) = {
-    State(mods, pats, defs ++ that)
+    State(mods, defs ++ that)
   }
 }
 
 case class Model(dyn: Env) extends Pretty
 
 object State {
-  def empty = State(Set(), Nil, Nil)
+  def empty = State(Set(), List())
 }
 
 object shell {
@@ -55,10 +51,24 @@ object shell {
     Console.err.flush
   }
 
+  def safe[A](f: => A) = try {
+    Some(f)
+  } catch {
+    case e: StackOverflowError =>
+      err("fatal: stack overflow")
+      None
+    case e: Throwable =>
+      err("fatal: " + e)
+      // e.printStackTrace()
+      None
+  }
+
   def main(args: Array[String]) {
-    load("base")
-    load("prover")
-    load("regex")
+    safe {
+      load("base")
+      load("test")
+      // load("regex")
+    }
     // repl()
   }
 
@@ -84,7 +94,7 @@ object shell {
 
   def repl() {
     while (true) {
-      try {
+      safe {
         input() match {
           case null =>
             out(":quit")
@@ -100,12 +110,6 @@ object shell {
           case line =>
             read("", line)
         }
-      } catch {
-        case e: StackOverflowError =>
-          err("fatal: stack overflow")
-        case e: Throwable =>
-          err("fatal: " + e.getMessage)
-          e.printStackTrace()
       }
     }
   }
@@ -128,9 +132,9 @@ object shell {
       in = rest
     }
   }
-  
+
   def merged(st: State) = st match {
-    case State(mods, pats, defs) =>
+    case State(mods, defs) =>
       val funs = defs.distinct.collect {
         case Def(UnApp(id: Id, pats), cond, rhs) if !pats.isEmpty =>
           (id, Case(pats, cond, rhs))
@@ -146,11 +150,11 @@ object shell {
           df
       }
 
-      State(mods, pats, merged.toList ++ consts)
+      State(mods, merged.toList ++ consts)
   }
 
   def model(st: State) = st match {
-    case State(_, _, defs) =>
+    case State(_, defs) =>
 
       val dyn = defs.foldLeft(Env.default) {
         case (dyn, df) =>
@@ -181,9 +185,6 @@ object shell {
         case not =>
           sys.error("unknown notation: " + not)
       }
-
-    case Pats(pats) =>
-      st = st pattern pats
 
     case Defs(defs) =>
       // out("checking " + existing.length + " existing patterns against " + defs.length + " new ones from " + ctx)

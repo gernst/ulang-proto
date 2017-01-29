@@ -129,16 +129,6 @@ define
 end
 
 define
-  find x s
-    == match (lookup x s) with
-         | None -> x
-         | Some y -> find y s;
-
-  union x y s
-    == store (find x s) (find y s) s;
-end
-
-define
   con [] ctx
     == reverse ctx;
   con (phi :: todo) ctx
@@ -148,25 +138,54 @@ define
 end
 
 define
+  open (Seq phis) == phis;
+  open (Step prems _ _) == flatmap open prems;
+  closed? (Seq phis) == False;
+  closed? (Step prems _ _) == forall closed? prems;
+  
+  try_close (Seq phis)
+    == if (contains False phis)
+       then []
+       else [(Seq phis)];
+
   rule_cut phi
-    == Rule "cut" \seq@(Seq phis) ->
-      [(Seq     (phi :: phis))
-       (Seq (Not phi :: phis))];
+    == Rule "cut" \(Seq phis) ->
+         [(Seq     (phi :: phis))
+          (Seq (Not phi :: phis))];
+
+  split phi psi == Some [phi (And (Not phi) psi)];
+  cases (Or phi psi) == split phi psi;
+  cases (Imp phi psi) == split (Not phi) psi;
+  cases (Not (And phi psi)) == split (Not phi) (Not psi);
+
+  cases (Eqv phi psi) == Some [(And phi psi) (Not (Or phi psi))];
+  cases (Not (Eqv phi psi)) == Some [(Imp phi psi) (Imp psi phi)];
+
+/*
+  rule_case
+    == Rule "case" \(Seq phis) ->
+    */   
 
   rule_simp
-    == Rule "simplify" \seq@(Seq phis) ->
-      [(Seq (con phis []))];
+    == Rule "simplify" \(Seq phis) ->
+         [(Seq (con phis []))];
 
-  apply (Rule name prems) concl
-    == Step (prems concl) concl name;
+  apply (Rule name derive) concl
+    == let prems = (derive concl)
+       in Step (flatmap try_close prems) concl name;
 end
 
 define
   prove phi
-    == apply rule_simp (Seq (Not phi :: []));
+    == let proof = apply rule_simp (Seq (Not phi :: []))
+       in if closed? proof
+          then Closed
+          else Seq (open proof);
 end
 
 eval
+  prove (And P Q);
+
   // Pelletier's problems
   prove (Eqv (Imp P Q) (Imp (Not Q) (Not P)));
   prove (Eqv (Not (Not P)) P);

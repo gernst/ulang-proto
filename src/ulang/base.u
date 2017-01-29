@@ -14,7 +14,7 @@ define
   
   curry   f == \x -> \y ->  f x y;
   uncurry f == \x y -> (f x) y;
-  tupled  f == \(x,y) -> f x y;
+  tupled  f == \(x, y) -> f x y;
   
   g . f == \x -> g (f x);
   
@@ -31,30 +31,4 @@ import
 
 define
   flatmap f xs == flatten (map f xs);
-  test p@(x,y) == p;
-  test l@(x :: y) == l;
-end
-
-eval
-  flatten [[A B] [C D]];
-  flatten (Some (Some A));
-  
-  test (1,2);
-  test (A :: []);
-  
-  $ x;
-  let z = $ X
-  in [z (force z) z];
-  
-  flatmap (\x -> [X x]) [A B C];
-  collect (\x -> if x = B then None else Some x) [A B C];
-  /* [ if x = B then None else Some x
-     | x <- [A B C]
-     ] */
-
-  ` x;
-  ` f x;  
-  
-  "hello";
-  'x';
 end

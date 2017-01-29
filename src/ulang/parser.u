@@ -4,7 +4,9 @@ end
 
 define
   bind f (Success a src)
-    == parse (f a) src;
+    == let (Parser p) = (f a)
+       in p src;
+
   bind f Failure
     == Failure;
   

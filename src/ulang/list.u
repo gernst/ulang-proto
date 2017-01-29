@@ -6,11 +6,6 @@ notation
   infix right 8 ++;
 end
 
-pattern
-  [] == Nil;
-  x :: xs == Cons x xs;
-end
-
 define
   []: List a == True;
   x :: xs: List a == x: a and xs: List a;
@@ -18,6 +13,8 @@ define
 end
 
 define
+  // [x ...] == x :: ... Nil;
+
   list None == [];
   list (Some x) == [x];
   
@@ -54,6 +51,12 @@ define
   
   unfoldr f (f x y) == x :: (unfoldr f y);
   unfoldr f z == z;
+  
+  forall p [] == True;
+  forall p (x :: xs) == if not p x then False else forall p xs;
+  
+  exists p [] == False;
+  exists p (x :: xs) == if p x then True else exists p xs;
 
   flatten [] == [];
   flatten ([] :: ys) == flatten ys;
@@ -68,21 +71,23 @@ define
        in (x :: xs, y :: ys);
 
   filter p [] == [];
-  
-  /* needs specific pattern grammar
-  filter p (x :: xs) if (p x)
-    == x :: filter p xs;
-  filter p (_ :: xs)
-    == filter p xs;
-   */
-  
   filter p (x :: xs)
     == let ys = (filter p xs)
        in if (p x) then (x :: ys) else ys;
+       
+  partition p [] == ([], []);
+  partition p (x :: xs)
+    == let (ys,zs) = partition p xs
+       in if p x then (x :: ys, zs)
+                 else (ys, x :: zs);
   
   contains x [] == False;
   contains x (x :: xs) == True;
   contains x (y :: xs) == contains x xs;
+  
+  find p [] == None;
+  find p (x :: xs) if px == Some x;
+  find p (_ :: xs) == find p xs;
        
   get _ [] == None;
   get 0      (x :: xs) == Some x;
@@ -105,8 +110,7 @@ define
   qsort (<) []
     == [];
   qsort (<) (x :: xs)
-    == let lesser  = filter (\y -> y < x) xs in
-       let greater = filter (\y -> not y < x) xs in
+    == let (lesser, greater) = partition (\y -> y < x) xs in
        (qsort (<) lesser) ++ [x] ++ (qsort (<) greater);
 end
 
@@ -114,6 +118,7 @@ test
   [0 1 2] ++ [3 4] == [0 1 2 3 4]; 
   map (+1) [0 1 2 3] == [1 2 3 4];
   filter even [0 1 2 3 4] == [0 2 4];
+  partition even [0 1 2 3 4] == ([0 2 4], [1 3]);
   
   [0 1 2 3 4]: List Nat == True;
   [A]: List Nat == False;
@@ -125,4 +130,6 @@ test
                          (3,A) (3,B) (3,C)];
   
   qsort (<) [3 2 1 4 2 3 1] == [1 1 2 2 3 3 4];
+  
+  A :: [B C] == [A B C];
 end

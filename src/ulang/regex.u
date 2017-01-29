@@ -19,8 +19,12 @@ define
     == False;
   nullable (Rep _)
     == True;
-  nullable (Alt r s)
+  nullable (Not r)
+    == not nullable r;
+  nullable (Or r s)
     == nullable r or nullable s;
+  nullable (And r s)
+    == nullable r and nullable s;
   nullable (Seq r s)
     == nullable r and nullable s;
   
@@ -30,53 +34,23 @@ define
     == if a = c then Eps else Empty;
   derive c (Rep r)
     == Seq (derive c r) (Rep r);
-  derive c (Alt r s)
-    == Alt (derive c r) (derive c s);
+  derive c (Not r)
+    == Not (derive c r);
+  derive c (Or r s)
+    == Or (derive c r) (derive c s);
+  derive c (And r s)
+    == And (derive c r) (derive c s);
   derive c (Seq r s)
     == if nullable r
        then Alt (Seq (derive c r) s) (derive c s)
        else                          (derive c s);
 
-  r ~ []
-    == nullable r;
-  r ~ c :: cs
-    == derive c r ~ cs;
+  derives [] r
+    == r;
+  derives (c :: cs) r
+    == derive c (derives cs r);
+
+  r ~ cs
+    == nullable (derives cs r);
 end
 
-define
-  dnf (Or a b)
-    == (dnf a) ++ (dnf b);
-  dnf (And a b)
-    == map (tupled (++)) (dnf a ** dnf b);
-  dnf a
-    == [a];
-end
-
-define
-  init == 0;
-  next st == st +1;
-  fin == const [Accept];
-  
-  close eps
-  
-  nfa Eps depth cont
-    == cont depth;
-  nfa (Char a) depth cont
-    == Char a :: cont (depth +1);
-  nfa (Alt r s) depth cont
-    == let nr = (nfa r (depth +1) cont) in
-       let ns = (nfa s (depth +1) cont) in
-       [(Split nr ns)];
-  nfa (Seq r s) depth cont
-    == let ns = \depth -> nfa s depth cont
-       in nfa r depth ns;
-  nfa (Rep r) depth cont
-    == let ne = (cont depth) in
-       let nb = (const [(Backtrack depth)]) in
-       let nr = (nfa r (depth +1) nb) in
-       [(Split ne nr)];
-end
-
-eval
-  nfa (Rep (Seq (Char A) (Char B))) init fin;
-end
