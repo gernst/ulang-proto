@@ -116,10 +116,7 @@ object interpreter {
   }
 
   def eval(expr: Expr, lex: Env, dyn: Env): Val = {
-    debugger.trap(expr, lex, dyn) match {
-      case None => _eval(expr, lex, dyn)
-      case Some(res) => res
-    }
+    debugger.trap(expr, lex, dyn) or _eval(expr, lex, dyn)
   }
 
   def _eval(expr: Expr, lex: Env, dyn: Env): Val = expr match {
