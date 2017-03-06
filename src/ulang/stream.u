@@ -1,12 +1,12 @@
 define
-  inf x == $ x :: inf x;
-  test == inf 0;
+  inf x = $ x :: inf x;
+  test = inf 0;
   
-  huge == 4 ^ 4;
+  huge = 4 ^ 4;
     
-  take (n +1) ($ x :: xs) == x :: take n xs;
+  take (n +1) ($ x :: xs) = x :: take n xs;
   
-  long == take huge test;
+  long = take huge test;
 end
 
 eval

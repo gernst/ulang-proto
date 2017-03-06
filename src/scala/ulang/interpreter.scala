@@ -12,9 +12,9 @@ case class Obj(tag: Tag, args: List[Val]) extends Pretty with Eq
 
 case class Lazy(body: Expr, lex: Env) extends Pretty {
   var memo: Option[Val] = None
-  def getOrElseUpdate(f: => Val) = {
+  def force(dyn: Env) = {
     if (memo == None)
-      memo = Some(f)
+      memo = Some(interpreter.eval(body, lex, dyn))
     memo.get
   }
 }
@@ -137,7 +137,7 @@ object interpreter {
     case Force(pat) =>
       arg match {
         case arg @ Lazy(body, lex) =>
-          val inner = arg.getOrElseUpdate(eval(body, lex, dyn))
+          val inner = arg.force(dyn)
           bind(pat, inner, dyn, env)
         case _ =>
           fail
@@ -161,14 +161,6 @@ object interpreter {
 
     case _ =>
       fail
-
-    /*
-    case (_, Nil) =>
-      sys.error("missing arguments for " + pats.mkString(" "))
-
-    case (Nil, _) =>
-      sys.error("extra arguments " + args.mkString(" "))
-      */
   }
 
   def apply(cs: Case, args: List[Val], lex: Env, dyn: Env): Val = cs match {
@@ -185,7 +177,7 @@ object interpreter {
 
   def apply(cases: List[Case], args: List[Val], lex: Env, dyn: Env): Val = cases match {
     case Nil =>
-      fail // sys.error("no case for " + args.mkString(" "))
+      fail
 
     case cs :: rest =>
       apply(cs, args, lex, dyn) or apply(rest, args, lex, dyn)
@@ -242,9 +234,7 @@ object interpreter {
       Lazy(body, lex)
 
     case App(fun, args) =>     
-      // println("eval " + expr + " in " + lex.mkString(" "))
       val res = apply(eval(fun, lex, dyn), eval(args, lex, dyn), dyn)
-      // println("eval " + expr + " in " + lex.mkString(" ") + " = " + res)
       res
 
     case MatchWith(args, cases) =>

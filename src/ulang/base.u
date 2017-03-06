@@ -4,31 +4,31 @@ notation
   infix 6 :;
 
   // infix right 6 ,;
-  infix       6 =;
+  // infix       6 =;
   infix right 9 .;
 end
 
 define
-  id x == x;
-  const x == \y -> x;
+  id x = x;
+  const x = \y -> x;
   
-  curry   f == \x -> \y ->  f x y;
-  uncurry f == \x y -> (f x) y;
-  tupled  f == \(x, y) -> f x y;
+  curry   f = \x -> \y ->  f x y;
+  uncurry f = \x y -> (f x) y;
+  tupled  f = \(x, y) -> f x y;
   
-  g . f == \x -> g (f x);
+  g . f = \x -> g (f x);
   
-  force $ x == x;
+  force ($ x) = x;
 end
 
 test
-  id A == A;
-  (const A) B == A;
+  id A = A;
+  (const A) B = A;
 end
 
 import
   bool nat option list;
 
 define
-  flatmap f xs == flatten (map f xs);
+  flatmap f xs = flatten (map f xs);
 end

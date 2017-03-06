@@ -12,7 +12,7 @@ object operators extends Syntax[String] {
   var data: Set[String] = Set(",")
   var prefix_ops: Map[String, Int] = Map()
   var postfix_ops: Map[String, Int] = Map()
-  var infix_ops: Map[String, (Assoc, Int)] = Map()
+  var infix_ops: Map[String, (Assoc, Int)] = Map("=" -> (Non, 6))
 }
 
 object parser {
@@ -39,8 +39,6 @@ object parser {
 }
 
 object grammar {
-  import arse.Mixfix._
-
   val keywords = Set(",", ";", "(", ")", "{", "}", "[", "]", "->", "==", "$", "`", "|", "\\",
     "if", "then", "else", "let", "in", "match", "with", "end")
 
@@ -74,7 +72,7 @@ object grammar {
   val fix = Fix.from(fixity, names)
   val data = "data" ~! Data.from(names)
 
-  val pat: Parser[List[String], Pat] = P(mixfix(inner_pat, Atom, UnApp, operators))
+  val pat: Mixfix[List[String], Atom, Pat] = mixfix(inner_pat, Atom, UnApp, operators)
   val pats = pat.rep(sep = ",")
 
   val patarg: Parser[List[String], Pat] = P(("(" ~! patopen ~! ")") | force | any | patlist | patatom)
@@ -88,7 +86,7 @@ object grammar {
     case (name, Some(pat)) => SubPat(name, pat)
   }
 
-  val expr: Parser[List[String], Expr] = P(mixfix(inner_expr, Atom, App, operators))
+  val expr: Mixfix[List[String], Atom, Expr] = mixfix(inner_expr, Atom, App, operators)
   val exprs = expr.rep(sep = ",")
 
   val arg: Parser[List[String], Expr] = P(("(" ~! open ~! ")") | fun | matches | ite | let | susp | escape | any | list | atom)
@@ -122,18 +120,17 @@ object grammar {
 
   val tuple = exprs map builtin.reify_tuple
   val pattuple = pats map builtin.reify_tuple
-  
+
   val open = tuple | anyatom
   val patopen = pattuple | anyatom
 
-  val unapp = UnApp.from(patarg, patargs)
-  val app = App.from(arg, args)
+  val unapp = P(UnApp.from(patarg, patargs))
+  val app = P(App.from(arg, args))
 
   val inner_pat = unapp | patarg
   val inner_expr = app | arg
 
   val escape = "`" ~! expr map builtin.reify
-
 
   val list = ("[" ~! exprs ~! "]") map builtin.reify_list
   val patlist = ("[" ~! pats ~! "]") map builtin.reify_list
@@ -143,14 +140,19 @@ object grammar {
     s0 ~! c.from(q *) ~! s1
   }
 
-  val eqq_ = !"==" ~! expr
-  val df = Def.from(pat, ret(None), eqq_)
-  val df_cond = Def.from(pat, cond, eqq_)
+  val expr_high = expr above 7
+  val cond_high = ("if" ~! expr_high).?
+  val pat_high = pat above 7
+  val pat_low = pat above 2
 
-  val test = Test.from(expr, eqq_)
+  val eqq_ = !"=" ~! expr
+  val df_eq = Def.from(pat_high, cond_high, "=" ~! expr)
+  val df_eqv = Def.from(pat_low, cond, "<=>" ~! expr)
+
+  val test = Test.from(expr)
 
   val imports = "import" ~! Imports.from(names) ~! ";"
-  val defs = section("define", Defs, df_cond, "end")
+  val defs = section("define", Defs, df_eq | df_eqv, "end")
   val tests = section("test", Tests, test, "end")
   val nots = section("notation", Nots, fix | data, "end")
   val evals = section("eval", Evals, expr, "end")

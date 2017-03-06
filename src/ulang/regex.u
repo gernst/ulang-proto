@@ -12,45 +12,45 @@ define
   */
 
   nullable Empty
-    == False;
+    = False;
   nullable Eps
-    == True;
+    = True;
   nullable (Char _)
-    == False;
+    = False;
   nullable (Rep _)
-    == True;
+    = True;
   nullable (Not r)
-    == not nullable r;
+    = not nullable r;
   nullable (Or r s)
-    == nullable r or nullable s;
+    = nullable r or nullable s;
   nullable (And r s)
-    == nullable r and nullable s;
+    = nullable r and nullable s;
   nullable (Seq r s)
-    == nullable r and nullable s;
+    = nullable r and nullable s;
   
   derive c Eps
-    == Empty;
+    = Empty;
   derive c (Char a)
-    == if a = c then Eps else Empty;
+    = if a = c then Eps else Empty;
   derive c (Rep r)
-    == Seq (derive c r) (Rep r);
+    = Seq (derive c r) (Rep r);
   derive c (Not r)
-    == Not (derive c r);
+    = Not (derive c r);
   derive c (Or r s)
-    == Or (derive c r) (derive c s);
+    = Or (derive c r) (derive c s);
   derive c (And r s)
-    == And (derive c r) (derive c s);
+    = And (derive c r) (derive c s);
   derive c (Seq r s)
-    == if nullable r
+    = if nullable r
        then Alt (Seq (derive c r) s) (derive c s)
        else                          (derive c s);
 
   derives [] r
-    == r;
+    = r;
   derives (c :: cs) r
-    == derive c (derives cs r);
+    = derive c (derives cs r);
 
   r ~ cs
-    == nullable (derives cs r);
+    = nullable (derives cs r);
 end
 

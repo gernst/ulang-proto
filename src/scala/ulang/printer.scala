@@ -66,8 +66,8 @@ object printer {
       lhs + " == " + rhs + ";"
     case Def(lhs, Some(cond), rhs) =>
       lhs + " if " + cond + " == " + rhs + ";"
-    case Test(lhs, rhs) =>
-      lhs + " == " + rhs + ";"
+    case Test(phi) =>
+      phi + ";"
 
     case Data(names) =>
       "data " + names.mkString(" ") + ";"

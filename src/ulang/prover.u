@@ -1,74 +1,74 @@
 define
-  triv (Not False) == True;
-  triv (Not True)  == False;
-  triv (Not (Not phi)) == phi;
+  triv (Not False) = True;
+  triv (Not True)  = False;
+  triv (Not (Not phi)) = phi;
   
-  triv (And True psi)  == psi;
-  triv (And False psi) == False;
-  triv (And phi True)  == phi;
-  triv (And phi False) == False;
-  triv (And phi phi)   == phi;
+  triv (And True psi)  = psi;
+  triv (And False psi) = False;
+  triv (And phi True)  = phi;
+  triv (And phi False) = False;
+  triv (And phi phi)   = phi;
   
-  triv (Or True psi)   == True;
-  triv (Or False psi)  == psi;
-  triv (Or phi True)   == True;
-  triv (Or phi False)  == phi;
-  triv (Or phi phi)    == phi;
+  triv (Or True psi)   = True;
+  triv (Or False psi)  = psi;
+  triv (Or phi True)   = True;
+  triv (Or phi False)  = phi;
+  triv (Or phi phi)    = phi;
   
-  triv (Imp True psi)  == psi;
-  triv (Imp False psi) == True;
-  triv (Imp phi True)  == True;
-  triv (Imp phi False) == Not phi;
-  triv (Imp phi phi)   == True;
+  triv (Imp True psi)  = psi;
+  triv (Imp False psi) = True;
+  triv (Imp phi True)  = True;
+  triv (Imp phi False) = Not phi;
+  triv (Imp phi phi)   = True;
   
-  triv (Eqv True psi)  == psi;
-  triv (Eqv False psi) == Not psi;
-  triv (Eqv phi True)  == phi;
-  triv (Eqv phi False) == Not phi;
-  triv (Eqv phi phi)   == True;
-  triv (Eqv phi (Not phi)) == False;
-  triv (Eqv (Not phi) phi) == False;
-  triv (Eqv (Not phi) (Not psi)) == Eqv phi psi;
+  triv (Eqv True psi)  = psi;
+  triv (Eqv False psi) = Not psi;
+  triv (Eqv phi True)  = phi;
+  triv (Eqv phi False) = Not phi;
+  triv (Eqv phi phi)   = True;
+  triv (Eqv phi (Not phi)) = False;
+  triv (Eqv (Not phi) phi) = False;
+  triv (Eqv (Not phi) (Not psi)) = Eqv phi psi;
   
-  triv (Eq expr expr) == True;
+  triv (Eq expr expr) = True;
 
-  triv phi == phi;
+  triv phi = phi;
 end
 
 define
   assume True ctx
-    == ctx;
+    = ctx;
   assume False ctx
-    == [False];
+    = [False];
   assume (Not phi) ctx
-    == assert phi ctx;
+    = assert phi ctx;
   assume (And phi psi) ctx
-    == assume phi (assume psi ctx);
+    = assume phi (assume psi ctx);
   assume phi ctx
-    == phi :: ctx;
+    = phi :: ctx;
     
   assumes phis ctx
-    == foldr assume ctx phis;
+    = foldr assume ctx phis;
     
   assert True ctx
-    == [False];
+    = [False];
   assert False ctx
-    == ctx;
+    = ctx;
   assert (Not phi) ctx
-    == assume phi ctx;
+    = assume phi ctx;
   assert (Imp phi psi) ctx
-    == assert psi (assume phi ctx);
+    = assert psi (assume phi ctx);
   assert (Or phi psi) ctx
-    == assert phi (assert psi ctx);
+    = assert phi (assert psi ctx);
   assert phi ctx
-    == triv (Not phi) :: ctx;
+    = triv (Not phi) :: ctx;
     
   asserts phis ctx
-    == foldr assert ctx phis;
+    = foldr assert ctx phis;
 
   binary phi phi_pos? phi_prove?
          psi psi_pos? psi_prove?
-         ctx ==
+         ctx =
   binary phi phi_pos? phi_prove?
          psi psi_pos? psi_prove? False
          ctx False;
@@ -76,7 +76,7 @@ define
   binary phi phi_pos? phi_prove?
          psi psi_pos? psi_prove? psi_done?
          ctx swap?
-    ==  let newctx = if psi_pos? then (assume psi ctx) else (assert psi ctx) in
+    =  let newctx = if psi_pos? then (assume psi ctx) else (assert psi ctx) in
         let newphi = simp phi phi_prove? newctx in
         let phi_done? = (phi = newphi) in
 
@@ -89,23 +89,23 @@ end
 
 define
   simp (Not phi) prove? ctx
-    == let newphi = (simp phi (not prove?) ctx)
+    = let newphi = (simp phi (not prove?) ctx)
        in triv (Not newphi);
   
   simp (And phi psi) prove? ctx
-    == let (newphi, newpsi) = binary phi True prove? psi True prove? ctx
+    = let (newphi, newpsi) = binary phi True prove? psi True prove? ctx
        in triv (And newphi newpsi);
   
   simp (Or phi psi) prove? ctx
-    == let (newphi, newpsi) = binary phi False prove? psi False prove? ctx
+    = let (newphi, newpsi) = binary phi False prove? psi False prove? ctx
        in triv (Or newphi newpsi);
   
   simp (Imp phi psi) prove? ctx
-    == let (newphi, newpsi) = binary phi True (not prove?) psi False prove? ctx
+    = let (newphi, newpsi) = binary phi True (not prove?) psi False prove? ctx
        in triv (Imp newphi newpsi);
 
   simp (Eqv phi psi) prove? ctx
-    == match (simp (Imp phi psi) prove? ctx)
+    = match (simp (Imp phi psi) prove? ctx)
              (simp (Imp psi phi) prove? ctx)
        with False _ -> False
           | _ False -> False
@@ -116,68 +116,68 @@ define
                  triv (Eqv newphi newpsi);
 
   simp (Eq lhs rhs) prove? ctx
-    == let newlhs = simp phi False ctx in
+    = let newlhs = simp phi False ctx in
        let newrhs = simp psi False ctx in
        triv (Eq newlhs newrhs);
   
   simp phi _ ctx if contains phi ctx
-    == True;
+    = True;
   simp phi _ ctx if contains (Not phi) ctx
-    == False;
+    = False;
   simp phi _ ctx
-    == phi;
+    = phi;
 end
 
 define
   con [] ctx
-    == reverse ctx;
+    = reverse ctx;
   con (phi :: todo) ctx
-    == let newctx = assume todo ctx in
+    = let newctx = assume todo ctx in
        let newphi = simp phi False newctx in
        con todo (assume newphi ctx);
 end
 
 define
-  open (Seq phis) == phis;
-  open (Step prems _ _) == flatmap open prems;
-  closed? (Seq phis) == False;
-  closed? (Step prems _ _) == forall closed? prems;
+  open (Seq phis) = phis;
+  open (Step prems _ _) = flatmap open prems;
+  closed? (Seq phis) = False;
+  closed? (Step prems _ _) = forall closed? prems;
   
   try_close (Seq phis)
-    == if (contains False phis)
+    = if (contains False phis)
        then []
        else [(Seq phis)];
 
   rule_cut phi
-    == Rule "cut" \(Seq phis) ->
+    = Rule "cut" \(Seq phis) ->
          [(Seq     (phi :: phis))
           (Seq (Not phi :: phis))];
 
-  split phi psi == Some [phi (And (Not phi) psi)];
-  cases (Or phi psi) == split phi psi;
-  cases (Imp phi psi) == split (Not phi) psi;
-  cases (Not (And phi psi)) == split (Not phi) (Not psi);
+  split phi psi = Some [phi (And (Not phi) psi)];
+  cases (Or phi psi) = split phi psi;
+  cases (Imp phi psi) = split (Not phi) psi;
+  cases (Not (And phi psi)) = split (Not phi) (Not psi);
 
-  cases (Eqv phi psi) == Some [(And phi psi) (Not (Or phi psi))];
-  cases (Not (Eqv phi psi)) == Some [(Imp phi psi) (Imp psi phi)];
+  cases (Eqv phi psi) = Some [(And phi psi) (Not (Or phi psi))];
+  cases (Not (Eqv phi psi)) = Some [(Imp phi psi) (Imp psi phi)];
 
 /*
   rule_case
-    == Rule "case" \(Seq phis) ->
+    = Rule "case" \(Seq phis) ->
     */   
 
   rule_simp
-    == Rule "simplify" \(Seq phis) ->
+    = Rule "simplify" \(Seq phis) ->
          [(Seq (con phis []))];
 
   apply (Rule name derive) concl
-    == let prems = (derive concl)
+    = let prems = (derive concl)
        in Step (flatmap try_close prems) concl name;
 end
 
 define
   prove phi
-    == let proof = apply rule_simp (Seq (Not phi :: []))
+    = let proof = apply rule_simp (Seq (Not phi :: []))
        in if closed? proof
           then Closed
           else Seq (open proof);

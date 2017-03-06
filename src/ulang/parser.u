@@ -4,67 +4,67 @@ end
 
 define
   bind f (Success a src)
-    == let (Parser p) = (f a)
+    = let (Parser p) = (f a)
        in p src;
 
   bind f Failure
-    == Failure;
+    = Failure;
   
   filter p (Success a src)
-    == if (p a)
+    = if (p a)
        then (Success a src)
        else Failure;
   filter p Failure
-    == Failure;
+    = Failure;
 end
 
 define
   parse (Parser p) src
-    == p src;
+    = p src;
   
   fail
-    == Parser \_ -> Failure;
+    = Parser \_ -> Failure;
   
   return a
-    == Parser \src -> Success a src;
+    = Parser \src -> Success a src;
   
   item
-    == Parser \ [] -> Failure
+    = Parser \ [] -> Failure
               | (a :: src) -> Success a src;
   
   literal a
-    == filter (\b -> a = b) item;
+    = filter (\b -> a = b) item;
     
   bind (Parser p) f
-    == Parser \src -> bind f (p src);
+    = Parser \src -> bind f (p src);
 
   filter p (Parser q)
-    == Parser \src -> filter p (q src);
+    = Parser \src -> filter p (q src);
   
   (Parser p) or (Parser q)
-    == Parser \src -> match (p src) with
+    = Parser \src -> match (p src) with
          | Failure -> q src
          | res -> res;
 end
 
 define
   map f p1
-    == bind p1 \a1 ->
+    = bind p1 \a1 ->
          return f a1;
 
   map f p1 p2
-    == bind p1 \a1 ->
+    = bind p1 \a1 ->
        bind p2 \a2 ->
          return f a1 a2;
 
   map f p1 p2 p3
-    == bind p1 \a1 ->
+    = bind p1 \a1 ->
        bind p2 \a2 ->
        bind p3 \a3 ->
          return f a1 a2 a3;
 
   map f p1 p2 p3 p4
-    == bind p1 \a1 ->
+    = bind p1 \a1 ->
        bind p2 \a2 ->
        bind p3 \a3 ->
        bind p4 \a4 ->

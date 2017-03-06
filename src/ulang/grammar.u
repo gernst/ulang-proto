@@ -2,16 +2,16 @@ import prelude;
 
 define
   ulang defs
-    == map split defs;
+    = map split defs;
   
   lambdas args body
-    == foldr Lambda body args;
+    = foldr Lambda body args;
 
   unapps expr
-    == unfold App expr Nil;
+    = unfold App expr Nil;
   
   split (Def lhs rhs)
-    == let (fun, args) = unapps lhs
+    = let (fun, args) = unapps lhs
        in (fun, lambdas args rhs);
 end
 
@@ -20,7 +20,7 @@ grammar ulang
   ulang ::= def * { ulang };
   
   expr ::= app;
-  def ::= expr '==' expr ';' { Def };
+  def ::= expr '=' expr ';' { Def };
   
   open ::= '(' expr ')';
   closed ::= open | fun | ite | let | matches | id;

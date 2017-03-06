@@ -67,7 +67,7 @@ object shell {
   def main(args: Array[String]) {
     safe {
       load("base")
-      load("test")
+      // load("test")
       // load("regex")
     }
     // repl()
@@ -188,12 +188,10 @@ object shell {
       }
 
     case Defs(defs) =>
-      // out("checking " + existing.length + " existing patterns against " + defs.length + " new ones from " + ctx)
       st.defs.collect {
         case Def(UnApp(fun: Id, pats1), _, _) =>
           defs.collect {
             case Def(UnApp(`fun`, pats2), _, _) =>
-              // out("checking " + App(fun, pat1) + " and " + App(fun, pat2))
               if (!compatible(pats1, pats2))
                 err("patterns " + UnApp(fun, pats1) + " and " + UnApp(fun, pats2) + " overlap")
           }
@@ -206,8 +204,13 @@ object shell {
 
       new tst.Test {
         test(ctx) {
-          for (Test(lhs, rhs) <- tests) {
-            eval(lhs, lex, dyn) expect eval(rhs, lex, dyn)
+          for (Test(phi) <- tests) {
+            phi match {
+              case App(Id("="), List(lhs, rhs)) =>
+                eval(lhs, lex, dyn) expect eval(rhs, lex, dyn)
+              case _ =>
+                eval(phi, lex, dyn) expect builtin.True
+            }
           }
         }
       }

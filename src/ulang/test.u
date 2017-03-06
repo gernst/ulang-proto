@@ -29,3 +29,11 @@ eval
   'x';
    ` (==>);
 end
+
+/*
+lemma
+  assume n: Nat and m: Nat;
+  show n + m : Nat;
+  show n + m = m + n;
+end
+*/

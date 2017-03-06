@@ -34,7 +34,7 @@ case class Data(names: List[String]) extends Not
 case class Fix(fixity: Fixity, names: List[String]) extends Not
 
 case class Def(lhs: Pat, cond: Option[Expr], rhs: Expr) extends Pretty
-case class Test(lhs: Expr, rhs: Expr) extends Pretty
+case class Test(phi: Expr) extends Pretty
 
 sealed trait Cmd extends Pretty
 case class Imports(names: List[String]) extends Cmd
