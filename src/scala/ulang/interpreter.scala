@@ -84,7 +84,7 @@ object interpreter {
       cond.map(eval(_, newlex, dyn)).foreach {
         case builtin.True =>
         case builtin.False => fail
-        case res => sys.error("not a condition in pattern: " + res)
+        case res => sys.error("not a boolean in pattern: " + res)
       }
       eval(body, newlex, dyn)
   }
@@ -115,7 +115,14 @@ object interpreter {
     exprs map (eval(_, lex, dyn))
   }
 
-  def eval(expr: Expr, lex: Env, dyn: Env): Val = expr match {
+  def eval(expr: Expr, lex: Env, dyn: Env): Val = {
+    debugger.trap(expr, lex, dyn) match {
+      case None => _eval(expr, lex, dyn)
+      case Some(res) => res
+    }
+  }
+
+  def _eval(expr: Expr, lex: Env, dyn: Env): Val = expr match {
     case tag: Tag =>
       tag
 
@@ -141,7 +148,7 @@ object interpreter {
       eval(test, lex, dyn) match {
         case builtin.True => eval(arg1, lex, dyn)
         case builtin.False => eval(arg2, lex, dyn)
-        case res => sys.error("not a condition in test: " + res)
+        case res => sys.error("not a boolean in test: " + res)
       }
 
     case Susp(body) =>
@@ -153,12 +160,12 @@ object interpreter {
 
     case Raise(args) =>
       throw Exc(eval(args, lex, dyn))
-      
+
     case TryCatch(arg, cases) =>
       try {
         eval(arg, lex, dyn)
       } catch {
-        case e@Exc(args) =>
+        case e @ Exc(args) =>
           apply(cases, args, lex, dyn) or { throw e }
       }
 
