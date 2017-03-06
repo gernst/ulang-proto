@@ -143,7 +143,7 @@ define
   closed? (Step prems _ _) = forall closed? prems;
   
   try_close (Seq phis)
-    = if (contains False phis)
+    = if contains False phis
       then []
       else [Seq phis];
 

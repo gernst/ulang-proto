@@ -136,10 +136,14 @@ object interpreter {
       val bound = lex.keys ++ dyn.keys
       sys.error("unbound identifier " + name + " in " + bound.mkString("[", " ", "]"))
 
-    case LetIn(pat, _arg, body) =>
-      val arg = eval(_arg, lex, dyn)
-      val env = bind(pat, arg, dyn, lex) or sys.error("cannot bind " + pat + " to " + arg)
-      eval(body, env, dyn)
+    case LetIn(eqs, body) =>
+      val bindings = eqs.map {
+        case LetEq(pat, arg) => (pat, eval(arg, lex, dyn))
+      }
+      val (pats, args) = bindings.unzip
+      val env = bind(pats, args, dyn, Env.empty)
+      val newlex = lex ++ env
+      eval(body, newlex, dyn)
 
     case IfThenElse(test, arg1, arg2) =>
       eval(test, lex, dyn) match {

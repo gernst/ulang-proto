@@ -29,6 +29,11 @@ object builtin {
       App(Tag("Id"), List(Lit(name)))
   }
 
+  def reify(eq: LetEq): Expr = eq match {
+    case LetEq(pat, arg) =>
+      App(Tag("LetEq"), List(reify(pat), reify(arg)))
+  }
+  
   def reify(cs: Case): Expr = cs match {
     case Case(pats, cond, body) =>
       App(Tag("Case"), List(reify_list(pats map reify), reify_option(cond map reify), reify(body)))
@@ -62,8 +67,8 @@ object builtin {
       App(Tag("Bind"), List(reify_list(cases map reify)))
     case IfThenElse(test, iftrue, iffalse) =>
       App(Tag("IfThenElse"), List(reify(test), reify(iftrue), reify(iffalse)))
-    case LetIn(pat, arg, body) =>
-      App(Tag("LetIn"), List(reify(pat), reify(arg), reify(body)))
+    case LetIn(eqs, body) =>
+      App(Tag("LetIn"), List(reify_list(eqs map reify), reify(body)))
     case MatchWith(args, cases) =>
       App(Tag("MatchWith"), List(reify_list(args map reify), reify_list(cases map reify)))
   }

@@ -100,8 +100,11 @@ object printer {
       "try " + arg + " catch " + cases.mkString(" | ")
     case MatchWith(args, cases) =>
       "match " + args.mkString(" ") + " with " + cases.mkString(" | ")
-    case LetIn(pat, arg, body) =>
-      "let " + pat + " = " + arg + " in " + body
+      
+    case LetEq(pat, arg) =>
+      pat + " = " + arg
+    case LetIn(eqs, body) =>
+      "let " + eqs.mkString(", ") + " in " + body
     case IfThenElse(test, iftrue, iffalse) =>
       "if " + test + " then " + iftrue + " else " + iffalse
     case Susp(body) =>

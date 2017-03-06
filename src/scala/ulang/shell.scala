@@ -68,8 +68,6 @@ object shell {
     safe {
       load("base")
       load("test")
-      // load("test")
-      // load("regex")
     }
     // repl()
   }

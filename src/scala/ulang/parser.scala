@@ -98,10 +98,11 @@ object grammar {
   val ite = IfThenElse.from(if_, then_, else_)
   val cond = if_.?
 
-  val let_ = "let" ~! patarg
-  val eq_ = !"=" ~! expr
+  val eq_ = LetEq.from(!patarg, !"=" ~! expr)
+  val eqs_ = eq_.rep(sep = ",")
+  val lets_ = "let" ~ eqs_
   val in_ = !"in" ~! expr
-  val let = LetIn.from(let_, eq_, in_)
+  val let = LetIn.from(lets_, in_)
 
   val arrow_ = !"->" ~! expr
   val cs = Case.from(pats, cond, arrow_)

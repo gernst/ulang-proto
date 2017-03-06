@@ -12,6 +12,9 @@ eval
   test (1,2);
   test (A :: []);
   
+  let x = X in let y = Y in
+  let x = y, y = x in (x, y);
+  
   try raise A, B
   catch A, C -> C | _, B -> D;
   
