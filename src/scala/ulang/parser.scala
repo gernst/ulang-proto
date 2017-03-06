@@ -6,6 +6,7 @@ import scala.language.postfixOps
 import scala.collection.mutable.ListBuffer
 
 import arse._
+import sourcecode.Name
 
 object operators extends Syntax[String] {
   var data: Set[String] = Set()
@@ -38,14 +39,10 @@ object parser {
 }
 
 object grammar {
-  import arse.Parser._
-  import arse.Recognizer._
   import arse.Mixfix._
 
   val keywords = Set(";", "(", ")", "{", "}", "[", "]", "->", "==", "$", "`", "|", "\\",
     "if", "then", "else", "let", "in", "match", "with", "end")
-
-  val strict_int = expect("number", int)
 
   val str = string collect {
     case s if s.head == '"' && s.last == '"' =>
@@ -68,25 +65,22 @@ object grammar {
   val right = lit("right", Right)
   val assoc = left | right | ret(Non)
 
-  val prefix = "prefix" ~ Prefix.from(strict_int)
-  val postfix = "postfix" ~ Postfix.from(strict_int)
-  val infix = "infix" ~ Infix.from(assoc, strict_int)
+  val prefix = "prefix" ~! Prefix.from(int)
+  val postfix = "postfix" ~! Postfix.from(int)
+  val infix = "infix" ~! Infix.from(assoc, int)
 
   val fixity = prefix | postfix | infix
 
   val fix = Fix.from(fixity, names)
-  val data = "data" ~ Data.from(names)
+  val data = "data" ~! Data.from(names)
 
-  val pat: Parser[List[String], Pat] = mixfix(inner_pat, Atom, UnApp, operators)
-  val pats = pat +
-  val strict_pat = expect("pattern", pat)
+  val pat: Parser[List[String], Pat] = P(mixfix(inner_pat, Atom, UnApp, operators))
+  val pats = pat.+
 
-  val patarg: Parser[List[String], Pat] = Parser.rec(parens("(", patopen, ")") | force |  any | patlist | patatom)
-  val patargs = patarg +
-  val strict_patarg = expect("closed pattern", patarg)
-  val strict_patargs = expect("list of patterns", patargs)
-  
-  val patnamed = "@" ~ strict_patarg
+  val patarg: Parser[List[String], Pat] = P(("(" ~! patopen ~! ")") | force | any | patlist | patatom)
+  val patargs = patarg.+
+
+  val patnamed = "@" ~! patarg
   val patatom = nonmixfix ~ patnamed.? map {
     case ("_", None) => Wildcard
     case (name, None) => Atom(name)
@@ -94,73 +88,69 @@ object grammar {
     case (name, Some(pat)) => SubPat(name, pat)
   }
 
-  val expr: Parser[List[String], Expr] = mixfix(inner_expr, Atom, App, operators)
-  val strict_expr = expect("expression", expr)
+  val expr: Parser[List[String], Expr] = P(mixfix(inner_expr, Atom, App, operators))
 
-  val arg: Parser[List[String], Expr] = Parser.rec(parens("(", open, ")") | fun | matches | ite | let | susp | escape | any | list | atom)
+  val arg: Parser[List[String], Expr] = P(("(" ~! open ~! ")") | fun | matches | ite | let | susp | escape | any | list | atom)
   val args = arg +
-  val strict_arg = expect("closed expression", arg)
-  val strict_args = expect("list of expressions", args)
 
-  val if_ = "if" ~ strict_expr
-  val then_ = expect("then") ~ strict_expr
-  val else_ = expect("else") ~ strict_expr
+  val if_ = "if" ~! expr
+  val then_ = !"then" ~! expr
+  val else_ = !"else" ~! expr
   val ite = IfThenElse.from(if_, then_, else_)
-  val cond = if_ ?
+  val cond = if_.?
 
-  val let_ = "let" ~ strict_patarg
-  val eq_ = expect("=") ~ strict_expr
-  val in_ = expect("in") ~ strict_expr
+  val let_ = "let" ~! patarg
+  val eq_ = !"=" ~! expr
+  val in_ = !"in" ~! expr
   val let = LetIn.from(let_, eq_, in_)
 
-  val arrow_ = "->" ~ strict_expr
+  val arrow_ = !"->" ~! expr
   val cs = Case.from(patargs, cond, arrow_)
-  val cases = "|".? ~ cs.rep(sep = "|")
+  val cases = "|".? ~ (!cs).rep(sep = "|")
 
-  val fun = "\\" ~ Bind.from(cases)
+  val fun = "\\" ~! Bind.from(cases)
 
-  val match_ = "match" ~ strict_args
-  val with_ = expect("with") ~ cases
+  val match_ = "match" ~! args
+  val with_ = !"with" ~! cases
   val matches = MatchWith.from(match_, with_)
 
-  val force = "$" ~ Force.from(strict_pat)
-  val susp = "$" ~ Susp.from(strict_expr)
+  val force = "$" ~! Force.from(pat)
+  val susp = "$" ~! Susp.from(expr)
 
   val any = Lit.from(str | chr)
 
   val open = expr | anyatom
   val patopen = pat | anyatom
-  
+
   val unapp = UnApp.from(patarg, patargs)
   val app = App.from(arg, args)
 
   val inner_pat = unapp | patarg
   val inner_expr = app | arg
 
-  val escape = "`" ~ strict_expr map builtin.reify
-  val list = parens("[", arg *, "]") map builtin.reify_list
-  val patlist = parens("[", patarg *, "]") map builtin.reify_list
+  val escape = "`" ~! expr map builtin.reify
+  val list = ("[" ~! arg.* ~! "]") map builtin.reify_list
+  val patlist = ("[" ~! patarg.* ~! "]") map builtin.reify_list
 
   def section[A, B](s0: String, c: List[A] => B, p: Parser[List[String], A], s1: String) = {
-    val q = p ~ expect(";")
-    parens(s0, c.from(q *), s1)
+    val q = p ~! ";"
+    s0 ~! c.from(q *) ~! s1
   }
 
-  val eqq_ = expect("==") ~ strict_expr
+  val eqq_ = !"==" ~! expr
   val df = Def.from(pat, ret(None), eqq_)
   val df_cond = Def.from(pat, cond, eqq_)
 
   val test = Test.from(expr, eqq_)
 
-  val imports = parens("import", Imports.from(names), ";")
+  val imports = "import" ~! Imports.from(names) ~! ";"
   val defs = section("define", Defs, df_cond, "end")
   val tests = section("test", Tests, test, "end")
   val nots = section("notation", Nots, fix | data, "end")
   val evals = section("eval", Evals, expr, "end")
 
   val cmd = imports | nots | defs | tests | evals;
-  val strict_cmd = expect("top level section", cmd)
-  val cmds = strict_cmd *
+  val cmds = cmd *
 
   val module = Module.from(cmds)
 }

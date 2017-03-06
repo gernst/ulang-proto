@@ -4,6 +4,7 @@ import java.io.File
 import java.io.Reader
 
 import arse._
+import arse.control._
 import scala.io.StdIn
 
 case class State(mods: Set[String], defs: List[Def]) extends Pretty {

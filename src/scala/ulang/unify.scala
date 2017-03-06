@@ -1,6 +1,6 @@
 package ulang
 
-import arse._
+import arse.control._
 
 object Subst {
   val empty: Subst = Map()
