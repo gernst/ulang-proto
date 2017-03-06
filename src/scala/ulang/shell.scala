@@ -67,7 +67,7 @@ object shell {
   def main(args: Array[String]) {
     safe {
       load("base")
-      load("prover")
+      load("stream")
       // load("test")
       // load("regex")
     }

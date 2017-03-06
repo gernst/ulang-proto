@@ -15,7 +15,7 @@ object builtin {
     case None => Tag("None")
     case Some(e) => App(Tag("Some"), List(e))
   }
-
+  
   def reify_tuple(ps: List[Pat]) = ps.reduceRight(unpair)
   def reify_tuple(es: List[Expr]) = es.reduceRight(pair)
   

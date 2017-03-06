@@ -7,6 +7,39 @@ trait Pretty {
 }
 
 object printer {
+  def print_number(n: Int, any: Any): String = any match {
+    case Obj(Tag("+1"), List(arg)) =>
+      print_number(n + 1, arg)
+    case Tag("0") =>
+      n + ""
+    case _ =>
+      any + " + " + n
+  }
+  
+  def print_tuple(any: Any): String = any match {
+    case App(Tag(","), List(arg1, arg2)) =>
+      ", " + arg1 + print_tuple(arg2)
+    case UnApp(Tag(","), List(arg1, arg2)) =>
+      ", " + arg1 + print_tuple(arg2)
+    case Obj(Tag(","), List(arg1, arg2)) =>
+      ", " + arg1 + print_list(arg2)
+    case _ =>
+      ", " + any + ")"
+  }
+
+  def print_list(any: Any): String = any match {
+    case App(Tag("::"), List(arg1, arg2)) =>
+      ", " + arg1 + print_list(arg2)
+    case UnApp(Tag("::"), List(arg1, arg2)) =>
+      ", " + arg1 + print_list(arg2)
+    case Obj(Tag("::"), List(arg1, arg2)) =>
+      ", " + arg1 + print_list(arg2)
+    case Tag("[]") =>
+      "]"
+    case _ =>
+      "] ++ " + any 
+  }
+
   def print(any: Pretty): String = any match {
     case Wildcard =>
       "_"
@@ -26,6 +59,10 @@ object printer {
     case SubPat(name, pat) =>
       name + " @ " + pat
 
+    case UnApp(Tag(","), List(arg1, arg2)) =>
+      "(" + arg1 + print_tuple(arg2)
+    case UnApp(Tag("::"), List(arg1, arg2)) =>
+      "{" + arg1 + print_list(arg2)
     case UnApp(Atom(name), List(arg)) if operators.prefix_ops contains name =>
       "(" + name + " " + arg + ")"
     case UnApp(Atom(name), List(arg)) if operators.postfix_ops contains name =>
@@ -37,6 +74,10 @@ object printer {
     case Force(body) =>
       "$ " + body
 
+    case App(Tag(","), List(arg1, arg2)) =>
+      "(" + arg1 + print_tuple(arg2)
+    case App(Tag("::"), List(arg1, arg2)) =>
+      "[" + arg1 + print_list(arg2)
     case App(Atom(name), List(arg)) if operators.prefix_ops contains name =>
       "(" + name + " " + arg + ")"
     case App(Atom(name), List(arg)) if operators.postfix_ops contains name =>
@@ -107,6 +148,12 @@ object printer {
       "\\ " + cases.mkString(" | ") + lex.keys.mkString(" [", ", ", "]")
     case Prim(name, _) =>
       name
+    case Obj(Tag("+1"), List(arg)) =>
+      print_number(1, arg)
+    case Obj(Tag(","), List(arg1, arg2: Eq)) =>
+      "(" + arg1 + print_tuple(arg2)
+    case Obj(Tag("::"), List(arg1, arg2: Eq)) =>
+      "[" + arg1 + print_list(arg2)
     case Obj(Tag(name), List(arg)) if operators.prefix_ops contains name =>
       "(" + name + " " + arg + ")"
     case Obj(Tag(name), List(arg)) if operators.postfix_ops contains name =>
