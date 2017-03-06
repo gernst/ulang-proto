@@ -9,7 +9,7 @@ import arse._
 import sourcecode.Name
 
 object operators extends Syntax[String] {
-  var data: Set[String] = Set()
+  var data: Set[String] = Set(",")
   var prefix_ops: Map[String, Int] = Map()
   var postfix_ops: Map[String, Int] = Map()
   var infix_ops: Map[String, (Assoc, Int)] = Map()
@@ -41,7 +41,7 @@ object parser {
 object grammar {
   import arse.Mixfix._
 
-  val keywords = Set(";", "(", ")", "{", "}", "[", "]", "->", "==", "$", "`", "|", "\\",
+  val keywords = Set(",", ";", "(", ")", "{", "}", "[", "]", "->", "==", "$", "`", "|", "\\",
     "if", "then", "else", "let", "in", "match", "with", "end")
 
   val str = string collect {
@@ -55,7 +55,7 @@ object grammar {
   }
 
   val name = string filterNot keywords
-  val names = name *
+  val names = name.*
   val nonmixfix = name filterNot operators.contains
 
   val atom = Atom.from(nonmixfix)
@@ -75,7 +75,7 @@ object grammar {
   val data = "data" ~! Data.from(names)
 
   val pat: Parser[List[String], Pat] = P(mixfix(inner_pat, Atom, UnApp, operators))
-  val pats = pat.+
+  val pats = pat.rep(sep = ",")
 
   val patarg: Parser[List[String], Pat] = P(("(" ~! patopen ~! ")") | force | any | patlist | patatom)
   val patargs = patarg.+
@@ -89,9 +89,10 @@ object grammar {
   }
 
   val expr: Parser[List[String], Expr] = P(mixfix(inner_expr, Atom, App, operators))
+  val exprs = expr.rep(sep = ",")
 
   val arg: Parser[List[String], Expr] = P(("(" ~! open ~! ")") | fun | matches | ite | let | susp | escape | any | list | atom)
-  val args = arg +
+  val args = arg.+
 
   val if_ = "if" ~! expr
   val then_ = !"then" ~! expr
@@ -119,8 +120,11 @@ object grammar {
 
   val any = Lit.from(str | chr)
 
-  val open = expr | anyatom
-  val patopen = pat | anyatom
+  val tuple = exprs map builtin.reify_tuple
+  val pattuple = pats map builtin.reify_tuple
+  
+  val open = tuple | anyatom
+  val patopen = pattuple | anyatom
 
   val unapp = UnApp.from(patarg, patargs)
   val app = App.from(arg, args)
@@ -129,8 +133,10 @@ object grammar {
   val inner_expr = app | arg
 
   val escape = "`" ~! expr map builtin.reify
-  val list = ("[" ~! arg.* ~! "]") map builtin.reify_list
-  val patlist = ("[" ~! patarg.* ~! "]") map builtin.reify_list
+
+
+  val list = ("[" ~! exprs ~! "]") map builtin.reify_list
+  val patlist = ("[" ~! pats ~! "]") map builtin.reify_list
 
   def section[A, B](s0: String, c: List[A] => B, p: Parser[List[String], A], s1: String) = {
     val q = p ~! ";"

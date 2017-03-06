@@ -29,6 +29,9 @@ object builtin {
   val False = Tag("False")
   def reify(b: Boolean) = if (b) True else False
 
+  def unpair(h: Pat, t: Pat) = UnApp(Tag(","), List(h, t))
+  def pair(h: Expr, t: Expr) = App(Tag(","), List(h, t))
+  
   def uncons(h: Pat, t: Pat) = UnApp(Tag("::"), List(h, t))
   def cons(h: Expr, t: Expr) = App(Tag("::"), List(h, t))
 
@@ -37,6 +40,9 @@ object builtin {
     case Some(e) => App(Tag("Some"), List(e))
   }
 
+  def reify_tuple(ps: List[Pat]) = ps.reduceRight(unpair)
+  def reify_tuple(es: List[Expr]) = es.reduceRight(pair)
+  
   def reify_list(ps: List[Pat]) = ps.foldRight(Tag("[]"): Pat)(uncons)
   def reify_list(es: List[Expr]) = es.foldRight(Tag("[]"): Expr)(cons)
 

@@ -34,6 +34,8 @@ object printer {
       "(" + arg1 + " " + name + " " + arg2 + ")"
     case UnApp(fun, args) =>
       (fun :: args).mkString("(", " ", ")")
+    case Force(body) =>
+      "$ " + body
 
     case App(Atom(name), List(arg)) if operators.prefix_ops contains name =>
       "(" + name + " " + arg + ")"
@@ -64,6 +66,8 @@ object printer {
       lhs + " == " + rhs + ";"
     case Def(lhs, Some(cond), rhs) =>
       lhs + " if " + cond + " == " + rhs + ";"
+    case Test(lhs, rhs) =>
+      lhs + " == " + rhs + ";"
 
     case Data(names) =>
       "data " + names.mkString(" ") + ";"

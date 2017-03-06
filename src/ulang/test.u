@@ -6,7 +6,7 @@ define
 end
 
 eval
-  flatten [[A B] [C D]];
+  flatten [[A, B], [C, D]];
   flatten (Some (Some A));
   
   test (1,2);
@@ -14,12 +14,12 @@ eval
   
   $ x;
   let z = $ X
-  in [z (force z) z];
+  in [z, (force z), z];
   
-  flatmap (\x -> [X x]) [A B C];
-  collect (\x -> if x = B then None else Some x) [A B C];
+  flatmap (\x -> [X, x]) [A, B, C];
+  collect (\x -> if x = B then None else Some x) [A, B, C];
   /* [ if x = B then None else Some x
-     | x <- [A B C]
+     | x <- [A, B, C]
      ] */
 
   ` x;

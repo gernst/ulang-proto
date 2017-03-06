@@ -60,7 +60,7 @@ object shell {
       None
     case e: Throwable =>
       err("fatal: " + e)
-      // e.printStackTrace()
+      e.printStackTrace()
       None
   }
 
