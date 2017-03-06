@@ -49,7 +49,7 @@ define
     
   assumes phis ctx
     = foldr assume ctx phis;
-    
+  
   assert True ctx
     = [False];
   assert False ctx
@@ -132,8 +132,8 @@ define
     = reverse ctx;
   con (phi :: todo) ctx
     = let newctx = assume todo ctx in
-       let newphi = simp phi False newctx in
-       con todo (assume newphi ctx);
+      let newphi = simp phi False newctx in
+      con todo (assume newphi ctx);
 end
 
 define
@@ -144,13 +144,13 @@ define
   
   try_close (Seq phis)
     = if (contains False phis)
-       then []
-       else [Seq phis];
+      then []
+      else [Seq phis];
 
   rule_cut phi
     = Rule "cut" \(Seq phis) ->
-         [Seq     (phi :: phis),
-          Seq (Not phi :: phis)];
+        [Seq     (phi :: phis),
+         Seq (Not phi :: phis)];
 
   split phi psi = Some [phi, And (Not phi) psi];
   cases (Or  phi psi) = split phi psi;
@@ -167,19 +167,19 @@ define
 
   rule_simp
     = Rule "simplify" \(Seq phis) ->
-         [Seq (con phis [])];
+        [Seq (con phis [])];
 
   apply (Rule name derive) concl
     = let prems = derive concl
-       in Step (flatmap try_close prems) concl name;
+      in Step (flatmap try_close prems) concl name;
 end
 
 define
   prove phi
     = let proof = apply rule_simp (Seq [Not phi])
-       in if closed? proof
-          then Closed
-          else Seq (open proof);
+      in if closed? proof
+         then Closed
+         else Seq (open proof);
 end
 
 eval
