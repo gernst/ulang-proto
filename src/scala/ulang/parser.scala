@@ -104,12 +104,12 @@ object grammar {
   val let = LetIn.from(let_, eq_, in_)
 
   val arrow_ = !"->" ~! expr
-  val cs = Case.from(patargs, cond, arrow_)
+  val cs = Case.from(pats, cond, arrow_)
   val cases = "|".? ~ (!cs).rep(sep = "|")
 
   val fun = "\\" ~! Bind.from(cases)
 
-  val match_ = "match" ~! args
+  val match_ = "match" ~! exprs
   val with_ = !"with" ~! cases
   val matches = MatchWith.from(match_, with_)
 

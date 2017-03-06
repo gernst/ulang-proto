@@ -60,13 +60,14 @@ object shell {
       None
     case e: Throwable =>
       err("fatal: " + e)
-      e.printStackTrace()
+      // e.printStackTrace()
       None
   }
 
   def main(args: Array[String]) {
     safe {
       load("base")
+      load("prover")
       // load("test")
       // load("regex")
     }

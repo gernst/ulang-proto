@@ -3,7 +3,7 @@ define
     = Const z;
 
   debruijn (Var x) stack
-    = match (index x stack) with
+    = match index x stack with
          | Some i -> Var i;
   
   debruijn (Let x b) stack
@@ -33,10 +33,10 @@ define
     
     
   compile (Const z)
-    = [(Const z)];
+    = [Const z];
   
   compile (Var i)
-    = [(Load i)];
+    = [Load i];
     
   compile (Let a b)
     = compile a ++ [Store] ++ compile b;
@@ -45,7 +45,7 @@ define
     = compile a ++ compile f ++ [Apply];
     
   compile (Lambda b)
-    = [ (Close (compile b ++ [Return])) ];
+    = [ Close (compile b ++ [Return]) ];
   
     
   exec [] env (x :: stack)
@@ -58,7 +58,7 @@ define
     = exec code (x :: env) stack;
     
   exec (Load i :: code) env stack
-    = match (get i env) with
+    = match get i env with
        | Some x -> exec code env (x :: stack);
 
   exec (Close c :: code) env stack

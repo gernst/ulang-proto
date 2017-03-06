@@ -47,7 +47,7 @@ define
   blacker E = EE;
   blacker (T c a x b) = T (blacker c) a x b;
   
-  bubble color a x b if (isBB b) or (isBB b) 
+  bubble color a x b if (isBB b or isBB b) 
     = balance (blacker color) (redder a) x (redder b);
   bubble color a x b
     = balance color a x b;
@@ -58,9 +58,9 @@ define
     = False;
   contains (<) x (T _ a x b)
     = True;
-  contains (<) x (T _ a y b) if x < y
+  contains (<) x (T _ a y b) if (x < y)
     = member (<) x a;
-  contains (<) x (T _ a y b) if y < x
+  contains (<) x (T _ a y b) if (y < x)
     = member (<) x b;
   
   list E
@@ -70,18 +70,18 @@ define
   
   insert (<) x E
     = T R E x E;
-  insert (<) x (T color a y b) if x < y
+  insert (<) x (T color a y b) if (x < y)
     = balance color (insert (<) x a) y b;
-  insert (<) x (T color a y b) if y < x
+  insert (<) x (T color a y b) if (y < x)
     = balance color a y (insert (<) x b);
   insert (<) x t
     = t;
     
   delete (<) x E
     = E;
-  delete (<) x (T color a y b) if x < y
+  delete (<) x (T color a y b) if (x < y)
     = bubble color (delete (<) x a) y b;
-  delete (<) x (T color a y b) if y < x
+  delete (<) x (T color a y b) if (y < x)
     = bubble color a y (delete (<) x b);
   delete (<) x t
     = remove t;
@@ -101,13 +101,10 @@ define
   insertm xs t
     = foldr insert t xs;
 
-  tree = insertm [0 2 1 3] (rbtree (<));
+  tree = insertm [0, 2, 1, 3] (rbtree (<));
 end
 
 define
-  RBTree _ t: Set a
-    = (list t): List a;
-
   rbtree (<)
     = RBTree (<) E;
   list (RBTree _ t)
