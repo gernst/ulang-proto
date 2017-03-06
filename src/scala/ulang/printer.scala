@@ -94,6 +94,10 @@ object printer {
 
     case Bind(cases) =>
       "\\ " + cases.mkString(" | ")
+    case Raise(args) =>
+      args.mkString("raise ", ", ", "")
+    case TryCatch(arg, cases) =>
+      "try " + arg + " catch " + cases.mkString(" | ")
     case MatchWith(args, cases) =>
       "match " + args.mkString(" ") + " with " + cases.mkString(" | ")
     case LetIn(pat, arg, body) =>
@@ -162,6 +166,8 @@ object printer {
       "(" + arg1 + " " + name + " " + arg2 + ")"
     case Obj(Tag(name), args) =>
       (name :: args).mkString("(", " ", ")")
+    case Exc(args) =>
+      args.mkString("raise ", ", ", "")
     case lzy @ Lazy(body, lex) =>
       lzy.memo match {
         case Some(v) =>

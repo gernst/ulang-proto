@@ -6,6 +6,7 @@ import java.io.File
 
 trait Eq
 
+case class Exc(args: List[Val]) extends Exception with Pretty
 case class Clos(cases: List[Case], lex: Env) extends Pretty
 case class Prim(name: String, f: List[Val] => Val) extends Pretty
 case class Obj(tag: Tag, args: List[Val]) extends Pretty with Eq
@@ -146,9 +147,20 @@ object interpreter {
     case Susp(body) =>
       Lazy(body, lex)
 
-    case App(fun, args) =>     
+    case App(fun, args) =>
       val res = apply(eval(fun, lex, dyn), eval(args, lex, dyn), dyn)
       res
+
+    case Raise(args) =>
+      throw Exc(eval(args, lex, dyn))
+      
+    case TryCatch(arg, cases) =>
+      try {
+        eval(arg, lex, dyn)
+      } catch {
+        case e@Exc(args) =>
+          apply(cases, args, lex, dyn) or { throw e }
+      }
 
     case MatchWith(args, cases) =>
       apply(cases, eval(args, lex, dyn), lex, dyn)

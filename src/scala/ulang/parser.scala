@@ -40,7 +40,7 @@ object parser {
 
 object grammar {
   val keywords = Set(",", ";", "(", ")", "{", "}", "[", "]", "->", "==", "$", "`", "|", "\\",
-    "if", "then", "else", "let", "in", "match", "with", "end")
+    "if", "then", "else", "let", "in", "match", "with", "raise", "try", "catch", "end")
 
   val str = string collect {
     case s if s.head == '"' && s.last == '"' =>
@@ -89,7 +89,7 @@ object grammar {
   val expr: Mixfix[List[String], Atom, Expr] = mixfix(inner_expr, Atom, App, operators)
   val exprs = expr.rep(sep = ",")
 
-  val arg: Parser[List[String], Expr] = P(("(" ~! open ~! ")") | fun | matches | ite | let | susp | escape | any | list | atom)
+  val arg: Parser[List[String], Expr] = P(("(" ~! open ~! ")") | fun | matches | raise | catches | ite | let | susp | escape | any | list | atom)
   val args = arg.+
 
   val if_ = "if" ~! expr
@@ -112,6 +112,11 @@ object grammar {
   val match_ = "match" ~! exprs
   val with_ = !"with" ~! cases
   val matches = MatchWith.from(match_, with_)
+  
+  val raise = "raise" ~! Raise.from(exprs)
+  val try_ = "try" ~! expr
+  val catch_ = !"catch" ~! cases
+  val catches = TryCatch.from(try_, catch_)
 
   val force = "$" ~! Force.from(pat)
   val susp = "$" ~! Susp.from(expr)
