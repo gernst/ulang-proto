@@ -7,20 +7,25 @@ import arse._
 import arse.control._
 import scala.io.StdIn
 
-case class State(mods: Set[String], defs: List[Def]) extends Pretty {
+case class State(mods: Set[String], defs: List[Def], prods: List[Prod]) extends Pretty {
   def +(ctx: String) = {
-    State(mods + ctx, defs)
+    State(mods + ctx, defs, prods)
   }
 
   def define(that: List[Def]) = {
-    State(mods, defs ++ that)
+    State(mods, defs ++ that, prods)
+  }
+
+  def grammar(that: List[Prod]) = {
+    State(mods, defs, prods ++ that)
   }
 }
 
 case class Model(dyn: Env) extends Pretty
+case class Parsers(ps: PEnv) extends Pretty
 
 object State {
-  def empty = State(Set(), List())
+  def empty = State(Set(), List(), List())
 }
 
 object shell {
@@ -29,10 +34,11 @@ object shell {
 
   val lex = Env.empty
   var st = State.empty
+  var cmd = grammar.cmd
 
   def cmd(c: => Any) = { () => c }
   def commands: Map[String, () => Any] = Map(
-    ":clear" -> cmd(st = State.empty),
+    ":clear" -> cmd({ st = State.empty; cmd = grammar.cmd }),
     ":state" -> cmd(out(st)),
     ":model" -> cmd(out(model(merged(st)))),
     ":check" -> cmd(check()))
@@ -60,14 +66,14 @@ object shell {
       None
     case e: Throwable =>
       err("fatal: " + e)
-      // e.printStackTrace()
+      e.printStackTrace()
       None
   }
 
   def main(args: Array[String]) {
     safe {
       load("base")
-      load("grammar")
+      load("test")
     }
     // repl()
   }
@@ -125,7 +131,8 @@ object shell {
     var in = tokenize(reader)
 
     while (!in.isEmpty) {
-      val (cmd, rest) = grammar.cmd(in)
+      val p = this.cmd | ret((null: Cmd, in))
+      val (cmd: Cmd, rest) = p(in)
       if (rest.length == in.length)
         sys.error("syntax error at " + rest.mkString(" "))
       exec(ctx, cmd)
@@ -134,7 +141,7 @@ object shell {
   }
 
   def merged(st: State) = st match {
-    case State(mods, defs) =>
+    case State(mods, defs, prods) =>
       val funs = defs.distinct.collect {
         case Def(UnApp(id: Id, pats), cond, rhs) if !pats.isEmpty =>
           (id, Case(pats, cond, rhs))
@@ -150,11 +157,11 @@ object shell {
           df
       }
 
-      State(mods, merged.toList ++ consts)
+      State(mods, merged.toList ++ consts, prods)
   }
 
   def model(st: State) = st match {
-    case State(_, defs) =>
+    case State(_, defs, _) =>
 
       val dyn = defs.foldLeft(Env.default) {
         case (dyn, df) =>
@@ -164,12 +171,68 @@ object shell {
       Model(dyn)
   }
 
+  def parsers(st: State) = {
+    val ps: Ref[PEnv] = Ref(Map.empty)
+
+    def compile(rule: Rule): Parser[List[String], Expr] = rule match {
+      case Id(name) =>
+        arse.parser.Rec(name, () => ps.get(name))
+      case Rep(rule, plus) =>
+        val p = compile(rule)
+        val q = if (plus) p.+ else p.*
+        q map builtin.reify_list
+      case Seq(rules, None) =>
+        compile1(rules)
+      case Seq(rules, Some(action)) =>
+        val nil: Parser[List[String], List[Expr]] = ret(Nil)
+        compiles(rules) map { App(action, _) }
+      case Alt(rules) =>
+        rules.map(compile).reduceRight(_ | _)
+      case _ =>
+        sys.error("grammar rule '" + rule + "' without result")
+    }
+    
+    def compile1(rules: List[Rule]): Parser[List[String], Expr] = compiles(rules) map {
+      case List(rule) =>
+        rule // could be static
+      case _ =>
+        sys.error("grammar rules '" + rules.mkString(" ") + "' without action")
+    }
+
+    def compiles(rules: List[Rule]): Parser[List[String], List[Expr]] = rules match {
+      case Nil =>
+        ret(Nil)
+      case Tok(str) :: rest =>
+        str ~ compiles(rest)
+      case Match(pat) :: rest =>
+        val test = string filter { _ matches pat }
+        test.unary_? ~ compiles(rest)
+      case rule :: rest =>
+        compile(rule) :: compiles(rest)
+    }
+
+    st match {
+      case State(_, _, prods) =>
+        val gs = group(prods.map { case Prod(Id(name), rule) => (name, rule) })
+        ps.set(gs.map { case (name, rules) => (name, compile(Alt(rules))) })
+        Parsers(ps.get)
+    }
+  }
+
   def exec(ctx: String, cmd: Cmd): Unit = cmd match {
     case Imports(names) =>
-      import parser._
-
       for (name <- names) {
         load(name)
+      }
+
+    case Langs(names) =>
+      val Model(dyn) = model(merged(st))
+      val Parsers(ps) = parsers(st)
+
+      for (name <- names) {
+        val p = ps(name)
+        val q = grammar.section(name, Evals, p, "end")
+        this.cmd |= q
       }
 
     case Nots(nots) =>
@@ -218,10 +281,10 @@ object shell {
       val Model(dyn) = model(merged(st))
 
       for (expr <- exprs) {
-        out(expr + "\n  == " + eval(expr, lex, dyn) + ";")
+        out(expr + "\n  = " + eval(expr, lex, dyn) + ";")
       }
-      
+
     case Grammar(prods) =>
-      println(cmd)
+      st = st grammar prods
   }
 }

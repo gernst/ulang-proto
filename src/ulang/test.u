@@ -1,5 +1,18 @@
 import base;
 
+grammar
+  foo = "x" { X };
+end
+
+language
+  foo; 
+
+foo
+  x;
+end
+
+/*
+
 define
   test p@(x,y) = p;
   test l@(x :: y) = l;
@@ -35,7 +48,7 @@ eval
   'x';
    ` (=>);
 end
-
+*/
 /*
 lemma
   assume n: Nat and m: Nat;

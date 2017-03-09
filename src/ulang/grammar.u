@@ -16,4 +16,3 @@ grammar
   case  = expr "->" expr { Case };
   cases = case ("|" case) * { (::) };
 end
-

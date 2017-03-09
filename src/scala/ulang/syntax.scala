@@ -38,10 +38,9 @@ case class Susp(body: Expr) extends Expr
 
 case class Tok(str: String) extends Rule
 case class Match(pat: String) extends Rule
-case class Seq(rules: List[Rule]) extends Rule
-case class Alt(rules: List[Rule]) extends Rule
 case class Rep(rule: Rule, plus: Boolean) extends Rule
-case class Attr(rule: Rule, action: Expr) extends Rule
+case class Seq(rules: List[Rule], action: Option[Expr]) extends Rule
+case class Alt(rules: List[Rule]) extends Rule
 
 sealed trait Not extends Pretty
 case class Data(names: List[String]) extends Not
@@ -54,6 +53,7 @@ case class Prod(lhs: Id, rhs: Rule) extends Pretty
 
 sealed trait Cmd extends Pretty
 case class Imports(names: List[String]) extends Cmd
+case class Langs(names: List[String]) extends Cmd
 case class Nots(fixs: List[Not]) extends Cmd
 case class Defs(defs: List[Def]) extends Cmd
 case class Tests(tests: List[Test]) extends Cmd

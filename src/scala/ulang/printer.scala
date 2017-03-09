@@ -112,24 +112,22 @@ object printer {
 
     case Tok(str) =>
       "\"" + str + "\""
-
     case Match(pat: String) =>
       "\"" + pat + "\""
-
-    case Seq(rules) =>
-      rules.mkString("(", " ", ")")
     case Alt(rules) =>
       rules.mkString("(", " | ", ")")
     case Rep(rule, plus) =>
       if (plus) rule + " +"
       else rule + " *"
-    case Attr(rule, action) =>
-      rule + " { " + action + " }"
+    case Seq(rules, None) =>
+      rules.mkString(" ")
+    case Seq(rules, Some(action)) =>
+      rules.mkString(" ") + " { " + action + " }"
 
     case Def(lhs, None, rhs) =>
-      lhs + " == " + rhs + ";"
+      lhs + " = " + rhs + ";"
     case Def(lhs, Some(cond), rhs) =>
-      lhs + " if " + cond + " == " + rhs + ";"
+      lhs + " if " + cond + " = " + rhs + ";"
     case Test(phi) =>
       phi + ";"
     case Prod(lhs, rule) =>
@@ -150,6 +148,8 @@ object printer {
 
     case Imports(names) =>
       names.mkString("import\n  ", " ", ";")
+    case Langs(names) =>
+      names.mkString("import\n  ", " ", ";")
     case Nots(fixs) =>
       fixs.mkString("notation\n  ", "\n  ", "\nend\n")
     case Defs(defs) =>
@@ -164,12 +164,17 @@ object printer {
     case Module(defs) =>
       defs.mkString("", "\n", "\n")
 
-    case State(_, defs) =>
-      defs.mkString("", "\n", "\n")
+    case State(_, defs, prods) =>
+      val s1 = defs.mkString("define\n  ", "\n  ", "\nend\n")
+      val s2 = defs.mkString("grammar\n  ", "\n  ", "\nend\n")
+      s1 + s2
 
     case Model(dyn) =>
-      val lines = dyn.map { case (name, rhs) => name + " == " + rhs + ";" }
+      val lines = dyn.map { case (name, rhs) => name + " = " + rhs + ";" }
       lines.mkString("model\n  ", "\n  ", "\nend\n")
+    case Parsers(ps) =>
+      val lines = ps.map { case (name, rhs) => name + " = " + rhs + ";" }
+      lines.mkString("parsers\n  ", "\n  ", "\nend\n")
 
     case Clos(cases, lex) =>
       "\\ " + cases.mkString(" | ") + lex.keys.mkString(" [", ", ", "]")
