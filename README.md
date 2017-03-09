@@ -16,6 +16,7 @@ See `src/ulang` for some examples on the syntax.
 - a primitive interactive repl
 - ad-hoc overloading of functions (based on arity and checked disjoint patterns),
   note that this rules out partial function applications.
+- embedded sublanguage definitions with (LL) grammars and interpreters
 
 ## Library + Code
 - primitive data types booleans, option, (church) numerals, lists, streams with useful functions
