@@ -15,7 +15,7 @@ object printer {
     case _ =>
       any + " + " + n
   }
-  
+
   def print_tuple(any: Any): String = any match {
     case App(Tag(","), List(arg1, arg2)) =>
       ", " + arg1 + print_tuple(arg2)
@@ -37,7 +37,7 @@ object printer {
     case Tag("[]") =>
       "]"
     case _ =>
-      "] ++ " + any 
+      "] ++ " + any
   }
 
   def print(any: Pretty): String = any match {
@@ -100,7 +100,7 @@ object printer {
       "try " + arg + " catch " + cases.mkString(" | ")
     case MatchWith(args, cases) =>
       "match " + args.mkString(" ") + " with " + cases.mkString(" | ")
-      
+
     case LetEq(pat, arg) =>
       pat + " = " + arg
     case LetIn(eqs, body) =>
@@ -110,12 +110,30 @@ object printer {
     case Susp(body) =>
       "$ " + body
 
+    case Tok(str) =>
+      "\"" + str + "\""
+
+    case Match(pat: String) =>
+      "\"" + pat + "\""
+
+    case Seq(rules) =>
+      rules.mkString("(", " ", ")")
+    case Alt(rules) =>
+      rules.mkString("(", " | ", ")")
+    case Rep(rule, plus) =>
+      if (plus) rule + " +"
+      else rule + " *"
+    case Attr(rule, action) =>
+      rule + " { " + action + " }"
+
     case Def(lhs, None, rhs) =>
       lhs + " == " + rhs + ";"
     case Def(lhs, Some(cond), rhs) =>
       lhs + " if " + cond + " == " + rhs + ";"
     case Test(phi) =>
       phi + ";"
+    case Prod(lhs, rule) =>
+      lhs + " = " + rule + ";"
 
     case Data(names) =>
       "data " + names.mkString(" ") + ";"
@@ -140,6 +158,8 @@ object printer {
       tests.mkString("test\n  ", "\n  ", "\nend\n")
     case Evals(exprs) =>
       exprs.mkString("eval\n  ", "\n  ", "\nend\n")
+    case Grammar(prods) =>
+      prods.mkString("grammar\n  ", "\n  ", "\nend\n")
 
     case Module(defs) =>
       defs.mkString("", "\n", "\n")

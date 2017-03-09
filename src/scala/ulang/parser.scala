@@ -39,7 +39,9 @@ object parser {
 }
 
 object grammar {
-  val keywords = Set(",", ";", "(", ")", "{", "}", "[", "]", "->", "==", "$", "`", "|", "\\",
+  val ebnf = Set(";", "*", "+", "(", ")", "{", "}", "[", "]", "|", "end")
+    
+  val keywords = Set(",", ";", "(", ")", "{", "}", "[", "]", "->", "$", "`", "|", "\\",
     "if", "then", "else", "let", "in", "match", "with", "raise", "try", "catch", "end")
 
   val str = string collect {
@@ -113,7 +115,7 @@ object grammar {
   val match_ = "match" ~! exprs
   val with_ = !"with" ~! cases
   val matches = MatchWith.from(match_, with_)
-  
+
   val raise = "raise" ~! Raise.from(exprs)
   val try_ = "try" ~! expr
   val catch_ = !"catch" ~! cases
@@ -141,11 +143,6 @@ object grammar {
   val list = ("[" ~! exprs ~! "]") map builtin.reify_list
   val patlist = ("[" ~! pats ~! "]") map builtin.reify_list
 
-  def section[A, B](s0: String, c: List[A] => B, p: Parser[List[String], A], s1: String) = {
-    val q = p ~! ";"
-    s0 ~! c.from(q *) ~! s1
-  }
-
   val expr_high = expr above 7
   val cond_high = ("if" ~! expr_high).?
   val pat_high = pat above 7
@@ -157,13 +154,41 @@ object grammar {
 
   val test = Test.from(expr)
 
+  val rule: Parser[List[String], Rule] = P(alt)
+
+  val nonebnf = string filterNot ebnf
+  val id = Id.from(nonebnf)
+  val tok = Tok.from(str)
+  val ruleatom = ("(" ~! rule ~! ")") | tok | id
+  
+  val rep = ruleatom ~ (lit("*", false) | lit("+", true)).? map {
+    case rule ~ None => rule
+    case rule ~ Some(plus) => Rep(rule, plus)
+  }
+
+  val attr = rep ~ ("{" ~! expr ~! "}").? map {
+    case rule ~ None => rule
+    case rule ~ Some(action) => Attr(rule, action)
+  }
+  
+  val seq = Seq.from(attr.+)
+  val alt = Alt.from(seq.rep(sep = "|"))
+  val prod = Prod.from(id ~! "=", !rule)
+
+
+  def section[A, B](s0: String, c: List[A] => B, p: Parser[List[String], A], s1: String) = {
+    val q = p ~! ";"
+    s0 ~! c.from(q *) ~! s1
+  }
+
   val imports = "import" ~! Imports.from(names) ~! ";"
   val defs = section("define", Defs, df_eq | df_eqv, "end")
   val tests = section("test", Tests, test, "end")
   val nots = section("notation", Nots, fix | data, "end")
   val evals = section("eval", Evals, expr, "end")
+  val grammar = section("grammar", Grammar, prod, "end")
 
-  val cmd = imports | nots | defs | tests | evals;
+  val cmd = imports | nots | defs | tests | evals | grammar;
   val cmds = cmd *
 
   val module = Module.from(cmds)

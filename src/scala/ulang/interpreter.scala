@@ -40,7 +40,7 @@ object interpreter {
 
     case Id(name) =>
       (env get name) match {
-        case Some(`arg`) => env
+        case Some(that) if builtin._equal(that, arg) => env
         case None => env + (name -> arg)
         case _ => fail
       }

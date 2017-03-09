@@ -67,7 +67,7 @@ object shell {
   def main(args: Array[String]) {
     safe {
       load("base")
-      load("test")
+      load("grammar")
     }
     // repl()
   }
@@ -220,5 +220,8 @@ object shell {
       for (expr <- exprs) {
         out(expr + "\n  == " + eval(expr, lex, dyn) + ";")
       }
+      
+    case Grammar(prods) =>
+      println(cmd)
   }
 }
