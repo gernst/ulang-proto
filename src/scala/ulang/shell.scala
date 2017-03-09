@@ -185,13 +185,16 @@ object shell {
         compile1(rules)
       case Seq(rules, Some(action)) =>
         val nil: Parser[List[String], List[Expr]] = ret(Nil)
-        compiles(rules) map { App(action, _) }
+        compiles(rules) map {
+          case Nil => action
+          case args => App(action, args)
+        }
       case Alt(rules) =>
         rules.map(compile).reduceRight(_ | _)
       case _ =>
         sys.error("grammar rule '" + rule + "' without result")
     }
-    
+
     def compile1(rules: List[Rule]): Parser[List[String], Expr] = compiles(rules) map {
       case List(rule) =>
         rule // could be static
@@ -230,8 +233,8 @@ object shell {
       val Parsers(ps) = parsers(st)
 
       for (name <- names) {
-        val p = ps(name)
-        val q = grammar.section(name, Evals, p, "end")
+        val p = ps(name) map { expr => Evals(List(expr)) }
+        val q = name ~ p ~ "end"
         this.cmd |= q
       }
 

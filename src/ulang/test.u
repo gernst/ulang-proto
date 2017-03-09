@@ -1,14 +1,15 @@
 import base;
 
 grammar
-  foo = "x" { X };
+  xy = "x" { X } | "y" { Y };
+  foo = xy * ";";
 end
 
 language
-  foo; 
+  foo;
 
 foo
-  x;
+  y x x y;
 end
 
 /*
