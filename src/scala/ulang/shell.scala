@@ -66,7 +66,7 @@ object shell {
       None
     case e: Throwable =>
       err("fatal: " + e)
-      e.printStackTrace()
+      // e.printStackTrace()
       None
   }
 
@@ -199,7 +199,7 @@ object shell {
       case List(rule) =>
         rule // could be static
       case _ =>
-        sys.error("grammar rules '" + rules.mkString(" ") + "' without action")
+        sys.error("grammar rule '" + rules.mkString(" ") + "' without action")
     }
 
     def compiles(rules: List[Rule]): Parser[List[String], List[Expr]] = rules match {

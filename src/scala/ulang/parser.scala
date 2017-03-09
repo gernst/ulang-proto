@@ -167,7 +167,7 @@ object grammar {
   }
 
   val attr = "{" ~! expr ~! "}"
-  val seq = Seq.from(rep.+, attr.?) | id
+  val seq = Seq.from(rep.*, attr.?) | id
   val alt = Alt.from(seq.rep(sep = "|"))
   val prod = Prod.from(id ~! "=", !rule)
 

@@ -1,8 +1,9 @@
 import base;
 
 grammar
+  v = { V };
   xy = "x" { X } | "y" { Y };
-  foo = xy * ";";
+  foo = v xy * ";" { B };
 end
 
 language
