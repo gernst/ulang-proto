@@ -59,9 +59,9 @@ define
   contains (<) x (T _ a x b)
     = True;
   contains (<) x (T _ a y b) if (x < y)
-    = member (<) x a;
+    = contains (<) x a;
   contains (<) x (T _ a y b) if (y < x)
-    = member (<) x b;
+    = contains (<) x b;
   
   list E
     = [];
@@ -94,7 +94,7 @@ define
   remove (T color a y b) = bubble color (removeMax a) (max a) b;
 
   max (T _ _ x E) = x;
-  max (T _ _ _ b) = max x;
+  max (T _ _ _ b) = max b;
   removeMax s@(T color a x E) = remove s;
   removeMax (T color a x b) = bubble color a x (removeMax b);
 

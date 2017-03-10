@@ -73,7 +73,7 @@ object shell {
   def main(args: Array[String]) {
     safe {
       load("base")
-      load("test")
+      load("prover")
     }
     // repl()
   }

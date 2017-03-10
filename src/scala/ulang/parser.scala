@@ -58,73 +58,59 @@ object grammar {
   val names = name.*
   val nonmixfix = name filterNot operators.contains
 
-  val atom = Atom.from(nonmixfix)
-  val anyatom = Atom.from(name)
+  val atom = nonmixfix ^^ { Atom }
+  val anyatom = name ^^ { Atom }
 
   val left = lit("left", Left)
   val right = lit("right", Right)
   val assoc = left | right | ret(Non)
 
-  val prefix = "prefix" ~! Prefix.from(int)
-  val postfix = "postfix" ~! Postfix.from(int)
-  val infix = "infix" ~! Infix.from(assoc, int)
+  val prefix = "prefix" ~ int ^^ { Prefix }
+  val postfix = "postfix" ~ int ^^ { Postfix }
+  val infix = "infix" ~ assoc ~ int ^^ { Infix }
 
   val fixity = prefix | postfix | infix
 
-  val fix = Fix.from(fixity, names)
-  val data = "data" ~! Data.from(names)
+  val fix = fixity ~ names ^^ { Fix }
+  val data = "data" ~ names ^^ { Data }
 
   val pat: Mixfix[List[String], Atom, Pat] = mixfix(inner_pat, Atom, UnApp, operators)
-  val pats = pat.rep(sep = ",")
-
-  val patarg: Parser[List[String], Pat] = P(("(" ~! patopen ~! ")") | force | any | patlist | patatom)
+  val pats = pat ~* ","
+  
+  val patarg: Parser[List[String], Pat] = P(("(" ~ patopen ~ ")") | force | any | patlist | patatom)
   val patargs = patarg.+
 
-  val patnamed = "@" ~! patarg
-  val patatom = nonmixfix ~ patnamed.? map {
-    case ("_", None) => Wildcard
-    case (name, None) => Atom(name)
-    case ("_", Some(pat)) => pat
-    case (name, Some(pat)) => SubPat(name, pat)
+  val patatom = nonmixfix ~ ("@" ~ patarg ?) map {
+    case "_" ~ None => Wildcard
+    case name ~ None => Atom(name)
+    case "_" ~ Some(pat) => pat
+    case name ~ Some(pat) => SubPat(name, pat)
   }
 
   val expr: Mixfix[List[String], Atom, Expr] = mixfix(inner_expr, Atom, App, operators)
-  val exprs = expr.rep(sep = ",")
+  val exprs = expr ~* ","
 
-  val arg: Parser[List[String], Expr] = P(("(" ~! open ~! ")") | fun | matches | raise | catches | ite | let | susp | escape | any | list | atom)
-  val args = arg.+
+  val arg: Parser[List[String], Expr] = P(("(" ~ open ~ ")") | bind | matches | raise | catches | ite | let | susp | escape | any | list | atom)
+  val args = arg +
 
-  val if_ = "if" ~! expr
-  val then_ = !"then" ~! expr
-  val else_ = !"else" ~! expr
-  val ite = IfThenElse.from(if_, then_, else_)
-  val cond = if_.?
+  val eq = patarg ~ "=" ~ expr ^^ { LetEq }
+  val eqs = eq ~* ","
+  val let = "let" ~ eqs ~ "in" ~ expr ^^ { LetIn }
 
-  val eq_ = LetEq.from(!patarg, !"=" ~! expr)
-  val eqs_ = eq_.rep(sep = ",")
-  val lets_ = "let" ~ eqs_
-  val in_ = !"in" ~! expr
-  val let = LetIn.from(lets_, in_)
+  val cond = "if" ~ expr ?
+  val cs = pats ~ cond ~ "->" ~ expr ^^ { Case }
+  val cases = ("|" ?) ~ cs ~* "|"
 
-  val arrow_ = !"->" ~! expr
-  val cs = Case.from(pats, cond, arrow_)
-  val cases = "|".? ~ (!cs).rep(sep = "|")
+  val bind = "\\" ~ cases ^^ { Bind }
+  val ite = "if" ~ expr ~ "then" ~ expr ~ "else" ~ expr ^^ { IfThenElse }
+  val matches = "match" ~ exprs ~ "with" ~ cases ^^ { MatchWith }
+  val raise = "raise" ~ exprs ^^ { Raise }
+  val catches = "try" ~ expr ~ "catch" ~ cases ^^ { TryCatch }
 
-  val fun = "\\" ~! Bind.from(cases)
+  val force = "$" ~ pat ^^ { Force }
+  val susp = "$" ~ expr ^^ { Susp }
 
-  val match_ = "match" ~! exprs
-  val with_ = !"with" ~! cases
-  val matches = MatchWith.from(match_, with_)
-
-  val raise = "raise" ~! Raise.from(exprs)
-  val try_ = "try" ~! expr
-  val catch_ = !"catch" ~! cases
-  val catches = TryCatch.from(try_, catch_)
-
-  val force = "$" ~! Force.from(pat)
-  val susp = "$" ~! Susp.from(expr)
-
-  val any = Lit.from(str | chr)
+  val any = (str | chr) ^^ { Lit }
 
   val tuple = exprs map builtin.reify_tuple
   val pattuple = pats map builtin.reify_tuple
@@ -132,57 +118,56 @@ object grammar {
   val open = tuple | anyatom
   val patopen = pattuple | anyatom
 
-  val unapp = P(UnApp.from(patarg, patargs))
-  val app = P(App.from(arg, args))
+  val unapp = P(patarg ~ patargs) ^^ { UnApp }
+  val app = P(arg ~ args) ^^ { App }
 
   val inner_pat = unapp | patarg
   val inner_expr = app | arg
 
-  val escape = "`" ~! expr map builtin.reify
+  val escape = "`" ~ expr map builtin.reify
 
-  val list = ("[" ~! exprs ~! "]") map builtin.reify_list
-  val patlist = ("[" ~! pats ~! "]") map builtin.reify_list
+  val list = "[" ~ exprs ~ "]" map builtin.reify_list
+  val patlist = "[" ~ pats ~ "]" map builtin.reify_list
 
   val expr_high = expr above 7
-  val cond_high = ("if" ~! expr_high).?
+  val cond_high = "if" ~ expr_high ?
   val pat_high = pat above 7
   val pat_low = pat above 2
 
-  val eqq_ = !"=" ~! expr
-  val df_eq = Def.from(pat_high, cond_high, "=" ~! expr)
-  val df_eqv = Def.from(pat_low, cond, "<=>" ~! expr)
+  val df_eq = pat_high ~ cond_high ~ "=" ~ expr ^^ { Def }
+  val df_eqv = pat_low ~ cond ~ "<=>" ~ expr ^^ { Def }
 
-  val test = Test.from(expr)
+  val test = expr ^^ { Test }
 
   val rule: Parser[List[String], Rule] = P(alt)
 
   val nonebnf = string filterNot ebnf
-  val id = Id.from(nonebnf)
-  val tok = Tok.from(str)
-  val ruleatom = ("(" ~! rule ~! ")") | tok | id
+  val id = nonebnf ^^ { Id }
+  val tok = str ^^ { Tok }
+  val ruleatom = ("(" ~ rule ~ ")") | tok | id
 
   val rep = ruleatom ~ (lit("*", false) | lit("+", true)).? map {
     case rule ~ None => rule
     case rule ~ Some(plus) => Rep(rule, plus)
   }
 
-  val attr = "{" ~! expr ~! "}"
-  val seq = Seq.from(rep.*, attr.?) | id
-  val alt = Alt.from(seq.rep(sep = "|"))
-  val prod = Prod.from(id ~! "=", !rule)
+  val attr = "{" ~ expr ~ "}" ?
+  val seq = (rep.* ~ attr) ^^ { Seq } | id
+  val alt = seq ~* "|" ^^ { Alt }
+  val prod = id ~ "=" ~ rule ^^ { Prod }
 
   def section[A, B](s0: String, c: List[A] => B, p: Parser[List[String], A], s1: String) = {
-    val q = p ~! ";"
-    s0 ~! c.from(q *) ~! s1
+    val q = p ~ ";"
+    s0 ~ q.* ~ s1 ^^ c
   }
 
   def named_section[A, B](s0: String, c: (String, List[A]) => B, n: Parser[List[String], String], p: Parser[List[String], A], s1: String) = {
-    val q = p ~! ";"
-    s0 ~! c.from(n, q *) ~! s1
+    val q = p ~ ";"
+    s0 ~ n ~ q.* ~ s1 ^^ c
   }
 
-  val imports = "import" ~! Imports.from(names) ~! ";"
-  val langs = "language" ~! Langs.from(names) ~! ";"
+  val imports = "import" ~ names ~ ";" ^^ { Imports }
+  val langs = "language" ~ names ~ ";" ^^ { Langs }
   val defs = section("define", Defs, df_eq | df_eqv, "end")
   val tests = section("test", Tests, test, "end")
   val nots = section("notation", Nots, fix | data, "end")
@@ -190,9 +175,8 @@ object grammar {
   val grammar = section("grammar", Grammar, prod, "end")
 
   val cmd = imports | nots | defs | tests | evals | grammar | langs;
-  val cmds = cmd *
 
-  val module = Module.from(cmds)
+  val module = cmd.* ^^ { Module }
 }
 
 
