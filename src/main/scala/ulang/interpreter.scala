@@ -11,15 +11,6 @@ case class Clos(cases: List[Case], lex: Env) extends Pretty
 case class Prim(name: String, f: List[Val] => Val) extends Pretty
 case class Obj(tag: Tag, args: List[Val]) extends Pretty with Eq
 
-case class Lazy(body: Expr, lex: Env) extends Pretty {
-  var memo: Option[Val] = None
-  def force(dyn: Env) = {
-    if (memo == None)
-      memo = Some(interpreter.eval(body, lex, dyn))
-    memo.get
-  }
-}
-
 object Env {
   val empty: Env = Map.empty
   val default: Env = Map("=" -> builtin.equal, "print" -> builtin.print)
@@ -47,15 +38,6 @@ object interpreter {
 
     case SubPat(name, pat) =>
       bind(pat, arg, dyn, env + (name -> arg))
-
-    case Force(pat) =>
-      arg match {
-        case arg @ Lazy(body, lex) =>
-          val inner = arg.force(dyn)
-          bind(pat, inner, dyn, env)
-        case _ =>
-          fail
-      }
 
     case UnApp(pfun, parg) =>
       arg match {
@@ -151,9 +133,6 @@ object interpreter {
         case builtin.False => eval(arg2, lex, dyn)
         case res => sys.error("not a boolean in test: " + res)
       }
-
-    case Susp(body) =>
-      Lazy(body, lex)
 
     case App(fun, args) =>
       val res = apply(eval(fun, lex, dyn), eval(args, lex, dyn), dyn)

@@ -33,9 +33,6 @@ case class LetIn(eqs: List[LetEq], body: Expr) extends Expr
 
 case class IfThenElse(test: Expr, iftrue: Expr, iffalse: Expr) extends Expr
 
-case class Force(body: Pat) extends Pat
-case class Susp(body: Expr) extends Expr
-
 case class Tok(str: String) extends Rule
 case class Match(pat: String) extends Rule
 case class Rep(rule: Rule, plus: Boolean) extends Rule

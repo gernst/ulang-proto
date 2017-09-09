@@ -41,9 +41,6 @@ class unify {
     case (a, id: Id) =>
       unify(id, a)
       
-    case (Force(body1), Force(body2)) =>
-      unify(body1, body2)
-
     case (UnApp(fun1, args1), UnApp(fun2, args2)) =>
       unify(fun1, fun2)
       unify(args1, args2)

@@ -73,8 +73,6 @@ object printer {
       "(" + arg1 + " " + name + " " + arg2 + ")"
     case UnApp(fun, args) =>
       (fun :: args).mkString("(", " ", ")")
-    case Force(body) =>
-      "$ " + body
 
     case App(builtin.Tuple, args) =>
       args.mkString("(", ", ", ")")
@@ -109,8 +107,6 @@ object printer {
       "let " + eqs.mkString(", ") + " in " + body
     case IfThenElse(test, iftrue, iffalse) =>
       "if " + test + " then " + iftrue + " else " + iffalse
-    case Susp(body) =>
-      "$ " + body
 
     case Tok(str) =>
       "\"" + str + "\""
@@ -198,12 +194,5 @@ object printer {
       (name :: args).mkString("(", " ", ")")
     case Exc(args) =>
       args.mkString("raise ", ", ", "")
-    case lzy @ Lazy(body, lex) =>
-      lzy.memo match {
-        case Some(v) =>
-          "$ " + v
-        case None =>
-          "$ " + body + lex.keys.mkString(" [", ", ", "]")
-      }
   }
 }

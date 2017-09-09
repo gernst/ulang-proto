@@ -66,8 +66,6 @@ object builtin {
       reify_atom(atom)
     case SubPat(name, pat) =>
       App(Tag("SubPat"), List(Lit(name), reify(pat)))
-    case Force(pat) =>
-      App(Tag("Force"), List(reify(pat)))
     case UnApp(fun, args) =>
       App(Tag("App"), List(reify(fun), reify_list(args map reify)))
   }
@@ -77,8 +75,6 @@ object builtin {
       l
     case atom: Atom =>
       reify_atom(atom)
-    case Susp(pat) =>
-      App(Tag("Susp"), List(reify(pat)))
     case App(fun, args) =>
       App(Tag("App"), List(reify(fun), reify_list(args map reify)))
     case Bind(cases) =>

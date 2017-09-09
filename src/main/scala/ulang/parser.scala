@@ -78,7 +78,7 @@ object grammar {
   val pat: Mixfix[List[String], Atom, Pat] = mixfix(inner_pat, Atom, UnApp, operators)
   val pats = pat ~* ","
   
-  val patarg: Parser[List[String], Pat] = P(("(" ~ patopen ~ ")") | force | any | patlist | wildcard | atom)  ~ ("as" ~ nonmixfix).? map {
+  val patarg: Parser[List[String], Pat] = P(("(" ~ patopen ~ ")") | any | patlist | wildcard | atom)  ~ ("as" ~ nonmixfix).? map {
     case pat ~ None => pat
     case pat ~ Some(name) => SubPat(name, pat)
   }
@@ -88,7 +88,7 @@ object grammar {
   val expr: Mixfix[List[String], Atom, Expr] = mixfix(inner_expr, Atom, App, operators)
   val exprs = expr ~* ","
 
-  val arg: Parser[List[String], Expr] = P(("(" ~ open ~ ")") | bind | matches | raise | catches | ite | let | susp | escape | any | list | atom)
+  val arg: Parser[List[String], Expr] = P(("(" ~ open ~ ")") | bind | matches | raise | catches | ite | let | escape | any | list | atom)
   val args = arg +
 
   val eq = patarg ~ "=" ~ expr ^^ { LetEq }
@@ -104,9 +104,6 @@ object grammar {
   val matches = "match" ~ exprs ~ "with" ~ cases ^^ { MatchWith }
   val raise = "raise" ~ exprs ^^ { Raise }
   val catches = "try" ~ expr ~ "catch" ~ cases ^^ { TryCatch }
-
-  val force = "$" ~ pat ^^ { Force }
-  val susp = "$" ~ expr ^^ { Susp }
 
   val any = (str | chr) ^^ { Lit }
 
