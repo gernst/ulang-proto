@@ -6,8 +6,8 @@ define
     = None;
   filter p (Some x)
     = if p x
-       then Some x
-       else None;
+      then Some x
+      else None;
   
   flatten None = None;
   flatten (Some None) = None;

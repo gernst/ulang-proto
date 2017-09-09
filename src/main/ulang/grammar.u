@@ -15,4 +15,9 @@ grammar
   
   case  = expr "->" expr { Case };
   cases = case ("|" case) * { (::) };
+  
+  // K framework
+  expr = expr "*" expr [strict, left]
+       > expr "+" expr // from SDF
+          { _ +Int _ } // also from K
 end

@@ -28,7 +28,7 @@ nl = \r|\n|\r\n
 sp = [ \t\f]
 ws = {nl} | {sp} 
 
-special = "[]" | "()" | "::" | "::="
+// special = "[]" | "()" | "::" | "::="
 id = [^ \r\n\t\f()\[\]\\.,:;\'\"$@`]+
 delim = [()\[\]\\.,:;$@`]
 string = \' ([^\']|\\\')* \' | \" ([^\"]|\\\")* \"
@@ -60,7 +60,7 @@ string = \' ([^\']|\\\')* \' | \" ([^\"]|\\\")* \"
 
 {delim}     { return tok(); }
 {id}        { return tok(); }
-{special}   { return tok(); }
+// {special}   { return tok(); }
 {string}    { return tok(); }
 
 // .|\n        { throw new RuntimeException("in scan: unexpected character '" + tok() + "'"); }

@@ -63,15 +63,17 @@ object shell {
   } catch {
     case e: StackOverflowError =>
       err("fatal: stack overflow")
+      e.printStackTrace()
       None
     case e: Throwable =>
       err("fatal: " + e)
-      // e.printStackTrace()
+      e.printStackTrace()
       None
   }
 
   def main(args: Array[String]) {
     safe {
+      // load("mini")
       load("base")
       load("prover")
     }

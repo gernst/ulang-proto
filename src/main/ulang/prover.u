@@ -1,3 +1,28 @@
+/*
+notation
+  data ¬ ∧ ∨ → ↔;
+  prefix      5 ¬;
+  infix left  4 ∧;
+  infix left  3 ∨;
+  infix right 2 →;
+  infix       1 ↔;
+end
+
+define
+  triv =
+  \ ¬ False -> True
+  | ¬ True  -> False
+  | ¬ ¬ phi -> phi
+
+  | True  ∧ psi -> psi
+  | False ∧ psi -> False
+  | phi ∧ True  -> phi
+  | phi ∧ False -> False
+  | phi ∧ phi   -> phi;
+  ;
+end
+*/
+
 define
   triv (Not False) = True;
   triv (Not True)  = False;
@@ -45,7 +70,7 @@ define
   assume (And phi psi) ctx
     = assume phi (assume psi ctx);
   assume phi ctx
-    = phi :: ctx;
+    = [phi; ctx];
     
   assumes phis ctx
     = foldr assume ctx phis;
@@ -61,7 +86,7 @@ define
   assert (Or phi psi) ctx
     = assert phi (assert psi ctx);
   assert phi ctx
-    = triv (Not phi) :: ctx;
+    = triv [Not phi; ctx];
     
   asserts phis ctx
     = foldr assert ctx phis;
@@ -128,9 +153,11 @@ define
 end
 
 define
+  con todo
+    = con todo [];
   con [] ctx
     = reverse ctx;
-  con (phi :: todo) ctx
+  con [phi; todo] ctx
     = let newctx = assume todo ctx in
       let newphi = simp phi False newctx in
       con todo (assume newphi ctx);
@@ -149,8 +176,8 @@ define
 
   rule_cut phi
     = Rule "cut" \(Seq phis) ->
-        [Seq     (phi :: phis),
-         Seq (Not phi :: phis)];
+        [Seq     [phi; phis],
+         Seq [Not phi; phis]];
 
   split phi psi = Some [phi, And (Not phi) psi];
   cases (Or  phi psi) = split phi psi;
@@ -167,7 +194,7 @@ define
 
   rule_simp
     = Rule "simplify" \(Seq phis) ->
-        [Seq (con phis [])];
+        [Seq (con phis)];
 
   apply (Rule name derive) concl
     = let prems = derive concl

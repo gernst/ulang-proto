@@ -30,7 +30,7 @@ define
   
   item
     = Parser \ [] -> Failure
-              | (a :: src) -> Success a src;
+             | [a; src] -> Success a src;
   
   literal a
     = filter (\b -> a = b) item;
@@ -50,23 +50,23 @@ end
 define
   map f p1
     = bind p1 \a1 ->
-         return f a1;
+         return (f a1);
 
   map f p1 p2
     = bind p1 \a1 ->
       bind p2 \a2 ->
-        return f a1 a2;
+        return (f a1 a2);
 
   map f p1 p2 p3
     = bind p1 \a1 ->
       bind p2 \a2 ->
       bind p3 \a3 ->
-        return f a1 a2 a3;
+        return (f a1 a2 a3);
 
   map f p1 p2 p3 p4
     = bind p1 \a1 ->
       bind p2 \a2 ->
       bind p3 \a3 ->
       bind p4 \a4 ->
-        return f a1 a2 a3 a4;
+        return (f a1 a2 a3 a4);
 end

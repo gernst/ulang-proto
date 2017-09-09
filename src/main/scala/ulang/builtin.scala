@@ -1,26 +1,44 @@
 package ulang
 
 object builtin {
+  val Zero = Tag("0")
+  val Succ = Tag("+1")
   val True = Tag("True")
   val False = Tag("False")
+  val Tuple = Tag("Tuple")
+  val Unit = App(Tuple, List())
+  val UnUnit = UnApp(Tuple, List())
+  val Nil = Tag("Nil")
+  val Cons = Tag("Cons")
+  
   def reify(b: Boolean) = if (b) True else False
 
-  def unpair(h: Pat, t: Pat) = UnApp(Tag(","), List(h, t))
-  def pair(h: Expr, t: Expr) = App(Tag(","), List(h, t))
+  def unpair(h: Pat, t: Pat) = UnApp(Tuple, List(h, t))
+  def pair(h: Expr, t: Expr) = App(Tuple, List(h, t))
   
-  def uncons(h: Pat, t: Pat) = UnApp(Tag("::"), List(h, t))
-  def cons(h: Expr, t: Expr) = App(Tag("::"), List(h, t))
+  def uncons(h: Pat, t: Pat) = UnApp(Cons, List(h, t))
+  def cons(h: Expr, t: Expr) = App(Cons, List(h, t))
 
   def reify_option(e: Option[Expr]) = e match {
     case None => Tag("None")
     case Some(e) => App(Tag("Some"), List(e))
   }
   
-  def reify_tuple(ps: List[Pat]) = ps.reduceRight(unpair)
-  def reify_tuple(es: List[Expr]) = es.reduceRight(pair)
+  def reify_tuple(ps: List[Pat]) = ps match {
+    case List(p) => p
+    case _ => UnApp(Tuple, ps)
+  }
   
-  def reify_list(ps: List[Pat]) = ps.foldRight(Tag("[]"): Pat)(uncons)
-  def reify_list(es: List[Expr]) = es.foldRight(Tag("[]"): Expr)(cons)
+  def reify_tuple(es: List[Expr]) = es match {
+    case List(e) => e
+    case _ => App(Tuple, es)
+  }
+  
+  def reify_list(ps: List[Pat]) = ps.foldRight(Nil: Pat)(uncons)
+  def reify_list(es: List[Expr]) = es.foldRight(Nil: Expr)(cons)
+  
+  def reify_list_with_tail(ps: List[Pat], pt: Pat) = ps.foldRight(pt)(uncons)
+  def reify_list_with_tail(es: List[Expr], et: Expr) = es.foldRight(et)(cons)
 
   def reify_atom(atom: Atom): Expr = atom match {
     case Tag(name) =>
@@ -71,6 +89,10 @@ object builtin {
       App(Tag("LetIn"), List(reify_list(eqs map reify), reify(body)))
     case MatchWith(args, cases) =>
       App(Tag("MatchWith"), List(reify_list(args map reify), reify_list(cases map reify)))
+    case Raise(args) =>
+      App(Tag("Raise"), List(reify_list(args map reify)))
+    case TryCatch(arg, cases) =>
+      App(Tag("TryCatch"), List(reify(arg), reify_list(cases map reify)))
   }
 
   val equal = Prim("=", { case List(obj1, obj2) => reify(_equal(obj1, obj2)) })

@@ -11,6 +11,7 @@ end
 define
   id x = x;
   const x = \y -> x;
+  apply f a = f a;
   
   curry   f = \x -> \y ->  f x y;
   uncurry f = \x y -> (f x) y;
@@ -24,6 +25,10 @@ end
 test
   id A = A;
   (const A) B = A;
+end
+
+eval
+  (A,B,C);
 end
 
 import

@@ -41,8 +41,8 @@ object parser {
 object grammar {
   val ebnf = Set(";", "*", "+", "(", ")", "{", "}", "[", "]", "|", "=", "end")
 
-  val keywords = Set(",", ";", "(", ")", "{", "}", "[", "]", "->", "$", "`", "|", "\\",
-    "if", "then", "else", "let", "in", "match", "with", "raise", "try", "catch", "end")
+  val keywords = Set(",", ";", "(", ")", "{", "}", "[", "]", "->", "$", "`", "|", "\\", "_",
+    "as", "if", "then", "else", "let", "in", "match", "with", "raise", "try", "catch", "end")
 
   val str = string collect {
     case s if s.head == '"' && s.last == '"' =>
@@ -57,6 +57,7 @@ object grammar {
   val name = string filterNot keywords
   val names = name.*
   val nonmixfix = name filterNot operators.contains
+  val wildcard = lit("_", Wildcard)
 
   val atom = nonmixfix ^^ { Atom }
   val anyatom = name ^^ { Atom }
@@ -77,15 +78,12 @@ object grammar {
   val pat: Mixfix[List[String], Atom, Pat] = mixfix(inner_pat, Atom, UnApp, operators)
   val pats = pat ~* ","
   
-  val patarg: Parser[List[String], Pat] = P(("(" ~ patopen ~ ")") | force | any | patlist | patatom)
-  val patargs = patarg.+
-
-  val patatom = nonmixfix ~ ("@" ~ patarg ?) map {
-    case "_" ~ None => Wildcard
-    case name ~ None => Atom(name)
-    case "_" ~ Some(pat) => pat
-    case name ~ Some(pat) => SubPat(name, pat)
+  val patarg: Parser[List[String], Pat] = P(("(" ~ patopen ~ ")") | force | any | patlist | wildcard | atom)  ~ ("as" ~ nonmixfix).? map {
+    case pat ~ None => pat
+    case pat ~ Some(name) => SubPat(name, pat)
   }
+  
+  val patargs = patarg.+
 
   val expr: Mixfix[List[String], Atom, Expr] = mixfix(inner_expr, Atom, App, operators)
   val exprs = expr ~* ","
@@ -99,7 +97,7 @@ object grammar {
 
   val cond = "if" ~ expr ?
   val cs = pats ~ cond ~ "->" ~ expr ^^ { Case }
-  val cases = ("|" ?) ~ cs ~* "|"
+  val cases = ("|" ?) ~ (cs ~* "|")
 
   val bind = "\\" ~ cases ^^ { Bind }
   val ite = "if" ~ expr ~ "then" ~ expr ~ "else" ~ expr ^^ { IfThenElse }
@@ -112,11 +110,11 @@ object grammar {
 
   val any = (str | chr) ^^ { Lit }
 
-  val tuple = exprs map builtin.reify_tuple
-  val pattuple = pats map builtin.reify_tuple
+  val tuple = exprs ^^ builtin.reify_tuple
+  val pattuple = pats ^^ builtin.reify_tuple
 
-  val open = tuple | anyatom
-  val patopen = pattuple | anyatom
+  val open = tuple | anyatom | ret(builtin.Unit)
+  val patopen = pattuple | anyatom | ret(builtin.UnUnit)
 
   val unapp = P(patarg ~ patargs) ^^ { UnApp }
   val app = P(arg ~ args) ^^ { App }
@@ -124,10 +122,17 @@ object grammar {
   val inner_pat = unapp | patarg
   val inner_expr = app | arg
 
-  val escape = "`" ~ expr map builtin.reify
+  val escape = "`" ~ expr ^^ builtin.reify
 
-  val list = "[" ~ exprs ~ "]" map builtin.reify_list
-  val patlist = "[" ~ pats ~ "]" map builtin.reify_list
+  val nil = "[" ~ ret[List[String], Atom](builtin.Nil) ~ "]"
+  
+  val tail = (";" ~ expr) | ret(builtin.Nil)
+  val cons = "[" ~ exprs ~ tail ~ "]" ^^ builtin.reify_list_with_tail
+  val list = cons | nil
+  
+  val pattail = (";" ~ pat) | ret(builtin.Nil)
+  val uncons = "[" ~ pats ~ pattail ~ "]" ^^ builtin.reify_list_with_tail
+  val patlist = uncons | nil
 
   val expr_high = expr above 7
   val cond_high = "if" ~ expr_high ?

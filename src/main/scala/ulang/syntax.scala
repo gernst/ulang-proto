@@ -17,8 +17,8 @@ case class Id(name: String) extends Atom with Rule
 
 case class SubPat(name: String, pat: Pat) extends Pat
 
-case class UnApp(fun: Pat, args: List[Pat]) extends Pat { assert(!args.isEmpty) }
-case class App(fun: Expr, args: List[Expr]) extends Expr { assert(!args.isEmpty) }
+case class UnApp(fun: Pat, args: List[Pat]) extends Pat // { assert(!args.isEmpty) }
+case class App(fun: Expr, args: List[Expr]) extends Expr // { assert(!args.isEmpty) }
 
 case class Case(pats: List[Pat], cond: Option[Expr], body: Expr) extends Pretty
 case class Bind(cases: List[Case]) extends Expr

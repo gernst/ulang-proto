@@ -1,3 +1,23 @@
+define
+  True:  Bool
+  False: Bool
+  
+  Nil: List a
+  Cons: a, List a -> List a  
+end
+
+
+apply f a = f a
+
+bind (Var x)    v e = e + (x -> v)
+bind (App f a) (
+
+eval (Const v) e = v
+eval (Var x)   e = lookup e x
+eval (App f a) e = apply (eval f e) (eval a e)
+eval (Abs p b) e = \v. eval b (bind p v e)
+
+
 grammar
   foo = ...
 end
