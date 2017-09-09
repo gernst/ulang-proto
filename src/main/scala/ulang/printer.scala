@@ -16,17 +16,6 @@ object printer {
       any + " + " + n
   }
 
-  /*def print_tuple(any: Any): String = any match {
-    case App(builtin.Tuple, List(arg1, arg2)) =>
-      ", " + arg1 + print_tuple(arg2)
-    case UnApp(builtin.Tuple, List(arg1, arg2)) =>
-      ", " + arg1 + print_tuple(arg2)
-    case Obj(builtin.Tuple, List(arg1, arg2)) =>
-      ", " + arg1 + print_list(arg2)
-    case _ =>
-      ", " + any + ")"
-  }*/
-
   def print_list(any: Any): String = any match {
     case App(builtin.Cons, List(arg1, arg2)) =>
       ", " + arg1 + print_list(arg2)
@@ -94,10 +83,6 @@ object printer {
 
     case Bind(cases) =>
       "\\ " + cases.mkString(" | ")
-    case Raise(args) =>
-      args.mkString("raise ", ", ", "")
-    case TryCatch(arg, cases) =>
-      "try " + arg + " catch " + cases.mkString(" | ")
     case MatchWith(args, cases) =>
       "match " + args.mkString(" ") + " with " + cases.mkString(" | ")
 

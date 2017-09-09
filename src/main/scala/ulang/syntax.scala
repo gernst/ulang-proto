@@ -23,9 +23,6 @@ case class App(fun: Expr, args: List[Expr]) extends Expr // { assert(!args.isEmp
 case class Case(pats: List[Pat], cond: Option[Expr], body: Expr) extends Pretty
 case class Bind(cases: List[Case]) extends Expr
 
-case class Raise(args: List[Expr]) extends Expr
-case class TryCatch(arg: Expr, cases: List[Case]) extends Expr
-
 case class MatchWith(args: List[Expr], cases: List[Case]) extends Expr
 
 case class LetEq(pat: Pat, arg: Expr) extends Pretty

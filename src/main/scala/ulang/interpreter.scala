@@ -97,11 +97,7 @@ object interpreter {
     exprs map (eval(_, lex, dyn))
   }
 
-  def eval(expr: Expr, lex: Env, dyn: Env): Val = {
-    debugger.trap(expr, lex, dyn) or _eval(expr, lex, dyn)
-  }
-
-  def _eval(expr: Expr, lex: Env, dyn: Env): Val = expr match {
+  def eval(expr: Expr, lex: Env, dyn: Env): Val = expr match {
     case tag: Tag =>
       tag
 
@@ -137,17 +133,6 @@ object interpreter {
     case App(fun, args) =>
       val res = apply(eval(fun, lex, dyn), eval(args, lex, dyn), dyn)
       res
-
-    case Raise(args) =>
-      throw Exc(eval(args, lex, dyn))
-
-    case TryCatch(arg, cases) =>
-      try {
-        eval(arg, lex, dyn)
-      } catch {
-        case e @ Exc(args) =>
-          apply(cases, args, lex, dyn) or { throw e }
-      }
 
     case MatchWith(args, cases) =>
       apply(cases, eval(args, lex, dyn), lex, dyn)

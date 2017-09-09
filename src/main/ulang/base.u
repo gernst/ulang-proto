@@ -1,9 +1,6 @@
 notation
-  // data ,;
-  
   infix 6 :;
 
-  // infix right 6 ,;
   // infix       6 =;
   infix right 9 .;
 end
@@ -18,8 +15,6 @@ define
   tupled  f = \(x, y) -> f x y;
   
   g . f = \x -> g (f x);
-  
-  force ($ x) = x;
 end
 
 test

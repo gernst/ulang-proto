@@ -73,9 +73,9 @@ object shell {
 
   def main(args: Array[String]) {
     safe {
-      // load("mini")
+      load("mini")
       load("base")
-      load("prover")
+      // load("prover")
     }
     // repl()
   }
@@ -125,7 +125,7 @@ object shell {
   def load(name: String) {
     if (!(st.mods contains name)) {
       st += name
-      read(name, new File("src/ulang/" + name + ".u"))
+      read(name, new File("src/main/ulang/" + name + ".u"))
     }
   }
 

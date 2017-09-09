@@ -88,7 +88,7 @@ object grammar {
   val expr: Mixfix[List[String], Atom, Expr] = mixfix(inner_expr, Atom, App, operators)
   val exprs = expr ~* ","
 
-  val arg: Parser[List[String], Expr] = P(("(" ~ open ~ ")") | bind | matches | raise | catches | ite | let | escape | any | list | atom)
+  val arg: Parser[List[String], Expr] = P(("(" ~ open ~ ")") | bind | matches | ite | let | escape | any | list | atom)
   val args = arg +
 
   val eq = patarg ~ "=" ~ expr ^^ { LetEq }
@@ -102,8 +102,6 @@ object grammar {
   val bind = "\\" ~ cases ^^ { Bind }
   val ite = "if" ~ expr ~ "then" ~ expr ~ "else" ~ expr ^^ { IfThenElse }
   val matches = "match" ~ exprs ~ "with" ~ cases ^^ { MatchWith }
-  val raise = "raise" ~ exprs ^^ { Raise }
-  val catches = "try" ~ expr ~ "catch" ~ cases ^^ { TryCatch }
 
   val any = (str | chr) ^^ { Lit }
 
