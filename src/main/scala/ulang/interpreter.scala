@@ -6,9 +6,7 @@ import java.io.File
 
 trait Eq
 
-case class Exc(args: List[Val]) extends Exception with Pretty
 case class Clos(cases: List[Case], lex: Env) extends Pretty
-case class Prim(name: String, f: List[Val] => Val) extends Pretty
 case class Obj(tag: Tag, args: List[Val]) extends Pretty with Eq
 
 object Env {
@@ -31,7 +29,7 @@ object interpreter {
 
     case Id(name) =>
       (env get name) match {
-        case Some(that) if builtin._equal(that, arg) => env
+        case Some(that) if builtin.equal.test(that, arg) => env
         case None => env + (name -> arg)
         case _ => fail
       }
@@ -86,7 +84,7 @@ object interpreter {
     case Clos(cases, lex) =>
       apply(cases, args, lex, dyn) or sys.error(fun + " mismatches " + args.mkString(" "))
 
-    case Prim(_, f) =>
+    case f: (List[Val] => Val) @unchecked =>
       f(args)
 
     case _ =>

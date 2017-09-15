@@ -161,8 +161,6 @@ object printer {
 
     case Clos(cases, lex) =>
       "\\ " + cases.mkString(" | ") + lex.keys.mkString(" [", ", ", "]")
-    case Prim(name, _) =>
-      name
     case Obj(builtin.Succ, List(arg)) =>
       print_number(1, arg)
     case Obj(builtin.Tuple, args) =>
@@ -177,7 +175,5 @@ object printer {
       "(" + arg1 + " " + name + " " + arg2 + ")"
     case Obj(Tag(name), args) =>
       (name :: args).mkString("(", " ", ")")
-    case Exc(args) =>
-      args.mkString("raise ", ", ", "")
   }
 }

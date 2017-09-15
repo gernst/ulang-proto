@@ -1,0 +1,37 @@
+define
+  reg RAX = 0;
+  
+  encode (MODRM mod reg rm)
+    = (mod & 0x3) << 5
+    | (reg & 0x7) << 3
+    | (rm  & 0x7) << 3;
+    
+  /* override prefix
+     rex prefix
+     opcode
+     modrm
+     disp
+     imm */
+     
+  emit Override
+    = [0x66];
+  emit NoOverride
+    = [];
+    
+  emit Rex w r x b
+    = [       (0b01000000)
+      | (if w then 0b1000 else 0)
+      | (if r then 0b0100 else 0)
+      | (if x then 0b0010 else 0)
+      | (if b then 0b0001 else 0)
+      ];
+ 
+  emit NoRex
+    = [];
+
+  emit (Opcode op)
+    = if op < 256
+      then [op]
+      else let (high, low) = div op 256
+      in   [high, low];
+end
