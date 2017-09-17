@@ -8,8 +8,8 @@ notation
 end
 
 define
-  (not True)  = False;
-  (not False) = True;
+  not True  <=> False;
+  not False <=> True;
   
   x != y <=> not x = y;
   
@@ -33,8 +33,8 @@ define
   False ==> True  <=> True;
   False ==> False <=> True;
   
- (True  <=> True)  = True;
- (True  <=> False) = False;
- (False <=> True)  = False;
- (False <=> False) = True;
+ (True  <=> True)  <=> True;
+ (True  <=> False) <=> False;
+ (False <=> True)  <=> False;
+ (False <=> False) <=> True;
 end

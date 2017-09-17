@@ -4,9 +4,6 @@ notation
 end
 
 define
-  list None = [];
-  list (Some x) = [x];
-  
   head [x;  _] = x;
   tail [_; xs] = xs;
   

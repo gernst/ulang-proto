@@ -12,4 +12,7 @@ define
   flatten None = None;
   flatten (Some None) = None;
   flatten (Some (Some x)) = Some x;
+  
+  list None = [];
+  list (Some x) = [x];
 end

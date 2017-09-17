@@ -176,7 +176,7 @@ object shell {
   def parsers(st: State) = {
     val ps: Ref[PEnv] = Ref(Map.empty)
 
-    def compile(rule: Rule): Parser[List[String], Expr] = rule match {
+    def compile(rule: Rule): Parser[Expr] = rule match {
       case Id(name) =>
         arse.parser.Rec(name, () => ps.get(name))
       case Rep(rule, plus) =>
@@ -186,7 +186,7 @@ object shell {
       case Seq(rules, None) =>
         compile1(rules)
       case Seq(rules, Some(action)) =>
-        val nil: Parser[List[String], List[Expr]] = ret(Nil)
+        val nil: Parser[List[Expr]] = ret(Nil)
         compiles(rules) map {
           case Nil => action
           case args => App(action, args)

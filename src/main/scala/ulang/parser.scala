@@ -19,7 +19,7 @@ object parser {
   implicit def toFileReader(file: File) = new FileReader(file)
   implicit def toStringReader(line: String) = new StringReader(line)
 
-  def parse[A](p: Parser[List[String], A], reader: Reader): A = {
+  def parse[A](p: Parser[A], reader: Reader): A = {
     val (res, out) = p(tokenize(reader))
     if (!out.isEmpty)
       sys.error("remaining input: " + out.mkString(" "))
@@ -44,16 +44,6 @@ object grammar {
   val keywords = Set(",", ";", "(", ")", "{", "}", "[", "]", "->", "$", "`", "|", "\\", "_",
     "as", "if", "then", "else", "let", "in", "match", "with", "raise", "try", "catch", "end")
 
-  val str = string collect {
-    case s if s.head == '"' && s.last == '"' =>
-      s.substring(1, s.length - 1)
-  }
-
-  val chr = string collect {
-    case s if s.length == 3 && s.head == '\'' && s.last == '\'' =>
-      s(1)
-  }
-
   val name = string filterNot keywords
   val names = name.*
   val nonmixfix = name filterNot operators.contains
@@ -75,20 +65,20 @@ object grammar {
   val fix = fixity ~ names ^^ { Fix }
   val data = "data" ~ names ^^ { Data }
 
-  val pat: Mixfix[List[String], Atom, Pat] = mixfix(inner_pat, Atom, UnApp, operators)
+  val pat: Mixfix[Atom, Pat] = mixfix(inner_pat, Atom, UnApp, operators)
   val pats = pat ~* ","
-  
-  val patarg: Parser[List[String], Pat] = P(("(" ~ patopen ~ ")") | any | patlist | wildcard | atom)  ~ ("as" ~ nonmixfix).? map {
+
+  val patarg: Parser[Pat] = P(("(" ~ patopen ~ ")") | any | patlist | wildcard | atom) ~ ("as" ~ nonmixfix).? map {
     case pat ~ None => pat
     case pat ~ Some(name) => SubPat(name, pat)
   }
-  
+
   val patargs = patarg.+
 
-  val expr: Mixfix[List[String], Atom, Expr] = mixfix(inner_expr, Atom, App, operators)
+  val expr: Mixfix[Atom, Expr] = mixfix(inner_expr, Atom, App, operators)
   val exprs = expr ~* ","
 
-  val arg: Parser[List[String], Expr] = P(("(" ~ open ~ ")") | bind | matches | ite | let | escape | any | list | atom)
+  val arg: Parser[Expr] = P(("(" ~ open ~ ")") | bind | matches | ite | let | escape | any | list | atom)
   val args = arg +
 
   val eq = patarg ~ "=" ~ expr ^^ { LetEq }
@@ -103,7 +93,7 @@ object grammar {
   val ite = "if" ~ expr ~ "then" ~ expr ~ "else" ~ expr ^^ { IfThenElse }
   val matches = "match" ~ exprs ~ "with" ~ cases ^^ { MatchWith }
 
-  val any = (str | chr) ^^ { Lit }
+  val any = (string | char) ^^ { Lit }
 
   val tuple = exprs ^^ builtin.reify_tuple
   val pattuple = pats ^^ builtin.reify_tuple
@@ -119,12 +109,12 @@ object grammar {
 
   val escape = "`" ~ expr ^^ builtin.reify
 
-  val nil = "[" ~ ret[List[String], Atom](builtin.Nil) ~ "]"
-  
+  val nil = "[" ~ ret(builtin.Nil) ~ "]"
+
   val tail = (";" ~ expr) | ret(builtin.Nil)
   val cons = "[" ~ exprs ~ tail ~ "]" ^^ builtin.reify_list_with_tail
   val list = cons | nil
-  
+
   val pattail = (";" ~ pat) | ret(builtin.Nil)
   val uncons = "[" ~ pats ~ pattail ~ "]" ^^ builtin.reify_list_with_tail
   val patlist = uncons | nil
@@ -139,7 +129,7 @@ object grammar {
 
   val test = expr ^^ { Test }
 
-  val rule: Parser[List[String], Rule] = P(alt)
+  val rule: Parser[Rule] = P(alt)
 
   val nonebnf = string filterNot ebnf
   val id = nonebnf ^^ { Id }
@@ -156,12 +146,12 @@ object grammar {
   val alt = seq ~* "|" ^^ { Alt }
   val prod = id ~ "=" ~ rule ^^ { Prod }
 
-  def section[A, B](s0: String, c: List[A] => B, p: Parser[List[String], A], s1: String) = {
+  def section[A, B](s0: String, c: List[A] => B, p: Parser[A], s1: String) = {
     val q = p ~ ";"
     s0 ~ q.* ~ s1 ^^ c
   }
 
-  def named_section[A, B](s0: String, c: (String, List[A]) => B, n: Parser[List[String], String], p: Parser[List[String], A], s1: String) = {
+  def named_section[A, B](s0: String, c: (String, List[A]) => B, n: Parser[String], p: Parser[A], s1: String) = {
     val q = p ~ ";"
     s0 ~ n ~ q.* ~ s1 ^^ c
   }

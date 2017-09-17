@@ -21,6 +21,6 @@ package object ulang {
   }
 
   type Env = Map[String, Val]
-  type PEnv = Map[String, Parser[List[String], Expr]]
+  type PEnv = Map[String, Parser[Expr]]
   type Subst = Map[Pat, Pat]
 }

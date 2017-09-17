@@ -26,6 +26,7 @@ case class Bind(cases: List[Case]) extends Expr
 case class MatchWith(args: List[Expr], cases: List[Case]) extends Expr
 
 case class LetEq(pat: Pat, arg: Expr) extends Pretty
+
 case class LetIn(eqs: List[LetEq], body: Expr) extends Expr
 
 case class IfThenElse(test: Expr, iftrue: Expr, iffalse: Expr) extends Expr
