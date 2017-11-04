@@ -42,10 +42,10 @@ object printer {
 
     case builtin.Nil =>
       "[]"
-    case Atom(name) if operators contains name =>
-      "(" + name + ")"
-    case Atom(name) =>
-      name
+    case op: Atom if operators contains op =>
+      "(" + op.name + ")"
+    case op: Atom =>
+      op.name
 
     case SubPat(name, pat) =>
       name + " @ " + pat
@@ -54,12 +54,12 @@ object printer {
       args.mkString("(", ", ", ")")
     case UnApp(builtin.Cons, List(arg1, arg2)) =>
       "[" + arg1 + print_list(arg2)
-    case UnApp(Atom(name), List(arg)) if operators.prefix_ops contains name =>
-      "(" + name + " " + arg + ")"
-    case UnApp(Atom(name), List(arg)) if operators.postfix_ops contains name =>
-      "(" + arg + " " + name + ")"
-    case UnApp(Atom(name), List(arg1, arg2)) if operators.infix_ops contains name =>
-      "(" + arg1 + " " + name + " " + arg2 + ")"
+    case UnApp(op: Atom, List(arg)) if operators.prefix_ops contains op =>
+      "(" + op + " " + arg + ")"
+    case UnApp(op: Atom, List(arg)) if operators.postfix_ops contains op =>
+      "(" + arg + " " + op + ")"
+    case UnApp(op: Atom, List(arg1, arg2)) if operators.infix_ops contains op =>
+      "(" + arg1 + " " + op + " " + arg2 + ")"
     case UnApp(fun, args) =>
       (fun :: args).mkString("(", " ", ")")
 
@@ -67,12 +67,12 @@ object printer {
       args.mkString("(", ", ", ")")
     case App(builtin.Cons, List(arg1, arg2)) =>
       "[" + arg1 + print_list(arg2)
-    case App(Atom(name), List(arg)) if operators.prefix_ops contains name =>
-      "(" + name + " " + arg + ")"
-    case App(Atom(name), List(arg)) if operators.postfix_ops contains name =>
-      "(" + arg + " " + name + ")"
-    case App(Atom(name), List(arg1, arg2)) if operators.infix_ops contains name =>
-      "(" + arg1 + " " + name + " " + arg2 + ")"
+    case App(op: Atom, List(arg)) if operators.prefix_ops contains op =>
+      "(" + op + " " + arg + ")"
+    case App(op: Atom, List(arg)) if operators.postfix_ops contains op =>
+      "(" + arg + " " + op + ")"
+    case App(op: Atom, List(arg1, arg2)) if operators.infix_ops contains op =>
+      "(" + arg1 + " " + op + " " + arg2 + ")"
     case App(fun, args) =>
       (fun :: args).mkString("(", " ", ")")
 
@@ -167,13 +167,13 @@ object printer {
       args.mkString("(", ", ", ")")
     case Obj(builtin.Cons, List(arg1, arg2: Eq)) =>
       "[" + arg1 + print_list(arg2)
-    case Obj(Tag(name), List(arg)) if operators.prefix_ops contains name =>
-      "(" + name + " " + arg + ")"
-    case Obj(Tag(name), List(arg)) if operators.postfix_ops contains name =>
-      "(" + arg + " " + name + ")"
-    case Obj(Tag(name), List(arg1, arg2)) if operators.infix_ops contains name =>
-      "(" + arg1 + " " + name + " " + arg2 + ")"
-    case Obj(Tag(name), args) =>
-      (name :: args).mkString("(", " ", ")")
+    case Obj(op: Tag, List(arg)) if operators.prefix_ops contains op =>
+      "(" + op + " " + arg + ")"
+    case Obj(op: Tag, List(arg)) if operators.postfix_ops contains op =>
+      "(" + arg + " " + op + ")"
+    case Obj(op: Tag, List(arg1, arg2)) if operators.infix_ops contains op =>
+      "(" + arg1 + " " + op + " " + arg2 + ")"
+    case Obj(op: Tag, args) =>
+      (op :: args).mkString("(", " ", ")")
   }
 }

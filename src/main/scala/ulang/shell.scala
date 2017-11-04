@@ -6,6 +6,7 @@ import java.io.Reader
 import arse._
 import arse.control._
 import scala.io.StdIn
+import scala.io.Source
 
 case class State(mods: Set[String], defs: List[Def], prods: List[Prod]) extends Pretty {
   def +(ctx: String) = {
@@ -29,12 +30,11 @@ object State {
 }
 
 object shell {
-  import parser._
-  import interpreter._
-
   val lex = Env.empty
   var st = State.empty
   var cmd = grammar.cmd
+
+  object whitespace extends Whitespace("\\s*")
 
   def cmd(c: => Any) = { () => c }
   def commands: Map[String, () => Any] = Map(
@@ -125,20 +125,20 @@ object shell {
   def load(name: String) {
     if (!(st.mods contains name)) {
       st += name
-      read(name, new File("src/main/ulang/" + name + ".u"))
+      val source = Source.fromFile("src/main/ulang/" + name + ".u")
+      read(name, source.mkString)
     }
   }
 
-  def read(ctx: String, reader: Reader): Unit = {
-    var in = tokenize(reader)
+  def read(ctx: String, test: String): Unit = {
+    val in = arse.input(test)(whitespace)
 
     while (!in.isEmpty) {
-      val p = this.cmd | ret((null: Cmd, in))
-      val (cmd: Cmd, rest) = p(in)
-      if (rest.length == in.length)
-        sys.error("syntax error at " + rest.mkString(" "))
+      val p = this.cmd | ret(null: Cmd)
+      val cmd = p(in)
+      /* if (rest.length == in.length)
+        sys.error("syntax error at " + rest.mkString(" ")) */
       exec(ctx, cmd)
-      in = rest
     }
   }
 
@@ -167,14 +167,16 @@ object shell {
 
       val dyn = defs.foldLeft(Env.default) {
         case (dyn, df) =>
-          dyn + eval(df, lex, dyn)
+          dyn + interpreter.eval(df, lex, dyn)
       }
 
       Model(dyn)
   }
 
   def parsers(st: State) = {
-    val ps: Ref[PEnv] = Ref(Map.empty)
+    import arse.implicits._
+
+    val ps: Ref[PEnv] = Ref(scala.collection.immutable.Map())
 
     def compile(rule: Rule): Parser[Expr] = rule match {
       case Id(name) =>
@@ -197,21 +199,21 @@ object shell {
         sys.error("grammar rule '" + rule + "' without result")
     }
 
-    def compile1(rules: List[Rule]): Parser[List[String], Expr] = compiles(rules) map {
+    def compile1(rules: List[Rule]): Parser[Expr] = compiles(rules) map {
       case List(rule) =>
         rule // could be static
       case _ =>
         sys.error("grammar rule '" + rules.mkString(" ") + "' without action")
     }
 
-    def compiles(rules: List[Rule]): Parser[List[String], List[Expr]] = rules match {
+    def compiles(rules: List[Rule]): Parser[List[Expr]] = rules match {
       case Nil =>
         ret(Nil)
       case Tok(str) :: rest =>
         str ~ compiles(rest)
       case Match(pat) :: rest =>
-        val test = string filter { _ matches pat }
-        test.unary_? ~ compiles(rest)
+        val lit = scan(pat) ~> Lit
+        lit :: compiles(rest)
       case rule :: rest =>
         compile(rule) :: compiles(rest)
     }
@@ -243,13 +245,13 @@ object shell {
     case Nots(nots) =>
       nots foreach {
         case Fix(Prefix(prec), names) =>
-          for (name <- names) { operators.prefix_ops += (name -> prec) }
+          for (name <- names) { operators.prefix_ops += (Atom(name) -> prec) }
         case Fix(Postfix(prec), names) =>
-          for (name <- names) { operators.postfix_ops += (name -> prec) }
+          for (name <- names) { operators.postfix_ops += (Atom(name) -> prec) }
         case Fix(Infix(assoc, prec), names) =>
-          for (name <- names) { operators.infix_ops += (name -> (assoc, prec)) }
+          for (name <- names) { operators.infix_ops += (Atom(name) -> (assoc, prec)) }
         case Data(names) =>
-          operators.data ++= names
+          operators.data ++= (names map Tag)
         case not =>
           sys.error("unknown notation: " + not)
       }
@@ -274,9 +276,9 @@ object shell {
           for (Test(phi) <- tests) {
             phi match {
               case App(Id("="), List(lhs, rhs)) =>
-                eval(lhs, lex, dyn) expect eval(rhs, lex, dyn)
+                interpreter.eval(lhs, lex, dyn) expect interpreter.eval(rhs, lex, dyn)
               case _ =>
-                eval(phi, lex, dyn) expect builtin.True
+                interpreter.eval(phi, lex, dyn) expect builtin.True
             }
           }
         }
@@ -286,7 +288,7 @@ object shell {
       val Model(dyn) = model(merged(st))
 
       for (expr <- exprs) {
-        out(expr + "\n  = " + eval(expr, lex, dyn) + ";")
+        out(expr + "\n  = " + interpreter.eval(expr, lex, dyn) + ";")
       }
 
     case Grammar(prods) =>

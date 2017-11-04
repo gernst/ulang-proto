@@ -21,17 +21,17 @@ object interpreter {
 
     case Lit(any) =>
       if (any == arg) env
-      else fail
+      else backtrack()
 
     case id @ Tag(_) =>
       if (id == arg) env
-      else fail
+      else backtrack()
 
     case Id(name) =>
       (env get name) match {
         case Some(that) if builtin.equal.test(that, arg) => env
         case None => env + (name -> arg)
-        case _ => fail
+        case _ => backtrack()
       }
 
     case SubPat(name, pat) =>
@@ -42,7 +42,7 @@ object interpreter {
         case Obj(vfun, varg) =>
           bind(parg, varg, dyn, bind(pfun, vfun, dyn, env))
         case _ =>
-          fail
+          backtrack()
       }
   }
 
@@ -54,7 +54,7 @@ object interpreter {
       bind(pats, args, dyn, bind(pat, arg, dyn, env))
 
     case _ =>
-      fail
+      backtrack()
   }
 
   def apply(cs: Case, args: List[Val], lex: Env, dyn: Env): Val = cs match {
@@ -63,7 +63,7 @@ object interpreter {
       val newlex = lex ++ env
       cond.map(eval(_, newlex, dyn)).foreach {
         case builtin.True =>
-        case builtin.False => fail
+        case builtin.False => backtrack()
         case res => sys.error("not a boolean in pattern: " + res)
       }
       eval(body, newlex, dyn)
@@ -71,7 +71,7 @@ object interpreter {
 
   def apply(cases: List[Case], args: List[Val], lex: Env, dyn: Env): Val = cases match {
     case Nil =>
-      fail
+      backtrack()
 
     case cs :: rest =>
       apply(cs, args, lex, dyn) or apply(rest, args, lex, dyn)

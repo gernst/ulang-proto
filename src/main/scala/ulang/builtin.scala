@@ -1,6 +1,7 @@
 package ulang
 
 object builtin {
+  val Eq = Id("=")
   val Zero = Tag("0")
   val Succ = Tag("+1")
   val True = Tag("True")

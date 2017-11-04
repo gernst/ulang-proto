@@ -61,7 +61,7 @@ case class Module(cmds: List[Cmd]) extends Pretty {
 
 object Atom extends (String => Atom) {
   def isTag(name: String) = {
-    name.head.isUpper || (operators.data contains name)
+    name.head.isUpper || operators.data.exists(_.name == name)
   }
 
   def apply(name: String) = {

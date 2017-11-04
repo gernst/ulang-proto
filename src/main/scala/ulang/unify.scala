@@ -15,6 +15,7 @@ class unify {
       a
     } else {
       val c = find(b)
+      // path compression
       rep += (a -> c)
       c
     }
@@ -26,7 +27,7 @@ class unify {
 
   def unify(ps1: List[Pat], ps2: List[Pat]): Unit = {
     if (ps1.length != ps2.length)
-      fail
+      backtrack()
 
     for ((p1, p2) <- (ps1, ps2).zipped)
       unify(p1, p2)
@@ -46,8 +47,6 @@ class unify {
       unify(args1, args2)
 
     case _ =>
-      fail
+      backtrack()
   }
-
-  // Option({ unify(p1, p2); rep } or { null })
 }
