@@ -127,11 +127,11 @@ object shell {
 
   def read(ctx: String, test: String): Unit = {
     val in = arse.input(test)(whitespace)
-    val p = this.cmd.* $
-    val cmds = p parse in
-    
-    for(cmd <- cmds)
+
+    while (!in.isEmpty) {
+      val cmd = this.cmd parse in
       exec(ctx, cmd)
+    }
   }
 
   def merged(st: State) = st match {

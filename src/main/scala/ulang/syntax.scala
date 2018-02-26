@@ -54,8 +54,10 @@ object Atom extends (String => Atom) {
   }
 
   def apply(name: String) = {
-    if (isTag(name)) Tag(name)
-    else Id(name)
+    if (isTag(name))
+      Tag(name)
+    else
+      Id(name)
   }
 
   def unapply(atom: Atom) = {

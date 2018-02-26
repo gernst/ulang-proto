@@ -3,7 +3,6 @@ package ulang
 import java.io._
 
 import scala.language.postfixOps
-import scala.collection.mutable.ListBuffer
 
 import arse._
 import arse.implicits._
@@ -18,8 +17,7 @@ object operators extends Syntax[Atom] {
   var postfix_ops: Map[Atom, Int] = Map()
 
   var infix_ops: Map[Atom, (Assoc, Int)] = Map(
-    builtin.Eq -> (Non, 6),
-    builtin.Eqv -> (Non, 1))
+    builtin.Eq -> (Non, 6))
 }
 
 object scanner {
@@ -111,11 +109,8 @@ object grammar {
   val expr_high = expr above 7
   val cond_high = "if" ~ expr_high
   val pat_high = pat above 7
-  val pat_low = pat above 2
 
-  val df_eq = Def(pat_high ~ (cond_high ?) ~ "=" ~ expr)
-  val df_eqv = Def(pat_low ~ (cond ?) ~ "<=>" ~ expr)
-  val df = df_eq | df_eqv
+  val df = Def(pat_high ~ (cond_high ?) ~ "=" ~ expr)
 
   val test = Test(expr)
 

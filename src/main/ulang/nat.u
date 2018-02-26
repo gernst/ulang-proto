@@ -35,17 +35,17 @@ define
   n ^ 0 = 1;
   n ^ (m +1) = n * (n ^ m);
 
-  0 < 0 <=> False;
-  0 < n +1 <=> True;
-  m +1 < 0 <=> False;
-  m +1 < n +1 <=> m < n;
+  (0 < 0) = False;
+  (0 < n +1) = True;
+  (m +1 < 0) = False;
+  (m +1 < n +1) = m < n;
 
-  0 <= n <=> True;
-  m +1 <= 0 <=> False;
-  m +1 <= n +1 <=> m <= n;
+  (0 <= n) = True;
+  (m +1 <= 0) = False;
+  (m +1 <= n +1) = m <= n;
   
-  n > m <=> m < n;
-  n >= m <=> m <= n;
+  (n > m) = m < n;
+  (n >= m) = m <= n;
   
   even  0 = True;
   even (n +1) = odd n;
