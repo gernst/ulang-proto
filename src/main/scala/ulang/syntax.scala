@@ -26,34 +26,23 @@ case class Bind(cases: List[Case]) extends Expr
 case class MatchWith(args: List[Expr], cases: List[Case]) extends Expr
 
 case class LetEq(pat: Pat, arg: Expr) extends Pretty
-
 case class LetIn(eqs: List[LetEq], body: Expr) extends Expr
 
 case class IfThenElse(test: Expr, iftrue: Expr, iffalse: Expr) extends Expr
 
-case class Tok(str: String) extends Rule
-case class Match(pat: String) extends Rule
-case class Rep(rule: Rule, plus: Boolean) extends Rule
-case class Seq(rules: List[Rule], action: Option[Expr]) extends Rule
-case class Alt(rules: List[Rule]) extends Rule
-
-sealed trait Not extends Pretty
-case class Data(names: List[String]) extends Not
-case class Fix(fixity: Fixity, names: List[String]) extends Not
+sealed trait Notation extends Pretty
+case class Data(names: List[String]) extends Notation
+case class Fix(fixity: Fixity, names: List[String]) extends Notation
 
 case class Def(lhs: Pat, cond: Option[Expr], rhs: Expr) extends Pretty
 case class Test(phi: Expr) extends Pretty
 
-case class Prod(lhs: Id, rhs: Rule) extends Pretty
-
 sealed trait Cmd extends Pretty
 case class Imports(names: List[String]) extends Cmd
-case class Langs(names: List[String]) extends Cmd
-case class Nots(fixs: List[Not]) extends Cmd
+case class Notations(fixs: List[Notation]) extends Cmd
 case class Defs(defs: List[Def]) extends Cmd
 case class Tests(tests: List[Test]) extends Cmd
 case class Evals(exprs: List[Expr]) extends Cmd
-case class Grammar(prods: List[Prod]) extends Cmd
 
 case class Module(cmds: List[Cmd]) extends Pretty {
   def ++(that: Module) = Module(this.cmds ++ that.cmds)

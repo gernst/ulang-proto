@@ -1,7 +1,5 @@
 notation
   infix 6 :;
-
-  // infix       6 =;
   infix right 9 .;
 end
 

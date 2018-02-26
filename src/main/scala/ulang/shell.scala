@@ -8,25 +8,20 @@ import arse.control._
 import scala.io.StdIn
 import scala.io.Source
 
-case class State(mods: Set[String], defs: List[Def], prods: List[Prod]) extends Pretty {
+case class State(mods: Set[String], defs: List[Def]) extends Pretty {
   def +(ctx: String) = {
-    State(mods + ctx, defs, prods)
+    State(mods + ctx, defs)
   }
 
   def define(that: List[Def]) = {
-    State(mods, defs ++ that, prods)
-  }
-
-  def grammar(that: List[Prod]) = {
-    State(mods, defs, prods ++ that)
+    State(mods, defs ++ that)
   }
 }
 
 case class Model(dyn: Env) extends Pretty
-case class Parsers(ps: PEnv) extends Pretty
 
 object State {
-  def empty = State(Set(), List(), List())
+  def empty = State(Set(), List())
 }
 
 object shell {
@@ -110,7 +105,7 @@ object shell {
           case ":quit" =>
             return
           case "" =>
-          // 
+          //
           case line if commands contains line =>
             commands(line)()
           case line if line startsWith ":" =>
@@ -132,18 +127,15 @@ object shell {
 
   def read(ctx: String, test: String): Unit = {
     val in = arse.input(test)(whitespace)
-
-    while (!in.isEmpty) {
-      val p = this.cmd | ret(null: Cmd)
-      val cmd = p(in)
-      /* if (rest.length == in.length)
-        sys.error("syntax error at " + rest.mkString(" ")) */
+    val p = this.cmd.* $
+    val cmds = p parse in
+    
+    for(cmd <- cmds)
       exec(ctx, cmd)
-    }
   }
 
   def merged(st: State) = st match {
-    case State(mods, defs, prods) =>
+    case State(mods, defs) =>
       val funs = defs.distinct.collect {
         case Def(UnApp(id: Id, pats), cond, rhs) if !pats.isEmpty =>
           (id, Case(pats, cond, rhs))
@@ -159,11 +151,11 @@ object shell {
           df
       }
 
-      State(mods, merged.toList ++ consts, prods)
+      State(mods, merged.toList ++ consts)
   }
 
   def model(st: State) = st match {
-    case State(_, defs, _) =>
+    case State(_, defs) =>
 
       val dyn = defs.foldLeft(Env.default) {
         case (dyn, df) =>
@@ -173,76 +165,13 @@ object shell {
       Model(dyn)
   }
 
-  def parsers(st: State) = {
-    import arse.implicits._
-
-    val ps: Ref[PEnv] = Ref(scala.collection.immutable.Map())
-
-    def compile(rule: Rule): Parser[Expr] = rule match {
-      case Id(name) =>
-        arse.parser.Rec(name, () => ps.get(name))
-      case Rep(rule, plus) =>
-        val p = compile(rule)
-        val q = if (plus) p.+ else p.*
-        q map builtin.reify_list
-      case Seq(rules, None) =>
-        compile1(rules)
-      case Seq(rules, Some(action)) =>
-        val nil: Parser[List[Expr]] = ret(Nil)
-        compiles(rules) map {
-          case Nil => action
-          case args => App(action, args)
-        }
-      case Alt(rules) =>
-        rules.map(compile).reduceRight(_ | _)
-      case _ =>
-        sys.error("grammar rule '" + rule + "' without result")
-    }
-
-    def compile1(rules: List[Rule]): Parser[Expr] = compiles(rules) map {
-      case List(rule) =>
-        rule // could be static
-      case _ =>
-        sys.error("grammar rule '" + rules.mkString(" ") + "' without action")
-    }
-
-    def compiles(rules: List[Rule]): Parser[List[Expr]] = rules match {
-      case Nil =>
-        ret(Nil)
-      case Tok(str) :: rest =>
-        str ~ compiles(rest)
-      case Match(pat) :: rest =>
-        val lit = scan(pat) ~> Lit
-        lit :: compiles(rest)
-      case rule :: rest =>
-        compile(rule) :: compiles(rest)
-    }
-
-    st match {
-      case State(_, _, prods) =>
-        val gs = group(prods.map { case Prod(Id(name), rule) => (name, rule) })
-        ps.set(gs.map { case (name, rules) => (name, compile(Alt(rules))) })
-        Parsers(ps.get)
-    }
-  }
-
   def exec(ctx: String, cmd: Cmd): Unit = cmd match {
     case Imports(names) =>
       for (name <- names) {
         load(name)
       }
 
-    case Langs(names) =>
-      val Model(dyn) = model(merged(st))
-      val Parsers(ps) = parsers(st)
-
-      for (name <- names) {
-        val p = ps(name) map { expr => Evals(List(expr)) }
-        val q = name ~ p ~ "end"
-        this.cmd |= q
-      }
-
-    case Nots(nots) =>
+    case Notations(nots) =>
       nots foreach {
         case Fix(Prefix(prec), names) =>
           for (name <- names) { operators.prefix_ops += (Atom(name) -> prec) }
@@ -290,8 +219,5 @@ object shell {
       for (expr <- exprs) {
         out(expr + "\n  = " + interpreter.eval(expr, lex, dyn) + ";")
       }
-
-    case Grammar(prods) =>
-      st = st grammar prods
   }
 }
