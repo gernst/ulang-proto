@@ -1,6 +1,8 @@
 package ulang
 
 import arse._
+import ulang.expr._
+import ulang.shell._
 
 trait Pretty {
   override def toString = printer.print(this)

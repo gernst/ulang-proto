@@ -8,13 +8,14 @@ import arse.control._
 import scala.io.StdIn
 import scala.io.Source
 import scala.runtime.NonLocalReturnControl
+import ulang.expr._
 
-object shell {
+package object shell {
   val lex = Env.empty
   var modules: Set[String] = Set()
   var defs: List[Def] = List()
 
-  def model = Model(eval.eval(defs, lex, Env.empty))
+  def model = Model(defs, lex, Env.empty)
 
   def cmd(c: => Any) = { () => c }
   def commands: Map[String, () => Any] = Map(

@@ -1,6 +1,6 @@
-package ulang
+package ulang.expr
 
-import arse.Fixity
+import ulang.Pretty
 
 sealed trait Pat extends Pretty
 
@@ -29,24 +29,6 @@ case class LetEq(pat: Pat, arg: Expr) extends Pretty
 case class LetIn(eqs: List[LetEq], body: Expr) extends Expr
 
 case class IfThenElse(test: Expr, iftrue: Expr, iffalse: Expr) extends Expr
-
-sealed trait Notation extends Pretty
-case class Data(names: List[String]) extends Notation
-case class Fix(fixity: Fixity, names: List[String]) extends Notation
-
-case class Def(lhs: Pat, cond: Option[Expr], rhs: Expr) extends Pretty
-case class Test(phi: Expr) extends Pretty
-
-sealed trait Cmd extends Pretty
-case class Imports(names: List[String]) extends Cmd
-case class Notations(fixs: List[Notation]) extends Cmd
-case class Defs(defs: List[Def]) extends Cmd
-case class Tests(tests: List[Test]) extends Cmd
-case class Evals(exprs: List[Expr]) extends Cmd
-
-case class Module(cmds: List[Cmd]) extends Pretty {
-  def ++(that: Module) = Module(this.cmds ++ that.cmds)
-}
 
 object Atom extends (String => Atom) {
   def isTag(name: String) = {

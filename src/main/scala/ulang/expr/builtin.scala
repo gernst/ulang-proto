@@ -1,4 +1,6 @@
-package ulang
+package ulang.expr
+
+import ulang.shell
 
 object builtin {
   val Eq = Id("=")
