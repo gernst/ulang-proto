@@ -24,6 +24,9 @@ object scanner {
   // val string = scan("""\' ([^\']|\\\')* \' | \" ([^\"]|\\\")* \"""")
 }
 
+object parser {
+}
+
 object grammar {
   val keywords = Set(",", ";", "(", ")", "{", "}", "[", "]", "->", "`", "|", "\\", "_",
     "as", "if", "then", "else", "let", "in", "match", "with", "end")

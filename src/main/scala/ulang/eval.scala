@@ -143,4 +143,31 @@ object eval {
     case Def(Id(name), None, rhs) =>
       (name -> eval(rhs, lex, dyn))
   }
+
+  def eval(dfs: List[Def], lex: Env, dyn: Env): Env = {
+    val funs = dfs.distinct.collect {
+      case Def(UnApp(id: Id, pats), cond, rhs) if !pats.isEmpty =>
+        (id, Case(pats, cond, rhs))
+    }
+
+    val merged = group(funs).map {
+      case (id, cases) =>
+        Def(id, None, Bind(cases))
+    }
+
+    val consts = dfs.collect {
+      case df @ Def(_: Id, None, rhs) =>
+        df
+    }
+
+    val all = merged.toList ++ consts
+    // check.check(all)
+
+    val newdyn = all.foldLeft(Env.default) {
+      case (dyn, df) =>
+        dyn + eval(df, lex, dyn)
+    }
+
+    newdyn
+  }
 }

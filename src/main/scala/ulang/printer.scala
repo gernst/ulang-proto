@@ -127,9 +127,6 @@ object printer {
     case Module(defs) =>
       defs.mkString("", "\n", "\n")
 
-    case State(_, defs) =>
-      defs.mkString("define\n  ", "\n  ", "\nend\n")
-
     case Model(dyn) =>
       val lines = dyn.map { case (name, rhs) => name + " = " + rhs + ";" }
       lines.mkString("model\n  ", "\n  ", "\nend\n")

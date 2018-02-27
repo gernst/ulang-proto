@@ -8,7 +8,7 @@ import java.io.File
 
 package object ulang {
   type Val = Any
-  
+
   def group[A, B](xs: List[(A, B)]) = {
     xs.groupBy(_._1).map {
       case (x, ys) => (x, ys.map(_._2))
@@ -21,6 +21,7 @@ package object ulang {
   }
 
   type Env = Map[String, Val]
-  type PEnv = Map[String, Parser[Expr]]
   type Subst = Map[Pat, Pat]
+
+  case class Model(dyn: Env) extends Pretty
 }

@@ -6,6 +6,14 @@ object Subst {
   val empty: Subst = Map()
 }
 
+object unify {
+  def apply(pat1: List[Pat], pat2: List[Pat]) = {
+    val u = new unify
+
+    { u.unify(pat1, pat2); true } or { false }
+  }
+}
+
 class unify {
   var rep = Subst.empty
 
@@ -41,7 +49,7 @@ class unify {
 
     case (a, id: Id) =>
       unify(id, a)
-      
+
     case (UnApp(fun1, args1), UnApp(fun2, args2)) =>
       unify(fun1, fun2)
       unify(args1, args2)

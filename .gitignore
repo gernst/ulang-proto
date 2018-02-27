@@ -1,3 +1,4 @@
 .cache-main
+.cache-test
 .settings/
 bin/
