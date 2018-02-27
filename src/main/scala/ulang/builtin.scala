@@ -118,7 +118,7 @@ object builtin {
       case (_: Eq, _: Eq) =>
         false
       case _ =>
-        sys.error("cannot compare " + obj1 + " and " + obj2)
+        shell.error("cannot compare " + obj1 + " and " + obj2)
     }
   }
 }

@@ -40,20 +40,24 @@ object shell {
     Console.out.flush
   }
 
-  def err(obj: Any) {
-    Console.err.println(obj)
+  def warning(obj: Any) = {
+    Console.err.println(obj.toString)
     Console.err.flush
+  }
+  
+  def error(obj: Any) = {
+    sys.error(obj.toString)
   }
 
   def safe[A](f: => A) = try {
     Some(f)
   } catch {
     case e: StackOverflowError =>
-      err("fatal: stack overflow")
+      warning("error: stack overflow")
       e.printStackTrace()
       None
     case e: Throwable =>
-      err("fatal: " + e)
+      warning("error: " + e)
       e.printStackTrace()
       None
   }
@@ -73,7 +77,7 @@ object shell {
           case line if commands contains line =>
             commands(line)()
           case line if line startsWith ":" =>
-            sys.error("unknown command " + line)
+            error("unknown command " + line)
           case line =>
             read("", line)
         }
@@ -116,7 +120,7 @@ object shell {
         case Data(names) =>
           for (name <- names) { operators.data += Tag(name) }
         case not =>
-          sys.error("unknown notation: " + not)
+          error("unknown notation: " + not)
       }
 
     case Defs(add) =>
