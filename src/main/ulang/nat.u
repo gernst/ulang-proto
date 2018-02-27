@@ -23,7 +23,7 @@ define
   m * 0 = 0;
   m * (n +1) = (m * n) + m;
   
-  div m n // if (n != 0)
+  div m n
     = if n > m
       then (0, m)
       else let (d, r) = div (m - n) n

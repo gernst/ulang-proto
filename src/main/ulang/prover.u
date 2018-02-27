@@ -1,4 +1,3 @@
-/*
 notation
   data ¬ ∧ ∨ → ↔;
   prefix      5 ¬;
@@ -7,21 +6,6 @@ notation
   infix right 2 →;
   infix       1 ↔;
 end
-
-define
-  triv =
-  \ ¬ False -> True
-  | ¬ True  -> False
-  | ¬ ¬ phi -> phi
-
-  | True  ∧ psi -> psi
-  | False ∧ psi -> False
-  | phi ∧ True  -> phi
-  | phi ∧ False -> False
-  | phi ∧ phi   -> phi;
-  ;
-end
-*/
 
 define
   triv (Not False) = True;
@@ -187,11 +171,6 @@ define
   cases (Eqv phi psi) = Some [And phi psi, Not (Or phi psi)];
   cases (Not (Eqv phi psi)) = Some [Imp phi psi, Imp psi phi];
 
-/*
-  rule_case
-    = Rule "case" \(Seq phis) ->
-    */   
-
   rule_simp
     = Rule "simplify" \(Seq phis) ->
         [Seq (con phis)];
@@ -212,7 +191,6 @@ end
 eval
   prove (And P Q);
 
-  // Pelletier's problems
   prove (Eqv (Imp P Q) (Imp (Not Q) (Not P)));
   prove (Eqv (Not (Not P)) P);
   prove (Imp (Not (Imp P Q)) (Imp Q P));

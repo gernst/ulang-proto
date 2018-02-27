@@ -26,7 +26,7 @@ object scanner {
 
 object grammar {
   val keywords = Set(",", ";", "(", ")", "{", "}", "[", "]", "->", "`", "|", "\\", "_",
-    "as", "if", "then", "else", "let", "in", "match", "with", "raise", "try", "catch", "end")
+    "as", "if", "then", "else", "let", "in", "match", "with", "end")
 
   val name = S("""[^ \r\n\t\f()\[\],;\'\"`]+""") filterNot keywords
   val names = name.*
@@ -86,11 +86,13 @@ object grammar {
   val patopen = pattuple | anyatom | ret(builtin.UnUnit)
 
   val inner_pat = (patarg +) map {
+    case Nil => ???
     case const :: Nil => const
     case fun :: args => UnApp(fun, args)
   }
 
   val inner_expr = (arg +) map {
+    case Nil => ???
     case const :: Nil => const
     case fun :: args => App(fun, args)
   }

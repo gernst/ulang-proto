@@ -14,7 +14,7 @@ object Env {
   val default: Env = Map("=" -> builtin.equal, "print" -> builtin.print)
 }
 
-object interpreter {
+object eval {
   def bind(pat: Pat, arg: Val, dyn: Env, env: Env): Env = pat match {
     case Wildcard =>
       env

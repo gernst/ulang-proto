@@ -7,6 +7,7 @@ import arse._
 import arse.control._
 import scala.io.StdIn
 import scala.io.Source
+import scala.runtime.NonLocalReturnControl
 
 case class State(mods: Set[String], defs: List[Def]) extends Pretty {
   def +(ctx: String) = {
@@ -96,14 +97,15 @@ object shell {
   }
 
   def repl() {
-    while (true) {
+    var run = true
+    while (run) {
       safe {
         input() match {
           case null =>
             out(":quit")
-            return
+            run = false
           case ":quit" =>
-            return
+            run = false
           case "" =>
           //
           case line if commands contains line =>
@@ -159,7 +161,7 @@ object shell {
 
       val dyn = defs.foldLeft(Env.default) {
         case (dyn, df) =>
-          dyn + interpreter.eval(df, lex, dyn)
+          dyn + eval.eval(df, lex, dyn)
       }
 
       Model(dyn)
@@ -205,9 +207,9 @@ object shell {
           for (Test(phi) <- tests) {
             phi match {
               case App(Id("="), List(lhs, rhs)) =>
-                interpreter.eval(lhs, lex, dyn) expect interpreter.eval(rhs, lex, dyn)
+                eval.eval(lhs, lex, dyn) expect eval.eval(rhs, lex, dyn)
               case _ =>
-                interpreter.eval(phi, lex, dyn) expect builtin.True
+                eval.eval(phi, lex, dyn) expect builtin.True
             }
           }
         }
@@ -217,7 +219,7 @@ object shell {
       val Model(dyn) = model(merged(st))
 
       for (expr <- exprs) {
-        out(expr + "\n  = " + interpreter.eval(expr, lex, dyn) + ";")
+        out(expr + "\n  = " + eval.eval(expr, lex, dyn) + ";")
       }
   }
 }
