@@ -7,9 +7,8 @@ object Subst {
 }
 
 object unify {
-  def apply(pat1: List[Pat], pat2: List[Pat]) = {
-    val u = new unify
-
+  def test(pat1: List[Pat], pat2: List[Pat]) = {
+    val u = new unify;
     { u.unify(pat1, pat2); true } or { false }
   }
 }

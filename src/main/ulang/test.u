@@ -83,8 +83,3 @@ inductive
   (forall x. x: a ==> f x: b)
     ==> f: a -> b;
 end
-
-// also better built in
-inductive
-  x: a ==> x = x;
-end
