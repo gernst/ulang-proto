@@ -5,7 +5,6 @@ import ulang.Pretty
 sealed trait Pat extends Pretty
 
 sealed trait Expr extends Pretty
-sealed trait Rule extends Pretty
 
 case object Wildcard extends Pat
 
@@ -13,7 +12,7 @@ case class Lit(any: Any) extends Expr with Pat with Eq
 
 sealed trait Atom extends Expr with Pat { def name: String }
 case class Tag(name: String) extends Atom with Eq
-case class Id(name: String) extends Atom with Rule
+case class Id(name: String) extends Atom
 
 case class SubPat(name: String, pat: Pat) extends Pat
 

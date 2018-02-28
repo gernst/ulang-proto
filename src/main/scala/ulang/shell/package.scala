@@ -9,6 +9,7 @@ import scala.io.StdIn
 import scala.io.Source
 import scala.runtime.NonLocalReturnControl
 import ulang.expr._
+import ulang.prove.derive
 
 package object shell {
   val lex = Env.empty
@@ -45,7 +46,7 @@ package object shell {
     Console.err.println(obj.toString)
     Console.err.flush
   }
-  
+
   def error(obj: Any) = {
     sys.error(obj.toString)
   }
@@ -148,7 +149,13 @@ package object shell {
       val Model(dyn) = model
 
       for (expr <- exprs) {
-        out(expr + "\n  = " + eval.eval(expr, lex, dyn) + ";")
+        val res = eval.eval(expr, lex, dyn)
+        out(expr + "\n  = " + res + ";")
+      }
+
+    case Props(props) =>
+      for(Prop(goal, rule) <- props) {
+        val res = derive.derive(goal, rule)
       }
   }
 }
