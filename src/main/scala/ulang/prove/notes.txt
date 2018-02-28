@@ -6,10 +6,32 @@ using definitions and universal quantifiers (rewriting)
 case distinction on the construction of expressions and size function
 induction, coinduction
 
-lemma "modus ponens"
+lemma
   A and (A ==> B) ==> B;
 end
 
+// this rule makes sure that implication works as expected...
+introduction
+  |- a ==> b;
+by
+  a |- b;
+end
+
+elimination
+  A ==> B;
+by
+  assert A;
+  assume B;
+end
+
+elimination
+  A and B;
+by
+  assume A;
+  assume B;
+end
+
+  
 lemma
   not exists n: Nat.
     forall m: Nat. m < n;

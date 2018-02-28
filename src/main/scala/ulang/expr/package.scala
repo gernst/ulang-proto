@@ -5,4 +5,8 @@ package object expr {
 
   type Env = Map[String, Val]
   type Subst = Map[Pat, Pat]
+
+  object Subst {
+    val empty: Subst = Map()
+  }
 }

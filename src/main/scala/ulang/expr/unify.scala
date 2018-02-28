@@ -2,14 +2,20 @@ package ulang.expr
 
 import arse.control._
 
-object Subst {
-  val empty: Subst = Map()
-}
-
 object unify {
-  def test(pat1: List[Pat], pat2: List[Pat]) = {
+  def test(pat1: List[Pat], pat2: List[Pat], matchonly: Boolean = false) = {
     val u = new unify;
-    { u.unify(pat1, pat2); true } or { false }
+    { u.unify(pat1, pat2, matchonly); true } or { false }
+  }
+
+  def apply(pat1: List[Pat], pat2: List[Pat], matchonly: Boolean = false) = {
+    val u = new unify;
+    {
+      u.unify(pat1, pat2, matchonly)
+      Some(u.rep): Option[Subst]
+    } or {
+      None
+    }
   }
 }
 
@@ -32,26 +38,26 @@ class unify {
     rep += (find(p1) -> find(p2))
   }
 
-  def unify(ps1: List[Pat], ps2: List[Pat]): Unit = {
+  def unify(ps1: List[Pat], ps2: List[Pat], matchonly: Boolean): Unit = {
     if (ps1.length != ps2.length)
       backtrack()
 
     for ((p1, p2) <- (ps1, ps2).zipped)
-      unify(p1, p2)
+      unify(p1, p2, matchonly)
   }
 
-  def unify(p1: Pat, p2: Pat): Unit = (find(p1), find(p2)) match {
+  def unify(p1: Pat, p2: Pat, matchonly: Boolean): Unit = (find(p1), find(p2)) match {
     case (r1, r2) if r1 == r2 =>
 
     case (id: Id, a) =>
       union(id, a)
 
-    case (a, id: Id) =>
-      unify(id, a)
+    case (a, id: Id) if !matchonly =>
+      unify(id, a, matchonly)
 
     case (UnApp(fun1, args1), UnApp(fun2, args2)) =>
-      unify(fun1, fun2)
-      unify(args1, args2)
+      unify(fun1, fun2, matchonly)
+      unify(args1, args2, matchonly)
 
     case _ =>
       backtrack()
