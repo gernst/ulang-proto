@@ -42,7 +42,7 @@ object derive {
   }
 
   def rewrite(phi: Expr, dyn: Binding): Expr = {
-    rules.rewrite.rewrite(phi, Binding.empty, dyn)
+    ulang.prove.rewrite.rewrite(phi, Binding.empty, dyn)
   }
 
   def derive(expr: Expr, rule: Option[Rule], dyn: Binding): Derivation = {
@@ -54,7 +54,7 @@ object derive {
   def derive(goal: Goal, rule: Rule, dyn: Binding): Derivation = {
     rule match {
       case Trivial =>
-        rules.trivial(goal, rule)
+        ulang.prove.trivial(goal, rule)
     }
   }
 }

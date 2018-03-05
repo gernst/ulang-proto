@@ -1,10 +1,9 @@
-package ulang.prove.rules
+package ulang.prove
 
 import arse.control.Control
 import arse.control.backtrack
 import ulang.shell
 import ulang.expr._
-import ulang.prove.Binding
 
 object rewrite {
   def bind(pat: Pat, arg: Expr, dyn: Binding, env: Binding): Binding = pat match {
