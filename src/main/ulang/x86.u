@@ -1,4 +1,4 @@
-define
+definition
   reg RAX = 0;
   
   encode (MODRM mod reg rm)

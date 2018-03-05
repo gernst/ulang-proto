@@ -3,7 +3,7 @@ notation
   postfix 11 * +;
 end
 
-define
+definition
   /* NOTE: Capturing submatches seems complicated due to nondeterminism.
            However, in scanners, the top-level regex is
              P1 | P2 | ...

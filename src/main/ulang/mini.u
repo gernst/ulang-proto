@@ -3,13 +3,17 @@ notation
   infix right 2 ==>;
 end
 
-define
+definition
   id x = x;
+  test A = X;
+  test B = Y;
+  test x = f x;
 end
 
-lemma
+theorem
   True;
   (A ==> B) ==> C;
   A and B ==> A;
   id A = A;
+  test a;
 end

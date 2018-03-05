@@ -1,4 +1,4 @@
-define
+definition
   debruijn e
     = debruijn e [];
 
@@ -94,7 +94,7 @@ eval
   in exec code [] [];
 end
 
-define
+definition
   step (Const x, code, env,     stack)
     =  (         code, env, [x; stack]);
     

@@ -1,4 +1,4 @@
-define
+definition
   True:  Bool
   False: Bool
   

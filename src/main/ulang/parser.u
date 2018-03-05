@@ -2,7 +2,7 @@ notation
   postfix 11 * +;
 end
 
-define
+definition
   bind f (Success a src)
     = let (Parser p) = (f a)
        in p src;
@@ -18,7 +18,7 @@ define
     = Failure;
 end
 
-define
+definition
   parse (Parser p) src
     = p src;
   
@@ -47,7 +47,7 @@ define
          | res -> res;
 end
 
-define
+definition
   map f p1
     = bind p1 \a1 ->
          return (f a1);

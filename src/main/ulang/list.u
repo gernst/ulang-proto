@@ -3,7 +3,7 @@ notation
   infix right 8 ++;
 end
 
-define
+definition
   head [x;  _] = x;
   tail [_; xs] = xs;
   

@@ -1,4 +1,4 @@
-define
+definition
   map f None = None;
   map f (Some x) = Some (f x);
   

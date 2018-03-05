@@ -7,7 +7,7 @@ notation
   infix       1 ↔;
 end
 
-define
+definition
   triv (Not False) = True;
   triv (Not True)  = False;
   triv (Not (Not phi)) = phi;
@@ -44,7 +44,7 @@ define
   triv phi = phi;
 end
 
-define
+definition
   assume True ctx
     = ctx;
   assume False ctx
@@ -96,7 +96,7 @@ define
                    ctx (not swap?);
 end
 
-define
+definition
   simp (Not phi) prove? ctx
     = let newphi = (simp phi (not prove?) ctx)
       in triv (Not newphi);
@@ -136,7 +136,7 @@ define
     = phi;
 end
 
-define
+definition
   con todo
     = con todo [];
   con [] ctx
@@ -147,7 +147,7 @@ define
       con todo (assume newphi ctx);
 end
 
-define
+definition
   open (Seq phis) = phis;
   open (Step prems _ _) = flatmap open prems;
   closed? (Seq phis) = False;
@@ -180,7 +180,7 @@ define
       in Step (flatmap try_close prems) concl name;
 end
 
-define
+definition
   prove phi
     = let proof = apply rule_simp (Seq [Not phi])
       in if closed? proof

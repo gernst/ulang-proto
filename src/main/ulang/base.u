@@ -3,7 +3,7 @@ notation
   infix right 9 .;
 end
 
-define
+definition
   id x = x;
   const x = \y -> x;
   apply f a = f a;
@@ -27,6 +27,6 @@ end
 import
   bool nat option list;
 
-define
+definition
   flatmap f xs = flatten (map f xs);
 end
