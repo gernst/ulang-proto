@@ -41,12 +41,17 @@ object derive {
       Goal(ant, phi)
   }
 
-  def derive(expr: Expr, rule: Option[Rule]): Derivation = {
-    val goal = assert(expr, Goal.empty)
-    derive(goal, rule getOrElse Trivial)
+  def rewrite(phi: Expr, dyn: Binding): Expr = {
+    rules.rewrite.rewrite(phi, Binding.empty, dyn)
   }
 
-  def derive(goal: Goal, rule: Rule): Derivation = {
+  def derive(expr: Expr, rule: Option[Rule], dyn: Binding): Derivation = {
+    val phi = rewrite(expr, dyn)
+    val goal = assert(phi, Goal.empty)
+    derive(goal, rule getOrElse Trivial, dyn)
+  }
+
+  def derive(goal: Goal, rule: Rule, dyn: Binding): Derivation = {
     rule match {
       case Trivial =>
         rules.trivial(goal, rule)

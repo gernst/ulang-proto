@@ -154,8 +154,13 @@ package object shell {
       }
 
     case Props(props) =>
-      for(Prop(goal, rule) <- props) {
-        val res = derive.derive(goal, rule)
+      val pairs = Model.merge(defs) map {
+        case Def(Id(name), None, rhs) => (name, rhs)
+      }
+      val dyn = pairs.toMap
+
+      for (Prop(goal, rule) <- props) {
+        val res = derive.derive(goal, rule, dyn)
         out(res)
       }
   }

@@ -9,6 +9,7 @@ end
 
 lemma
   True;
+  (A ==> B) ==> C;
   A and B ==> A;
   id A = A;
 end

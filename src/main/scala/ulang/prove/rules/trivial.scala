@@ -10,11 +10,14 @@ import ulang.expr.Id
 import ulang.prove.Derivation
 
 object trivial {
-  def apply(goal: Goal, rule: Rule): Derivation = {
-    val Goal(ant, suc) = goal
-
-    if (suc == True || (ant contains False) || (ant contains suc))
+  def apply(goal: Goal, rule: Rule): Derivation = goal match {
+    case Goal(_, True) =>
       goal close rule
-    else goal
+    case Goal(_, App(Id("="), List(x, y))) if x == y =>
+      goal close rule
+    case Goal(ant, suc) if (ant contains False) || (ant contains suc) =>
+      goal close rule
+    case _ =>
+      goal
   }
 }

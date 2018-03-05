@@ -38,11 +38,14 @@ object printer {
     case Step(prems, concl, rule) =>
       val sp = "  " * ident
       var res = ""
-      res += print_derivation(concl, ident) + " by " + rule + "\n"
+      res += print_derivation(concl, ident) + " by " + rule
+      if (!prems.isEmpty) res += "\n"
       for (prem <- prems) {
         res += print_derivation(prem, ident + 1)
       }
       res
+    case Goal(Nil, assert) =>
+      "|- " + assert
     case Goal(assume, assert) =>
       assume.mkString(", ") + " |- " + assert
   }
@@ -72,12 +75,12 @@ object printer {
       args.mkString("(", ", ", ")")
     case UnApp(builtin.Cons, List(arg1, arg2)) =>
       "[" + arg1 + print_list(arg2)
-    case UnApp(op: Atom, List(arg)) if operators.prefix_ops contains op =>
-      "(" + op + " " + arg + ")"
-    case UnApp(op: Atom, List(arg)) if operators.postfix_ops contains op =>
-      "(" + arg + " " + op + ")"
-    case UnApp(op: Atom, List(arg1, arg2)) if operators.infix_ops contains op =>
-      "(" + arg1 + " " + op + " " + arg2 + ")"
+    case UnApp(op @ Atom(name), List(arg)) if operators.prefix_ops contains op =>
+      "(" + name + " " + arg + ")"
+    case UnApp(op @ Atom(name), List(arg)) if operators.postfix_ops contains op =>
+      "(" + arg + " " + name + ")"
+    case UnApp(op @ Atom(name), List(arg1, arg2)) if operators.infix_ops contains op =>
+      "(" + arg1 + " " + name + " " + arg2 + ")"
     case UnApp(fun, args) =>
       (fun :: args).mkString("(", " ", ")")
 
@@ -85,12 +88,12 @@ object printer {
       args.mkString("(", ", ", ")")
     case App(builtin.Cons, List(arg1, arg2)) =>
       "[" + arg1 + print_list(arg2)
-    case App(op: Atom, List(arg)) if operators.prefix_ops contains op =>
-      "(" + op + " " + arg + ")"
-    case App(op: Atom, List(arg)) if operators.postfix_ops contains op =>
-      "(" + arg + " " + op + ")"
-    case App(op: Atom, List(arg1, arg2)) if operators.infix_ops contains op =>
-      "(" + arg1 + " " + op + " " + arg2 + ")"
+    case App(op @ Atom(name), List(arg)) if operators.prefix_ops contains op =>
+      "(" + name + " " + arg + ")"
+    case App(op @ Atom(name), List(arg)) if operators.postfix_ops contains op =>
+      "(" + arg + " " + name + ")"
+    case App(op @ Atom(name), List(arg1, arg2)) if operators.infix_ops contains op =>
+      "(" + arg1 + " " + name + " " + arg2 + ")"
     case App(fun, args) =>
       (fun :: args).mkString("(", " ", ")")
 
