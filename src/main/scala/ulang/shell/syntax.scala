@@ -23,6 +23,4 @@ case class Tests(tests: List[Test]) extends Cmd
 case class Evals(exprs: List[Expr]) extends Cmd
 case class Props(props: List[Prop]) extends Cmd
 
-case class Module(cmds: List[Cmd]) extends Pretty {
-  def ++(that: Module) = Module(this.cmds ++ that.cmds)
-}
+case class Module(cmds: List[Cmd]) extends Pretty

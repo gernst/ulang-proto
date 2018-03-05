@@ -3,6 +3,9 @@ package ulang
 import arse._
 import ulang.expr._
 import ulang.shell._
+import ulang.prove.Derivation
+import ulang.prove.Step
+import ulang.prove.Goal
 
 trait Pretty {
   override def toString = printer.print(this)
@@ -29,6 +32,19 @@ object printer {
       "]"
     case _ =>
       "; " + any + "]"
+  }
+
+  def print_derivation(deriv: Derivation, ident: Int = 0): String = deriv match {
+    case Step(prems, concl, rule) =>
+      val sp = "  " * ident
+      var res = ""
+      res += print_derivation(concl, ident) + " by " + rule + "\n"
+      for (prem <- prems) {
+        res += print_derivation(prem, ident + 1)
+      }
+      res
+    case Goal(assume, assert) =>
+      assume.mkString(", ") + " |- " + assert
   }
 
   def print(any: Pretty): String = any match {
@@ -149,5 +165,8 @@ object printer {
       "(" + arg1 + " " + op + " " + arg2 + ")"
     case Obj(op: Tag, args) =>
       (op :: args).mkString("(", " ", ")")
+
+    case deriv: Derivation =>
+      print_derivation(deriv)
   }
 }

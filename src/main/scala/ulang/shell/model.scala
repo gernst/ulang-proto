@@ -7,7 +7,7 @@ import ulang.Pretty
 case class Model(dyn: Env) extends Pretty
 
 object Model {
-  def apply(dfs: List[Def], lex: Env, dyn: Env): Model = {
+  def merge(dfs: List[Def]): List[Def] = {
     val funs = dfs.distinct.collect {
       case Def(UnApp(id: Id, pats), cond, rhs) if !pats.isEmpty =>
         (id, Case(pats, cond, rhs))
@@ -23,7 +23,11 @@ object Model {
         df
     }
 
-    val all = merged.toList ++ consts
+    merged.toList ++ consts
+  }
+
+  def apply(dfs: List[Def], lex: Env, dyn: Env): Model = {
+    val all = merge(dfs)
     // check.check(all)
 
     val newdyn = all.foldLeft(Env.default) {

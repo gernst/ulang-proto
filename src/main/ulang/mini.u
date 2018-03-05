@@ -1,12 +1,14 @@
-eval
-  Z;
-  ();
-  (A);
-  (A, B);
-  (A, B, C);
-  
-  [];
-  [A];
-  [A, B];
-  [A, B; C];
+notation
+  infix left  4 and;
+  infix right 2 ==>;
+end
+
+define
+  id x = x;
+end
+
+lemma
+  True;
+  A and B ==> A;
+  id A = A;
 end

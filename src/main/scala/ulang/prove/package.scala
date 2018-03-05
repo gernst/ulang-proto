@@ -1,5 +1,11 @@
-package ulang.prove
+package ulang
 
-object prove {
+import ulang.expr.Expr
 
+package object prove {
+  type Binding = Map[String, Expr]
+  
+  object Binding {
+    val empty: Binding = Map()
+  }
 }

@@ -28,10 +28,10 @@ package object shell {
   def main(args: Array[String]) {
     safe {
       load("mini")
-      load("base")
+      // load("base")
       // load("prover")
     }
-    repl()
+    // repl()
   }
 
   def input(): String = input(Prompt)
@@ -156,6 +156,7 @@ package object shell {
     case Props(props) =>
       for(Prop(goal, rule) <- props) {
         val res = derive.derive(goal, rule)
+        out(res)
       }
   }
 }
