@@ -15,36 +15,10 @@ import ulang.expr.Atom
 import ulang.expr.App
 import ulang.expr.Tag
 import ulang.expr.eval
-import scala.reflect.ClassTag
-
-case class State(defs: List[Def]) {
-  def ++(defs: List[Def]) = {
-    copy(defs = this.defs ++ defs)
-  }
-
-  lazy val model = {
-    import ulang.expr.Env
-    Env(exec.merge(defs), Env.empty)
-  }
-
-  lazy val rewrite = {
-    import ulang.prove.Env
-    Env(exec.merge(defs))
-  }
-}
-
-object State {
-  val empty = State(List())
-}
 
 object exec {
-  import ulang.shell.state
-
-  def filter[A: ClassTag, B >: A](xs: List[B]) = {
-    xs.collect {
-      case a: A => a
-    }
-  }
+  import ulang.shell.defs
+  import ulang.shell.rewrites
 
   def group[A, B](xs: List[(A, B)]) = {
     xs.groupBy(_._1).map {
@@ -92,13 +66,13 @@ object exec {
       }
 
     case Defs(add) =>
-      check.check(state.defs, add)
-      state ++= add
+      check.check(defs, add)
+      defs ++= add
 
     case Tests(tests) =>
       import ulang.expr.Env
       val lex = Env.empty
-      val dyn = state.model
+      val dyn = model
 
       new tst.Test {
         test(ctx) {
@@ -116,7 +90,7 @@ object exec {
     case Evals(exprs) =>
       import ulang.expr.Env
       val lex = Env.empty
-      val dyn = state.model
+      val dyn = model
 
       for (expr <- exprs) {
         val res = eval.eval(expr, lex, dyn)
@@ -125,7 +99,7 @@ object exec {
 
     case Thms(props) =>
       import ulang.prove.Env
-      val dyn = state.rewrite
+      val dyn = rewrites
 
       for (Thm(goal, rule) <- props) {
         val res = derive.derive(goal, rule, dyn)

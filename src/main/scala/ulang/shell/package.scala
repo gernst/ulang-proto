@@ -20,12 +20,22 @@ import scala.collection.mutable
 
 package object shell {
   var modules = Set.empty[String]
-  var state = State.empty
+  var defs: List[Def] = Nil
+  var inds: List[Ind] = Nil
+
+  def model = {
+    import ulang.expr.Env
+    Env(exec.merge(defs), Env.empty)
+  }
+
+  def rewrites = {
+    import ulang.prove.Env
+    Env(exec.merge(defs))
+  }
 
   def cmd(c: => Any) = { () => c }
 
-  def commands: Map[String, () => Any] = Map(
-    ":clear" -> cmd(state = State.empty))
+  def commands: Map[String, () => Any] = Map()
 
   val Prompt = "u> "
 
