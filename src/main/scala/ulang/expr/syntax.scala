@@ -3,10 +3,7 @@ package ulang.expr
 import ulang.Pretty
 
 sealed trait Pat extends Pretty
-
 sealed trait Expr extends Pretty
-
-case object Wildcard extends Pat
 
 case class Lit(any: Any) extends Expr with Pat with Eq
 
@@ -14,8 +11,8 @@ sealed trait Atom extends Expr with Pat { def name: String }
 case class Tag(name: String) extends Atom with Eq
 case class Id(name: String) extends Atom
 
+case object Wildcard extends Pat
 case class SubPat(name: String, pat: Pat) extends Pat
-
 case class UnApp(fun: Pat, args: List[Pat]) extends Pat // { assert(!args.isEmpty) }
 case class App(fun: Expr, args: List[Expr]) extends Expr // { assert(!args.isEmpty) }
 

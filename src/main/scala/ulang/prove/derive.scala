@@ -8,6 +8,8 @@ import ulang.expr.builtin.False
 import ulang.expr.builtin.True
 import ulang.expr.builtin.==>
 import ulang.expr.builtin.and
+import ulang.expr.Pat
+import bk._
 
 sealed trait Derivation extends Pretty
 
@@ -24,10 +26,27 @@ object Goal {
 case class Step(prems: List[Derivation], concl: Goal, rule: Rule) extends Derivation
 
 object derive {
+  def trivial(goal: Goal, rule: Rule): Derivation = goal match {
+    case Goal(_, True) =>
+      goal close rule
+    case Goal(_, App(Id("="), List(x, y))) if x == y =>
+      goal close rule
+    case Goal(ant, suc) if (ant contains False) || (ant contains suc) =>
+      goal close rule
+    case _ =>
+      goal
+  }
+  
   def cut(phi: Expr, goal: Goal, rule: Rule): Derivation = {
     val prem1 = assert(phi, goal)
     val prem2 = assume(phi, goal)
     Step(List(prem1, prem2), goal, rule)
+  }
+
+  def induction(expr: Expr, cases: List[(Pat, Rule)], goal: Goal, rule: Rule): Derivation = {
+    val Goal(ant, suc) = goal
+    if (!(ant contains expr)) backtrack()
+    ???
   }
 
   def assume(phi: Expr, goal: Goal): Goal = phi match {
@@ -60,6 +79,8 @@ object derive {
     rule match {
       case Trivial =>
         trivial(goal, rule)
+      case Cut(phi) =>
+        cut(phi, goal, rule)
       case Induction(expr, cases) =>
         induction(expr, cases, goal, rule)
     }

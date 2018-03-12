@@ -161,7 +161,7 @@ package object shell {
 
     case Thms(props) =>
       val pairs = Model.merge(defs) map {
-        case Def(Id(name), None, rhs) => (name, rhs)
+        case (Id(name), rhs) => (name, rhs)
       }
       val dyn = pairs.toMap
 
@@ -169,5 +169,8 @@ package object shell {
         val res = derive.derive(goal, rule, dyn)
         out(res)
       }
+
+    case Inds(inds) =>
+      ???
   }
 }
