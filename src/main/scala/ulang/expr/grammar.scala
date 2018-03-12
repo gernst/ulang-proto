@@ -63,17 +63,17 @@ object grammar {
   val cs = Case(pats ~ (cond ?) ~ "->" ~ expr)
   val cases = cs ~+ "|"
 
-  val bind = Bind("\\" ~ cases)
+  val bind = Lambda("\\" ~ cases)
   val ite = IfThenElse("if" ~ expr ~ "then" ~ expr ~ "else" ~ expr)
   val matches = MatchWith("match" ~ exprs ~ "with" ~ cases)
 
   val any = (string | char) map { Lit(_) }
 
-  val tuple = exprs map builtin.reify_tuple
-  val pattuple = pats map builtin.reify_tuple
+  val tuple = exprs map reify.tuple
+  val pattuple = pats map reify.tuple
 
-  val open = tuple | anyatom | ret(builtin.Unit)
-  val patopen = pattuple | anyatom | ret(builtin.UnUnit)
+  val open = tuple | anyatom | ret(builtin.Tuple(): Expr)
+  val patopen = pattuple | anyatom | ret(builtin.Tuple(): Pat)
 
   val inner_pat = (patarg +) map {
     case Nil => ???
@@ -87,15 +87,15 @@ object grammar {
     case fun :: args => App(fun, args)
   }
 
-  val escape = "`" ~ expr map builtin.reify
+  val escape = "`" ~ expr map reify.reify
 
   val nil = ret(builtin.Nil)
   val tail = (";" ~ expr) | nil
-  val cons = exprs ~ tail map { case (exprs, tail) => builtin.reify_list_with_tail(exprs, tail) }
+  val cons = exprs ~ tail map { case (exprs, tail) => reify.list_with_tail(exprs, tail) }
   val list = "[" ~ (cons | nil) ~ "]"
 
   val pattail = (";" ~ pat) | nil
-  val uncons = pats ~ pattail map { case (pats, tail) => builtin.reify_list_with_tail(pats, tail) }
+  val uncons = pats ~ pattail map { case (pats, tail) => reify.list_with_tail(pats, tail) }
   val patlist = "[" ~ (uncons | nil) ~ "]"
 }
 

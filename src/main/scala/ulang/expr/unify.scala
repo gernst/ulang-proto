@@ -1,6 +1,7 @@
 package ulang.expr
 
-import arse.control._
+import bk.Control
+import bk.backtrack
 
 object unify {
   def test(pat1: List[Pat], pat2: List[Pat]) = {
@@ -61,5 +62,25 @@ class unify {
 
     case _ =>
       backtrack()
+  }
+
+  def unbind(p: Pat): Pat = p match {
+    case _: Id | Wildcard => Wildcard
+    case _: Tag | _: Lit => p
+    case SubPat(name, pat) => unbind(pat)
+    case UnApp(fun, args) => UnApp(unbind(fun), args.map(unbind))
+  }
+
+  def merge(ps1: List[Pat], ps2: List[Pat]): List[Pat] = {
+    (ps1, ps2).zipped map {
+      case (p1, p2) => merge(p1, p2)
+    }
+  }
+
+  def merge(p1: Pat, p2: Pat): Pat = (p1, p2) match {
+    case (UnApp(fun1, args1), UnApp(fun2, args2)) =>
+      UnApp(merge(fun1, fun2), merge(args1, args2))
+    case _ =>
+      if (p1 == p2) p1 else Wildcard
   }
 }

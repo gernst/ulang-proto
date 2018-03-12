@@ -7,11 +7,12 @@ definition
   id x = x;
   test A = X;
   test B = Y;
-  test x = f x;
 end
 
 theorem
   True;
+proof
+  trivial;
   (A ==> B) ==> C;
   A and B ==> A;
   id A = A;

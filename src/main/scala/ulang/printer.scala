@@ -102,7 +102,7 @@ object printer {
     case Case(pats, Some(cond), body) =>
       pats.mkString(" ") + " if " + cond + " -> " + body
 
-    case Bind(cases) =>
+    case Lambda(cases) =>
       "\\ " + cases.mkString(" | ")
     case MatchWith(args, cases) =>
       "match " + args.mkString(" ") + " with " + cases.mkString(" | ")

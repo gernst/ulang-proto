@@ -32,7 +32,7 @@ object grammar {
 
   val df = Def(pat_high ~ (cond_high ?) ~ "=" ~ expr)
 
-  def proof = "proof" ~ rule
+  def proof = "proof" ~ rule ~ ";"
   val prop = Thm(expr ~ ";" ~ (proof ?))
 
   val test = Test(expr)

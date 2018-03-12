@@ -21,6 +21,12 @@ object Goal {
 case class Step(prems: List[Derivation], concl: Goal, rule: Rule) extends Derivation
 
 object derive {
+  def cut(phi: Expr, goal: Goal, rule: Rule): Derivation = {
+    val prem1 = assert(phi, goal)
+    val prem2 = assume(phi, goal)
+    Step(List(prem1, prem2), goal, rule)
+  }
+
   def assume(phi: Expr, goal: Goal): Goal = phi match {
     case True =>
       goal
@@ -32,17 +38,13 @@ object derive {
   }
 
   def assert(phi: Expr, goal: Goal): Goal = phi match {
-    case False =>
-      goal
     case App(Id("==>"), List(phi, psi)) =>
       assume(phi, assert(psi, goal))
-    case _ if goal.suc == True =>
-      val Goal(ant, _) = goal
+    case _ =>
+      val Goal(ant, suc) = goal
+      if (phi == False) ulang.shell.warning("asserting false")
+      if (suc != True) ulang.shell.warning("weaken ... ==> " + suc)
       Goal(ant, phi)
-  }
-
-  def rewrite(phi: Expr, dyn: Binding): Expr = {
-    ulang.prove.rewrite.rewrite(phi, Binding.empty, dyn)
   }
 
   def derive(expr: Expr, rule: Option[Rule], dyn: Binding): Derivation = {
@@ -54,7 +56,9 @@ object derive {
   def derive(goal: Goal, rule: Rule, dyn: Binding): Derivation = {
     rule match {
       case Trivial =>
-        ulang.prove.trivial(goal, rule)
+        trivial(goal, rule)
+      case Induction(expr, cases) =>
+        induction(expr, cases, goal, rule)
     }
   }
 }

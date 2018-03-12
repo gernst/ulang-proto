@@ -1,9 +1,21 @@
 package ulang.prove
 
-import arse.control.Control
-import arse.control.backtrack
+import bk.Control
+import bk.backtrack
+import ulang.expr.App
+import ulang.expr.Case
+import ulang.expr.Expr
+import ulang.expr.Id
+import ulang.expr.IfThenElse
+import ulang.expr.Lambda
+import ulang.expr.Lit
+import ulang.expr.Pat
+import ulang.expr.SubPat
+import ulang.expr.Tag
+import ulang.expr.UnApp
+import ulang.expr.Wildcard
+import ulang.expr.builtin
 import ulang.shell
-import ulang.expr._
 
 object rewrite {
   def bind(pat: Pat, arg: Expr, dyn: Binding, env: Binding): Binding = pat match {
@@ -69,7 +81,7 @@ object rewrite {
   }
 
   def apply(id: Id, fun: Expr, args: List[Expr], dyn: Binding): Expr = fun match {
-    case Bind(cases) =>
+    case Lambda(cases) =>
       apply(cases, args, Binding.empty, dyn) or App(id, args)
     case _ =>
       App(id, args)
@@ -101,5 +113,9 @@ object rewrite {
 
     case _ =>
       expr
+  }
+  
+  def apply(phi: Expr, dyn: Binding): Expr = {
+    rewrite(phi, Binding.empty, dyn)
   }
 }

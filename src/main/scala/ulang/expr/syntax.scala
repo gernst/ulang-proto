@@ -20,7 +20,7 @@ case class UnApp(fun: Pat, args: List[Pat]) extends Pat // { assert(!args.isEmpt
 case class App(fun: Expr, args: List[Expr]) extends Expr // { assert(!args.isEmpty) }
 
 case class Case(pats: List[Pat], cond: Option[Expr], body: Expr) extends Pretty
-case class Bind(cases: List[Case]) extends Expr
+case class Lambda(cases: List[Case]) extends Expr
 
 case class MatchWith(args: List[Expr], cases: List[Case]) extends Expr
 

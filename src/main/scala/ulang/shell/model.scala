@@ -15,7 +15,7 @@ object Model {
 
     val merged = group(funs).map {
       case (id, cases) =>
-        Def(id, None, Bind(cases))
+        Def(id, None, Lambda(cases))
     }
 
     val consts = dfs.collect {

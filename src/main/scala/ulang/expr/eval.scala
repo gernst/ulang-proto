@@ -1,9 +1,8 @@
 package ulang.expr
 
-import arse.control.Control
-import arse.control.backtrack
+import bk.Control
+import bk.backtrack
 import ulang.Pretty
-import ulang.group
 import ulang.shell
 
 trait Eq
@@ -137,7 +136,7 @@ object eval {
     case MatchWith(args, cases) =>
       apply(cases, eval(args, lex, dyn), lex, dyn)
 
-    case Bind(cases) =>
+    case Lambda(cases) =>
       Clos(cases, lex)
   }
 }

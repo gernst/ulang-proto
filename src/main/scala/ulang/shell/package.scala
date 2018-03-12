@@ -1,14 +1,20 @@
 package ulang
 
-import java.io.File
-import java.io.Reader
-
-import arse._
-import arse.control._
-import scala.io.StdIn
 import scala.io.Source
-import scala.runtime.NonLocalReturnControl
-import ulang.expr._
+import scala.io.StdIn
+
+import arse.Infix
+import arse.Postfix
+import arse.Prefix
+import arse.Whitespace
+import ulang.expr.App
+import ulang.expr.Atom
+import ulang.expr.Env
+import ulang.expr.Id
+import ulang.expr.Tag
+import ulang.expr.builtin
+import ulang.expr.eval
+import ulang.expr.operators
 import ulang.prove.derive
 
 package object shell {

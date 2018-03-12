@@ -5,7 +5,7 @@ import ulang.expr._
 object check {
   def check(defs: List[Def]) = {
     defs collect {
-      case Def(fun, _, Bind(cases)) =>
+      case Def(fun, _, Lambda(cases)) =>
         cases.tails.foreach {
           case Case(pat1, _, _) :: xs =>
             for (Case(pat2, _, _) <- xs) {
