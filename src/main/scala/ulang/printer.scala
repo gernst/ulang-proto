@@ -145,13 +145,6 @@ object printer {
     case Evals(exprs) =>
       exprs.mkString("eval\n  ", "\n  ", "\nend\n")
 
-    case Module(defs) =>
-      defs.mkString("", "\n", "\n")
-
-    case Model(dyn) =>
-      val lines = dyn.map { case (name, rhs) => name + " = " + rhs + ";" }
-      lines.mkString("model\n  ", "\n  ", "\nend\n")
-
     case Clos(cases, lex) =>
       "\\ " + cases.mkString(" | ") + lex.keys.mkString(" [", ", ", "]")
     case Obj(builtin.Succ, List(arg)) =>

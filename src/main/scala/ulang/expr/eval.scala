@@ -13,6 +13,13 @@ case class Obj(tag: Tag, args: List[Val]) extends Pretty with Eq
 object Env {
   val empty: Env = Map.empty
   val default: Env = Map("=" -> builtin.equal, "print" -> builtin.print)
+
+  def apply(dfs: List[(Id, Expr)], lex: Env): Env = {
+    dfs.foldLeft(default) {
+      case (dyn, (Id(name), rhs)) =>
+        dyn + (name -> eval.eval(rhs, lex, dyn))
+    }
+  }
 }
 
 object eval {

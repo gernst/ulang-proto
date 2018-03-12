@@ -18,7 +18,7 @@ import ulang.expr.builtin
 import ulang.shell
 
 object rewrite {
-  def bind(pat: Pat, arg: Expr, dyn: Binding, env: Binding): Binding = pat match {
+  def bind(pat: Pat, arg: Expr, dyn: Env, env: Env): Env = pat match {
     case Wildcard =>
       env
 
@@ -49,7 +49,7 @@ object rewrite {
       }
   }
 
-  def bind(pats: List[Pat], args: List[Expr], dyn: Binding, env: Binding): Binding = (pats, args) match {
+  def bind(pats: List[Pat], args: List[Expr], dyn: Env, env: Env): Env = (pats, args) match {
     case (Nil, Nil) =>
       env
 
@@ -60,9 +60,9 @@ object rewrite {
       backtrack()
   }
 
-  def apply(cs: Case, args: List[Expr], lex: Binding, dyn: Binding): Expr = cs match {
+  def apply(cs: Case, args: List[Expr], lex: Env, dyn: Env): Expr = cs match {
     case Case(pats, cond, body) =>
-      val env = bind(pats, args, dyn, Binding.empty)
+      val env = bind(pats, args, dyn, Env.empty)
       val newlex = lex ++ env
       cond.map(rewrite(_, newlex, dyn)).foreach {
         case builtin.True =>
@@ -72,7 +72,7 @@ object rewrite {
       rewrite(body, newlex, dyn)
   }
 
-  def apply(cases: List[Case], args: List[Expr], lex: Binding, dyn: Binding): Expr = cases match {
+  def apply(cases: List[Case], args: List[Expr], lex: Env, dyn: Env): Expr = cases match {
     case Nil =>
       backtrack()
 
@@ -80,18 +80,18 @@ object rewrite {
       apply(cs, args, lex, dyn) or apply(rest, args, lex, dyn)
   }
 
-  def apply(id: Id, fun: Expr, args: List[Expr], dyn: Binding): Expr = fun match {
+  def apply(id: Id, fun: Expr, args: List[Expr], dyn: Env): Expr = fun match {
     case Lambda(cases) =>
-      apply(cases, args, Binding.empty, dyn) or App(id, args)
+      apply(cases, args, Env.empty, dyn) or App(id, args)
     case _ =>
       App(id, args)
   }
 
-  def rewrite(exprs: List[Expr], lex: Binding, dyn: Binding): List[Expr] = {
+  def rewrite(exprs: List[Expr], lex: Env, dyn: Env): List[Expr] = {
     exprs map (rewrite(_, lex, dyn))
   }
 
-  def rewrite(expr: Expr, lex: Binding, dyn: Binding): Expr = expr match {
+  def rewrite(expr: Expr, lex: Env, dyn: Env): Expr = expr match {
     case Id(name) if lex contains name =>
       lex(name)
 
@@ -114,8 +114,8 @@ object rewrite {
     case _ =>
       expr
   }
-  
-  def apply(phi: Expr, dyn: Binding): Expr = {
-    rewrite(phi, Binding.empty, dyn)
+
+  def apply(phi: Expr, dyn: Env): Expr = {
+    rewrite(phi, Env.empty, dyn)
   }
 }

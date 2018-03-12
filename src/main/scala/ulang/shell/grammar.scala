@@ -51,8 +51,6 @@ object grammar {
   val props = Thms("theorem" ~ prop_ ~ "end")
 
   val cmd = imports | notations | defs | tests | evals | props;
-
-  val module = Module(cmd *)
 }
 
 

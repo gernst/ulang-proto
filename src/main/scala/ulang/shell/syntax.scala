@@ -26,5 +26,3 @@ case class Tests(tests: List[Test]) extends Cmd
 case class Evals(exprs: List[Expr]) extends Cmd
 case class Thms(props: List[Thm]) extends Cmd
 case class Inds(props: List[Ind]) extends Cmd
-
-case class Module(cmds: List[Cmd]) extends Pretty

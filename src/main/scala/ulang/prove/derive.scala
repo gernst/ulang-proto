@@ -1,15 +1,15 @@
 package ulang.prove
 
+import bk.backtrack
 import ulang.Pretty
 import ulang.expr.App
 import ulang.expr.Expr
 import ulang.expr.Id
+import ulang.expr.Pat
 import ulang.expr.builtin.False
 import ulang.expr.builtin.True
-import ulang.expr.builtin.==>
 import ulang.expr.builtin.and
-import ulang.expr.Pat
-import bk._
+import ulang.expr.builtin.==>
 
 sealed trait Derivation extends Pretty
 
@@ -36,7 +36,7 @@ object derive {
     case _ =>
       goal
   }
-  
+
   def cut(phi: Expr, goal: Goal, rule: Rule): Derivation = {
     val prem1 = assert(phi, goal)
     val prem2 = assume(phi, goal)
@@ -45,7 +45,8 @@ object derive {
 
   def induction(expr: Expr, cases: List[(Pat, Rule)], goal: Goal, rule: Rule): Derivation = {
     val Goal(ant, suc) = goal
-    if (!(ant contains expr)) backtrack()
+    if (!(ant contains expr))
+      backtrack()
     ???
   }
 
@@ -69,13 +70,13 @@ object derive {
       Goal(ant, phi)
   }
 
-  def derive(expr: Expr, rule: Option[Rule], dyn: Binding): Derivation = {
+  def derive(expr: Expr, rule: Option[Rule], dyn: Env): Derivation = {
     val phi = rewrite(expr, dyn)
     val goal = assert(phi, Goal.empty)
     derive(goal, rule getOrElse Trivial, dyn)
   }
 
-  def derive(goal: Goal, rule: Rule, dyn: Binding): Derivation = {
+  def derive(goal: Goal, rule: Rule, dyn: Env): Derivation = {
     rule match {
       case Trivial =>
         trivial(goal, rule)
