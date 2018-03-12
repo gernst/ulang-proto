@@ -3,15 +3,26 @@ package ulang.expr
 import ulang.shell
 
 object builtin {
-  val Eq = Id("=")
+  val eq = Binary(Id("="))
+  
   val Zero = Tag("0")
   val Succ = Unary(Tag("+1"))
+  
   val True = Tag("True")
   val False = Tag("False")
-  val Tuple = NAry(Tag("Tuple"))
+  val and = Binary(Id("and"))
+  val or = Binary(Id("or"))
+  val ==> = Binary(Id("==>"))
+  val <=> = Binary(Id("<=>"))
+  
+  val Tuple = Nary(Tag("Tuple"))
+  
   val Nil = Tag("Nil")
   val Cons = Binary(Tag("Cons"))
-
+  
+  val None = Tag("None")
+  val Some = Binary(Tag("Some"))
+  
   def reify(b: Boolean) = if (b) True else False
 
   object print extends (List[Val] => Val) {

@@ -31,16 +31,32 @@ case class Binary(op: Atom) {
     case _ => None
   }
 
-  def apply(arg1: Expr, arg2: Expr) = {
+  def apply(arg1: Expr, arg2: Expr): Expr = {
     App(op, List(arg1, arg2))
   }
 
-  def apply(arg1: Pat, arg2: Pat) = {
+  def apply(args: List[Expr], zero: Expr): Expr = {
+    args.foldRight(zero)(apply)
+  }
+
+  def apply(zero: Expr, args: List[Expr]): Expr = {
+    args.foldLeft(zero)(apply)
+  }
+
+  def apply(arg1: Pat, arg2: Pat): Pat = {
     UnApp(op, List(arg1, arg2))
+  }
+
+  def apply(args: List[Pat], zero: Pat): Pat = {
+    args.foldRight(zero)(apply)
+  }
+
+  def apply(zero: Pat, args: List[Pat]): Pat = {
+    args.foldLeft(zero)(apply)
   }
 }
 
-case class NAry(op: Atom) {
+case class Nary(op: Atom) {
   def unapplySeq(e: Expr) = e match {
     case App(`op`, args) => Some(args)
     case _ => None

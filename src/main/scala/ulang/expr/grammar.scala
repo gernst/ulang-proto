@@ -17,7 +17,7 @@ object operators extends Syntax[Atom] {
   var postfix_ops: Map[Atom, Int] = Map()
 
   var infix_ops: Map[Atom, (Assoc, Int)] = Map(
-    builtin.Eq -> (Non, 6))
+    builtin.eq.op -> (Non, 6))
 }
 
 object scanner {

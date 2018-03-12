@@ -16,11 +16,11 @@ object reify {
     case _ => builtin.Tuple(es)
   }
 
-  def list(ps: List[Pat]) = ps.foldRight(builtin.Nil: Pat)(builtin.Cons(_,_))
-  def list(es: List[Expr]) = es.foldRight(builtin.Nil: Expr)(builtin.Cons(_,_))
+  def list(ps: List[Pat]) = builtin.Cons(ps, builtin.Nil)
+  def list(es: List[Expr]) = builtin.Cons(es, builtin.Nil)
 
-  def list_with_tail(ps: List[Pat], pt: Pat) = ps.foldRight(pt)(builtin.Cons(_,_))
-  def list_with_tail(es: List[Expr], et: Expr) = es.foldRight(et)(builtin.Cons(_,_))
+  def list_with_tail(ps: List[Pat], pt: Pat) = builtin.Cons(ps, pt)
+  def list_with_tail(es: List[Expr], et: Expr) = builtin.Cons(es, et)
 
   def atom(atom: Atom): Expr = atom match {
     case Tag(name) =>

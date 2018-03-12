@@ -1,10 +1,13 @@
 package ulang.prove
 
-import ulang.expr.Expr
-import ulang.expr.builtin._
 import ulang.Pretty
-import ulang.expr.Id
 import ulang.expr.App
+import ulang.expr.Expr
+import ulang.expr.Id
+import ulang.expr.builtin.False
+import ulang.expr.builtin.True
+import ulang.expr.builtin.==>
+import ulang.expr.builtin.and
 
 sealed trait Derivation extends Pretty
 
@@ -30,7 +33,7 @@ object derive {
   def assume(phi: Expr, goal: Goal): Goal = phi match {
     case True =>
       goal
-    case App(Id("and"), List(phi, psi)) =>
+    case phi and psi =>
       assume(phi, assume(psi, goal))
     case _ =>
       val Goal(ant, suc) = goal
@@ -38,7 +41,7 @@ object derive {
   }
 
   def assert(phi: Expr, goal: Goal): Goal = phi match {
-    case App(Id("==>"), List(phi, psi)) =>
+    case phi ==> psi =>
       assume(phi, assert(psi, goal))
     case _ =>
       val Goal(ant, suc) = goal
