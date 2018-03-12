@@ -1,45 +1,28 @@
-package ulang
+package ulang.shell
 
 import scala.io.Source
 import scala.io.StdIn
 
-import arse.Infix
-import arse.Postfix
-import arse.Prefix
 import arse.Whitespace
-import ulang.expr.App
-import ulang.expr.Atom
-import ulang.expr.Env
-import ulang.expr.Id
-import ulang.expr.Tag
-import ulang.expr.builtin
-import ulang.expr.eval
-import ulang.expr.operators
-import ulang.prove.derive
-import scala.collection.mutable
 
-package object shell {
+object shell {
   var modules = Set.empty[String]
   var defs: List[Def] = Nil
   var inds: List[Ind] = Nil
 
-  def model = {
-    import ulang.expr.Env
-    Env(exec.merge(defs), Env.empty)
-  }
-
-  def rewrites = {
-    import ulang.prove.Env
-    Env(exec.merge(defs))
+  def clear {
+    defs = Nil
+    inds = Nil
   }
 
   def cmd(c: => Any) = { () => c }
 
-  def commands: Map[String, () => Any] = Map()
+  def commands: Map[String, () => Any] = Map(
+    ":clear" -> cmd(clear))
 
   val Prompt = "u> "
 
-  def main(args: Array[String]) {
+  def run(args: Array[String]) {
     safe {
       load("mini")
       // load("base")
@@ -51,29 +34,15 @@ package object shell {
   def input(): String = input(Prompt)
   def input(p: String): String = StdIn.readLine(p)
 
-  def out(obj: Any) {
-    Console.out.println(obj)
-    Console.out.flush
-  }
-
-  def warning(obj: Any) = {
-    Console.err.println(obj.toString)
-    Console.err.flush
-  }
-
-  def error(obj: Any) = {
-    sys.error(obj.toString)
-  }
-
   def safe[A](f: => A) = try {
     Some(f)
   } catch {
     case e: StackOverflowError =>
-      warning("error: stack overflow")
+      ulang.warning("error: stack overflow")
       e.printStackTrace()
       None
     case e: Throwable =>
-      warning("error: " + e)
+      ulang.warning("error: " + e)
       e.printStackTrace()
       None
   }
@@ -84,7 +53,7 @@ package object shell {
       safe {
         input() match {
           case null =>
-            out(":quit")
+            ulang.out(":quit")
             run = false
           case ":quit" =>
             run = false
@@ -93,7 +62,7 @@ package object shell {
           case line if commands contains line =>
             commands(line)()
           case line if line startsWith ":" =>
-            error("unknown command " + line)
+            ulang.error("unknown command " + line)
           case line =>
             read("", line)
         }

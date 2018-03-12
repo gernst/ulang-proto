@@ -65,8 +65,8 @@ object derive {
       assume(phi, assert(psi, goal))
     case _ =>
       val Goal(ant, suc) = goal
-      if (phi == False) ulang.shell.warning("asserting false")
-      if (suc != True) ulang.shell.warning("weaken ... ==> " + suc)
+      if (phi == False) ulang.warning("asserting false")
+      if (suc != True) ulang.warning("weaken ... ==> " + suc)
       Goal(ant, phi)
   }
 

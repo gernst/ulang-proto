@@ -15,7 +15,6 @@ import ulang.expr.Tag
 import ulang.expr.UnApp
 import ulang.expr.Wildcard
 import ulang.expr.builtin
-import ulang.shell
 
 object rewrite {
   def bind(pat: Pat, arg: Expr, dyn: Env, env: Env): Env = pat match {
@@ -67,7 +66,7 @@ object rewrite {
       cond.map(rewrite(_, newlex, dyn)).foreach {
         case builtin.True =>
         case builtin.False => backtrack()
-        case res => shell.error("not a boolean in pattern: " + res)
+        case res => ulang.error("not a boolean in pattern: " + res)
       }
       rewrite(body, newlex, dyn)
   }

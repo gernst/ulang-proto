@@ -1,24 +1,34 @@
 package ulang.shell
 
+import arse.Infix
+import arse.Postfix
+import arse.Prefix
+import ulang.expr.App
+import ulang.expr.Atom
+import ulang.expr.Case
+import ulang.expr.Expr
 import ulang.expr.Id
 import ulang.expr.Lambda
-import ulang.expr.Case
+import ulang.expr.Tag
 import ulang.expr.UnApp
-import ulang.expr.Expr
-import arse.Postfix
-import arse.Infix
 import ulang.expr.builtin
-import arse.Prefix
+import ulang.expr.eval
 import ulang.expr.operators
 import ulang.prove.derive
-import ulang.expr.Atom
-import ulang.expr.App
-import ulang.expr.Tag
-import ulang.expr.eval
 
 object exec {
-  import ulang.shell.defs
-  import ulang.shell.rewrites
+  import shell.defs
+  import shell.inds
+
+  def model = {
+    import ulang.expr.Env
+    Env(merge(defs), Env.empty)
+  }
+
+  def rewrites = {
+    import ulang.prove.Env
+    Env(merge(defs))
+  }
 
   def group[A, B](xs: List[(A, B)]) = {
     xs.groupBy(_._1).map {
@@ -48,7 +58,7 @@ object exec {
   def exec(ctx: String, cmd: Cmd) = cmd match {
     case Imports(names) =>
       for (name <- names) {
-        load(name)
+        shell.load(name)
       }
 
     case Notations(nots) =>
@@ -62,16 +72,14 @@ object exec {
         case Data(names) =>
           for (name <- names) { operators.data += Tag(name) }
         case not =>
-          error("unknown notation: " + not)
+          ulang.error("unknown notation: " + not)
       }
 
     case Defs(add) =>
-      check.check(defs, add)
+      check.disjoint(defs, add)
       defs ++= add
 
     case Tests(tests) =>
-      import ulang.expr.Env
-      val lex = Env.empty
       val dyn = model
 
       new tst.Test {
@@ -79,34 +87,31 @@ object exec {
           for (Test(phi) <- tests) {
             phi match {
               case App(Id("="), List(lhs, rhs)) =>
-                eval.eval(lhs, lex, dyn) expect eval.eval(rhs, lex, dyn)
+                eval.eval(lhs, dyn) expect eval.eval(rhs, dyn)
               case _ =>
-                eval.eval(phi, lex, dyn) expect builtin.True
+                eval.eval(phi, dyn) expect builtin.True
             }
           }
         }
       }
 
     case Evals(exprs) =>
-      import ulang.expr.Env
-      val lex = Env.empty
       val dyn = model
 
       for (expr <- exprs) {
-        val res = eval.eval(expr, lex, dyn)
-        out(expr + "\n  = " + res + ";")
+        val res = eval.eval(expr, dyn)
+        ulang.out(expr + "\n  = " + res + ";")
       }
 
     case Thms(props) =>
-      import ulang.prove.Env
       val dyn = rewrites
 
       for (Thm(goal, rule) <- props) {
         val res = derive.derive(goal, rule, dyn)
-        out(res)
+        ulang.out(res)
       }
 
-    case Inds(inds) =>
-      ???
+    case Inds(add) =>
+      inds ++= add
   }
 }

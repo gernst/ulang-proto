@@ -3,7 +3,6 @@ package ulang.expr
 import bk.Control
 import bk.backtrack
 import ulang.Pretty
-import ulang.shell
 
 trait Eq
 
@@ -72,7 +71,7 @@ object eval {
       cond.map(eval(_, newlex, dyn)).foreach {
         case builtin.True =>
         case builtin.False => backtrack()
-        case res => shell.error("not a boolean in pattern: " + res)
+        case res => ulang.error("not a boolean in pattern: " + res)
       }
       eval(body, newlex, dyn)
   }
@@ -90,13 +89,17 @@ object eval {
       Obj(tag, args)
 
     case Clos(cases, lex) =>
-      apply(cases, args, lex, dyn) or shell.error(fun + " mismatches " + args.mkString(" "))
+      apply(cases, args, lex, dyn) or ulang.error(fun + " mismatches " + args.mkString(" "))
 
     case f: (List[Val] => Val) @unchecked =>
       f(args)
 
     case _ =>
-      shell.error("not a function " + fun)
+      ulang.error("not a function " + fun)
+  }
+
+  def eval(expr: Expr, dyn: Env): Val = {
+    eval(expr, Env.empty, dyn)
   }
 
   def eval(exprs: List[Expr], lex: Env, dyn: Env): List[Val] = {
@@ -118,7 +121,7 @@ object eval {
 
     case Id(name) =>
       val bound = lex.keys ++ dyn.keys
-      shell.error("unbound identifier " + name + " in " + bound.mkString("[", " ", "]"))
+      ulang.error("unbound identifier " + name + " in " + bound.mkString("[", " ", "]"))
 
     case LetIn(eqs, body) =>
       val bindings = eqs.map {
@@ -133,7 +136,7 @@ object eval {
       eval(test, lex, dyn) match {
         case builtin.True => eval(arg1, lex, dyn)
         case builtin.False => eval(arg2, lex, dyn)
-        case res => shell.error("not a boolean in test: " + res)
+        case res => ulang.error("not a boolean in test: " + res)
       }
 
     case App(fun, args) =>

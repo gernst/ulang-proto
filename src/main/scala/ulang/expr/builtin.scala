@@ -1,7 +1,5 @@
 package ulang.expr
 
-import ulang.shell
-
 object builtin {
   val eq = Binary(Id("="))
   
@@ -55,7 +53,7 @@ object builtin {
       case (_: Eq, _: Eq) =>
         false
       case _ =>
-        shell.error("cannot compare " + obj1 + " and " + obj2)
+        ulang.error("cannot compare " + obj1 + " and " + obj2)
     }
   }
 }
