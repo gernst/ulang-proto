@@ -11,6 +11,7 @@ definition
   length [_; xs] = length xs +1;
   
   take 0 xs = [];
+  take n [] = [];
   take (n +1) [x; xs] = [x; take n xs];
 
   [] ++ ys = ys;

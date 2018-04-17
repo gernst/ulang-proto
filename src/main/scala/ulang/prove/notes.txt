@@ -1,83 +1,51 @@
 
 
 True represents truth
-equational reasoning: refl, trans, subst (congruence closure)
+equational reasoning: refl, trans, subst (congruence closure from lambda calculus confluence)
 using definitions and universal quantifiers (rewriting)
 case distinction on the construction of expressions and size function
 induction, coinduction
 
-lemma
-  A and (A ==> B) ==> B;
-end
+all theorems and lemmas are just expressions
+- equations are considered as rewrite rules
+- everything else is considered as an axiom/theorem that this should be true
 
-// this rule makes sure that implication works as expected...
-introduction
-  |- a ==> b;
-by
-  a |- b;
-end
+the notation for definitions and lemmas should be exactly the same?
 
-elimination
-  A ==> B;
-by
-  assert A;
-  assume B;
-end
+basic patterns
+_ and x matches anything, the latter binds to x
+C matches the constant C
+f p1 pn matches an n-ary function application, including the function itself
+how do varargs work?
 
-elimination
-  A and B;
-by
-  assume A;
-  assume B;
-end
+open
+how to match constants?
+should it be possible to match function literals?
 
-  
-lemma
-  not exists n: Nat.
-    forall m: Nat. m < n;
-
-  // rewrites to
-  // assume forall m: Nat. m < n;
-  // assert False;
-proof
-  instantiate m with n +1;
-end
-
-define
+definition
   n + 0 = n;
   n + (m +1) = (n + m) +1;
 end
 
-inductive
-  x: a and y: b and p = (x, y) 
-    ==> p: a * b;
-
-  (forall x: a. f x: b)
-    ==> f: a -> b;
+definition
+  # f p1 ... pn = # f + # p1 + ... + # pn;
+  # _ = 1;
 end
 
-lemma
-  (x, y): a * b
-    <=> x: a and y: b;
-
-  x: a and f: a -> b
-    ==> f x: b;
-end
-
-lemma
-  (+): Nat * Nat -> Nat;
-
-  // equivalently:
-  n: Nat and m: Nat
-    ==> n + m: Nat;
-end
-
-inductive
+inductive definition
   0: Nat;
-  +1: Nat -> Nat;
+  n: Nat ==> n +1: Nat;
+end
 
-  Nil: List a;
-  Cons: a * List a -> List a;
+inductive theorem
+  0: Nat;
+  1: Nat;
+  n: Nat ==> n + 2: Nat;
+end
+
+inductive theorem
+  n: Nat and (forall m: Nat. n < m ==> p m) 
+    ==> p n
 end
 
 lemma

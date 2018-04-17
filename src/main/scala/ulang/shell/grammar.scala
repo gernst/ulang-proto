@@ -33,7 +33,7 @@ object grammar {
   val df = Def(pat_high ~ (cond_high ?) ~ "=" ~ expr)
 
   def proof = "proof" ~ rule ~ ";"
-  val prop = Thm(expr ~ ";" ~ (proof ?))
+  val thm = Thm(expr ~ ";" ~ (proof ?))
 
   val test = Test(expr)
 
@@ -41,16 +41,17 @@ object grammar {
   val test_ = (test ~ ";") *
   val notation_ = ((fix | data) ~ ";") *
   val expr_ = (expr ~ ";") *
-  val prop_ = prop *
+  val thm_ = thm *
 
   val imports = Imports("import" ~ names ~ ";")
   val defs = Defs("definition" ~ def_ ~ "end")
   val tests = Tests("test" ~ test_ ~ "end")
   val notations = Notations("notation" ~ notation_ ~ "end")
   val evals = Evals("eval" ~ expr_ ~ "end")
-  val props = Thms("theorem" ~ prop_ ~ "end")
+  val thms = Thms("theorem" ~ thm_ ~ "end")
+  val ind = Ind("inductive definition" ~ expr_ ~ "end")
 
-  val cmd = imports | notations | defs | tests | evals | props;
+  val cmd = imports | notations | defs | tests | evals | thms | ind;
 }
 
 

@@ -22,15 +22,6 @@ object shell {
 
   val Prompt = "u> "
 
-  def run(args: Array[String]) {
-    safe {
-      load("mini")
-      // load("base")
-      // load("prover")
-    }
-    // repl()
-  }
-
   def input(): String = input(Prompt)
   def input(p: String): String = StdIn.readLine(p)
 

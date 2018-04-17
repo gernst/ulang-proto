@@ -27,13 +27,22 @@ object exec {
 
   def rewrites = {
     import ulang.prove.Env
-    Env(merge(defs))
+    Env(merge(defs, inds))
+  }
+
+  def inductions = {
+    import ulang.prove.Ind
+    Ind(inds)
   }
 
   def group[A, B](xs: List[(A, B)]) = {
     xs.groupBy(_._1).map {
       case (x, ys) => (x, ys.map(_._2))
     }
+  }
+
+  def merge(dfs: List[Def], inds: List[Ind]): List[(Id, Expr)] = {
+    merge(dfs ++ define(inds))
   }
 
   def merge(dfs: List[Def]): List[(Id, Expr)] = {
@@ -53,6 +62,20 @@ object exec {
     }
 
     merged.toList ++ consts
+  }
+
+  def define(inds: List[Ind]): List[Def] = {
+    import builtin.==>
+
+    inds.flatMap {
+      case Ind(cases) =>
+        cases.collect {
+          case ant ==> suc =>
+            Def(suc.toPat, None, ant)
+          case suc =>
+            Def(suc.toPat, None, builtin.True)
+        }
+    }
   }
 
   def exec(ctx: String, cmd: Cmd) = cmd match {
@@ -105,13 +128,14 @@ object exec {
 
     case Thms(props) =>
       val dyn = rewrites
+      val ind = inductions
 
       for (Thm(goal, rule) <- props) {
-        val res = derive.derive(goal, rule, dyn)
+        val res = derive.derive(goal, rule, dyn, ind)
         ulang.out(res)
       }
 
-    case Inds(add) =>
-      inds ++= add
+    case add: Ind =>
+      inds :+= add
   }
 }

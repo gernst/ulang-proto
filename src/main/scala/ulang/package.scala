@@ -19,6 +19,12 @@ package object ulang {
   }
 
   def main(args: Array[String]) {
-    ulang.shell.shell.run(args)
+    import ulang.shell.shell._
+
+    safe {
+      load("mini")
+      // load("base")
+    }
+    // repl()
   }
 }

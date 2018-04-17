@@ -9,19 +9,45 @@ object unify {
     { u.unify(pat1, pat2); true } or { false }
   }
 
-  def apply(pat1: List[Pat], pat2: List[Pat]) = {
+  def apply(pat1: Pat, pat2: Pat): Option[Map[Pat, Pat]] = {
+    apply(List(pat1), List(pat2))
+  }
+
+  def apply(pats1: List[Pat], pats2: List[Pat]): Option[Map[Pat, Pat]] = {
     val u = new unify;
     {
-      u.unify(pat1, pat2)
-      Some(u.rep): Option[Subst]
+      u.unify(pats1, pats2)
+      Some(u.rep): Option[Map[Pat, Pat]]
     } or {
       None
     }
   }
+
+  def unbind(p: Pat): Pat = p match {
+    case _: Id | Wildcard => Wildcard
+    case _: Tag | _: Lit => p
+    case SubPat(name, pat) => unbind(pat)
+    case UnApp(fun, args) => UnApp(unbind(fun), args.map(unbind))
+  }
+
+  def merges(ps1: List[Pat], ps2: List[Pat]): List[Pat] = {
+    (ps1, ps2).zipped map {
+      case (p1, p2) => merge(p1, p2)
+    }
+  }
+
+  def merge(p1: Pat, p2: Pat): Pat = (p1, p2) match {
+    case (SubPat(name1, pat1), SubPat(name2, pat2)) =>
+      merge(pat1, pat2)
+    case (UnApp(fun1, args1), UnApp(fun2, args2)) =>
+      UnApp(merge(fun1, fun2), merges(args1, args2))
+    case _ =>
+      if (p1 == p2) p1 else Wildcard
+  }
 }
 
 class unify {
-  var rep = Subst.empty
+  var rep = Map[Pat, Pat]()
 
   def find(a: Pat): Pat = {
     val b = rep.getOrElse(a, a)
@@ -62,25 +88,5 @@ class unify {
 
     case _ =>
       backtrack()
-  }
-
-  def unbind(p: Pat): Pat = p match {
-    case _: Id | Wildcard => Wildcard
-    case _: Tag | _: Lit => p
-    case SubPat(name, pat) => unbind(pat)
-    case UnApp(fun, args) => UnApp(unbind(fun), args.map(unbind))
-  }
-
-  def merge(ps1: List[Pat], ps2: List[Pat]): List[Pat] = {
-    (ps1, ps2).zipped map {
-      case (p1, p2) => merge(p1, p2)
-    }
-  }
-
-  def merge(p1: Pat, p2: Pat): Pat = (p1, p2) match {
-    case (UnApp(fun1, args1), UnApp(fun2, args2)) =>
-      UnApp(merge(fun1, fun2), merge(args1, args2))
-    case _ =>
-      if (p1 == p2) p1 else Wildcard
   }
 }

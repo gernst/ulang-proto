@@ -1,20 +1,66 @@
 notation
+  prefix 5 not;
   infix left  4 and;
+  infix left  3 or;
   infix right 2 ==>;
+  infix 5 :;
+  infix 7 +;
 end
 
 definition
   id x = x;
   test A = X;
   test B = Y;
+  (x = x) = True;
+  1 = Succ Zero;
+end
+
+definition
+  (not False) = True;
+  (not True)  = False;
+end
+
+inductive definition
+  False : Bool;
+  True  : Bool;
 end
 
 theorem
-  True;
-proof
-  trivial;
+  b : Bool
+    ==> (not not b) = b;
+proof induction b : Bool
+  | False : Bool -> trivial
+  | True  : Bool -> trivial;
+end
+
+inductive definition
+  Zero : Nat;
+  n : Nat ==> Succ(n) : Nat;
+end
+
+theorem
   (A ==> B) ==> C;
   A and B ==> A;
   id A = A;
   test a;
+  test A;
+  True : Bool;
+  False : Bool;
+  n : Nat ==> Succ(n) : Nat;
+end
+
+definition
+  n + Zero = n;
+  n + (Succ m) = Succ (n + m);
+end
+
+theorem
+  1 + 1 = Succ(Succ(Zero));
+end
+
+theorem
+  k : Nat ==> Zero + k = k;
+proof induction k : Nat
+  | Zero : Nat -> trivial
+  | Succ(m) : Nat -> trivial;
 end
