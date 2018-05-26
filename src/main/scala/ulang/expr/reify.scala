@@ -1,9 +1,14 @@
 package ulang.expr
 
 object reify {
-  def reify_option(e: Option[Expr]) = e match {
-    case None => Tag("None")
-    case Some(e) => App(Tag("Some"), List(e))
+  def boolean(b: Boolean) = {
+    if (b) builtin.True
+    else builtin.False
+  }
+
+  def option(e: Option[Expr]) = e match {
+    case None => builtin.None
+    case Some(e) => builtin.Some(e)
   }
 
   def tuple(ps: List[Pat]) = ps match {
@@ -36,7 +41,7 @@ object reify {
 
   def reify(cs: Case): Expr = cs match {
     case Case(pats, cond, body) =>
-      App(Tag("Case"), List(list(pats map reify), reify_option(cond map reify), reify(body)))
+      App(Tag("Case"), List(list(pats map reify), option(cond map reify), reify(body)))
   }
 
   def reify(pat: Pat): Expr = pat match {

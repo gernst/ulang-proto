@@ -19,9 +19,7 @@ object builtin {
   val Cons = Binary(Tag("Cons"))
   
   val None = Tag("None")
-  val Some = Binary(Tag("Some"))
-  
-  def reify(b: Boolean) = if (b) True else False
+  val Some = Unary(Tag("Some"))
 
   object print extends (List[Val] => Val) {
     override def toString = "print"
@@ -38,7 +36,7 @@ object builtin {
 
     def apply(args: List[Val]): Val = args match {
       case List(obj1, obj2) =>
-        reify(test(obj1, obj2))
+        reify.boolean(test(obj1, obj2))
     }
 
     def test(obj1: Val, obj2: Val): Boolean = (obj1, obj2) match {
