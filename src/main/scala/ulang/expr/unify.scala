@@ -76,7 +76,7 @@ class unify {
   def unify(p1: Pat, p2: Pat): Unit = (find(p1), find(p2)) match {
     case (r1, r2) if r1 == r2 =>
 
-    case (id: Id, a) =>
+    case (id: Id, a) if !(id in a)=>
       union(id, a)
 
     case (a, id: Id) =>

@@ -46,7 +46,8 @@ theorem
   test A;
   True : Bool;
   False : Bool;
-  n : Nat ==> Succ(n) : Nat;
+  n : Nat ==> (Succ n) : Nat;
+  (F a b x) = (F a d z) ==> False;
 end
 
 definition
@@ -55,12 +56,12 @@ definition
 end
 
 theorem
-  1 + 1 = Succ(Succ(Zero));
+  1 + 1 = Succ (Succ Zero);
 end
 
 theorem
   k : Nat ==> Zero + k = k;
 proof induction k : Nat
-  | Zero : Nat -> trivial
-  | Succ(m) : Nat -> trivial;
+  | Zero : Nat -> sorry
+  | Succ m : Nat -> sorry;
 end

@@ -34,6 +34,11 @@ class congruence {
       canonsig(e)
   }
 
+  def ++=(es: List[(Expr, Expr)]) = {
+    for ((e1, e2) <- es)
+      this += (e1, e2)
+  }
+
   def +=(e1: Expr, e2: Expr) = {
     merge(canon(e1), canon(e2))
   }

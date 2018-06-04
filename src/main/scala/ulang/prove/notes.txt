@@ -1,4 +1,22 @@
 
+theorem
+  k : Nat ==> Zero + k = k;
+proof induction // k : Nat implicit: can pattern match
+  | Zero : Nat -> sorry
+  | ... -> refine // add necessary assumption not to get to this case?
+  | Succ m : Nat -> sorry;
+end
+
+Inductive hypotheses:
+
+theorem
+  I (t x) ==> Q (s x y) // I is inductive
+end
+
+Hyp n
+  = all x' y'.
+      t x' < t y' and I (t x') ==> Q (s x' y')
+
 
 True represents truth
 equational reasoning: refl, trans, subst (congruence closure from lambda calculus confluence)

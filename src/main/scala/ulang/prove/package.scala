@@ -24,7 +24,7 @@ package object prove {
     def apply(inds: List[ulang.shell.Ind]): Ind = {
       val pairs = inds.collect {
         case ulang.shell.Ind(cases) if !cases.isEmpty =>
-          val constrs = cases map (assert(_, Goal.empty))
+          val constrs = cases map Goal.normalized
           val pats = constrs.map(_.suc.toPat)
           val pat = pats reduce unify.merge
           (pat, constrs)

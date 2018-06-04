@@ -26,6 +26,17 @@ case class Goal(eqs: List[(Expr, Expr)], ant: List[Expr], suc: Expr) extends Der
 object Goal {
   val empty = init(True)
   def init(phi: Expr) = Goal(List(), List(), phi)
+
+  def normalized(suc: Expr): Goal = {
+    import derive.assert
+    assert(suc, empty)
+  }
+
+  def normalized(ant: List[Expr], suc: Expr): Goal = {
+    import derive.assume
+    import derive.assert
+    assume(ant, assert(suc, empty))
+  }
 }
 
 case class Step(prems: List[Derivation], concl: Goal, rule: Rule) extends Derivation
@@ -49,13 +60,12 @@ object derive {
     for ((lhs, rhs) <- eqs) {
       cong += (lhs, rhs)
     }
-
   }
 
   def trivial(goal: Goal, rule: Rule): Derivation = goal match {
     case Goal(_, _, True) =>
       goal close rule
-    case Goal(_, _, App(Id("="), List(x, y))) if x == y =>
+    case Goal(_, _, x eq y) if x == y =>
       goal close rule
     case Goal(_, ant, suc) if (ant contains False) || (ant contains suc) =>
       goal close rule
@@ -67,6 +77,36 @@ object derive {
     val prem1 = assert(phi, goal)
     val prem2 = assume(phi, goal)
     Step.normalized(List(prem1, prem2), goal, rule)
+  }
+
+  def induction_prems(expr: Expr, goal: Goal, constrs: List[Goal], tried: List[Case], cases: List[Case], dyn: Env, ind: Ind): List[Derivation] = (constrs, cases) match {
+    case (Nil, _) =>
+      if (cases.isEmpty)
+        ulang.warning("extra cases " + cases)
+      Nil
+
+    case (goal :: constrs, Nil) =>
+      // prove by trivial, however, need to rename a lot?
+      ???
+
+    case (Goal(_, prems, concl) :: constrs, (cs @ Case(pat, rule)) :: cases) =>
+      val App(fun: Id, args1) = expr
+      val App(`fun`, args2) = concl
+
+      {
+        val lex = rewrite.bind(pat, concl, Env.empty, dyn)
+
+        val eqs = (args1, args2).zipped.map {
+          case (arg1, arg2) => builtin.eq(arg1, arg2)
+        }
+
+        // TODO: inductive hypotheses
+
+        val prem = derive(assume(eqs, goal), rule, dyn, ind)
+        prem :: induction_prems(expr, goal, constrs, Nil, tried.reverse ++ cases, dyn, ind)
+      } or {
+        induction_prems(expr, goal, constrs, cs :: tried, cases, dyn, ind)
+      }
   }
 
   def induction(expr: Expr, cases: List[Case], goal: Goal, rule: Rule, dyn: Env, ind: Ind): Derivation = {
@@ -82,19 +122,44 @@ object derive {
         constrs
     }
 
-    val prems = for ((Goal(_, prems, concl), Case(pat, rule)) <- (constrs, cases).zipped) yield {
+    val premlists = for (Goal(_, prems, concl) <- constrs) yield {
+      /*
+      val cs = cases
+
+        // Case(pat, rule) <- cases)
+
       val App(`fun`, args2) = concl
-      val eqs = (args1, args2).zipped.map {
-        case (arg1, arg2) => builtin.eq(arg1, arg2)
+
+      {
+        val lex = rewrite.bind(pat, concl, Env.empty, dyn)
+
+        val eqs = (args1, args2).zipped.map {
+          case (arg1, arg2) => builtin.eq(arg1, arg2)
+        }
+
+        // TODO: inductive hypotheses
+
+        derive(assume(eqs, goal), rule, dyn, ind)
+      } or {
+        ???
       }
-
-      val lex = rewrite.bind(pat, concl, Env.empty, dyn)
-      // for inductive hypotheses
-
-      derive(assume(eqs, goal), rule, dyn, ind)
+      */
+      Nil
     }
 
-    Step(prems.toList, goal, rule)
+    Step(premlists.flatten, goal, rule)
+  }
+
+  def equal(lhs: Expr, rhs: Expr, goal: Goal): Goal = (lhs, rhs) match {
+    case _ if lhs == rhs =>
+      goal
+    case (App(fun1: Id, args1), App(fun2: Id, args2)) if fun1 == fun2 =>
+      (args1, args2).zipped.foldRight(goal) {
+        case ((arg1, arg2), goal) => equal(arg1, arg2, goal)
+      }
+    case _ =>
+      val Goal(eqs, ant, suc) = goal
+      Goal((lhs, rhs) :: eqs, ant, suc)
   }
 
   def assume(phi: Expr, goal: Goal): Goal = phi match {
@@ -103,8 +168,7 @@ object derive {
     case phi and psi =>
       assume(phi, assume(psi, goal))
     case lhs eq rhs =>
-      val Goal(eqs, ant, suc) = goal
-      Goal((lhs, rhs) :: eqs, ant, suc)
+      equal(lhs, rhs, goal)
     case _ =>
       val Goal(eqs, ant, suc) = goal
       Goal(eqs, phi :: ant, suc)
@@ -128,16 +192,35 @@ object derive {
     phis.foldRight(goal)(assert)
   }
 
+  def process(eqs: List[(Expr, Expr)], ant: List[Expr], suc: Expr, dyn: Env): Goal = ant match {
+    case Nil =>
+      val Goal(_, newant, newsuc) = Goal.normalized(rewrite(suc, dyn))
+      Goal(eqs, newant, newsuc)
+    case phi :: ant =>
+      assume(rewrite(phi, dyn), process(eqs, ant, suc, dyn))
+  }
+
+  def process_plus(eqs: List[(Expr, Expr)], ant: List[Expr], suc: Expr, lex: Env, dyn: Env): Goal = ant match {
+    case Nil =>
+      val Goal(_, newant, newsuc) = Goal.normalized(rewrite.rewrite(suc, lex, dyn))
+      Goal(eqs, newant, newsuc)
+    case phi :: ant =>
+      assume(rewrite.rewrite(phi, lex, dyn), process_plus(eqs, ant, suc, lex: Env, dyn))
+  }
+
   def derive(phi: Expr, rule: Option[Rule], dyn: Env, ind: Ind): Derivation = {
-    val goal = assert(phi, Goal.empty)
-    // val goal = Goal(List(), List(), phi)
-    derive(goal, rule getOrElse Trivial, dyn, ind)
+    val goal = Goal.normalized(phi)
+    derive(goal, rule getOrElse Trivial, dyn, ind) or goal
   }
 
   def derive(goal: Goal, rule: Rule, dyn: Env, ind: Ind): Derivation = {
     rule match {
+      case Sorry =>
+        Step(List(goal), goal, rule)
       case Trivial =>
-        trivial(goal, rule)
+        val Goal(eqs, ant, suc) = goal
+        val lex = eqs collect { case (Id(name), rhs) => (name, rhs) }
+        trivial(process_plus(eqs, ant, suc, lex.toMap, dyn), rule)
       case Cut(phi) =>
         cut(phi, goal, rule)
       case Induction(expr, cases) =>
