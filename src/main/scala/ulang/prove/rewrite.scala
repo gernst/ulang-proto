@@ -4,7 +4,7 @@ import bk.Control
 import bk.backtrack
 import ulang.expr.App
 import ulang.expr.Expr
-import ulang.expr.Id
+import ulang.expr.Free
 import ulang.expr.IfThenElse
 import ulang.expr.Lambda
 import ulang.expr.Lit
@@ -32,7 +32,7 @@ object rewrite {
       if (id == arg) env
       else backtrack()
 
-    case Id(name) =>
+    case Free(name) =>
       (env get name) match {
         case Some(that) if that == arg => env
         case None => env + (name -> arg)
@@ -81,7 +81,7 @@ object rewrite {
       apply(cs, args, lex, dyn) or apply(rest, args, lex, dyn)
   }
 
-  def apply(id: Id, fun: Expr, args: List[Expr], dyn: Env): Expr = {
+  def apply(id: Free, fun: Expr, args: List[Expr], dyn: Env): Expr = {
     val res = fun match {
       case Lambda(cases) =>
         apply(cases, args, Env.empty, dyn) or App(id, args)
@@ -97,10 +97,10 @@ object rewrite {
 
   def rewrite(expr: Expr, lex: Env, dyn: Env): Expr = {
     val res = expr match {
-      case Id(name) if lex contains name =>
+      case Free(name) if lex contains name =>
         lex(name)
 
-      case Id(name) if dyn contains name =>
+      case Free(name) if dyn contains name =>
         dyn(name)
 
       case IfThenElse(test, arg1, arg2) =>
@@ -113,7 +113,7 @@ object rewrite {
           case newtest => IfThenElse(newtest, newarg1, newarg2)
         }
 
-      case App(fun: Id, args) =>
+      case App(fun: Free, args) =>
         apply(fun, rewrite(fun, lex, dyn), rewrite(args, lex, dyn), dyn)
         
       case App(tag: Tag, args) =>

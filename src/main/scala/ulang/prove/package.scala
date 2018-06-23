@@ -1,7 +1,7 @@
 package ulang
 
 import ulang.expr.Expr
-import ulang.expr.Id
+import ulang.expr.Free
 import ulang.expr.Pat
 import ulang.expr.unify
 
@@ -12,8 +12,8 @@ package object prove {
   object Env {
     val empty: Env = Map()
 
-    def apply(dfs: List[(Id, Expr)]): Env = {
-      val pairs = dfs.map { case (Id(name), rhs) => (name, rhs) }
+    def apply(dfs: List[(Free, Expr)]): Env = {
+      val pairs = dfs.map { case (Free(name), rhs) => (name, rhs) }
       pairs.toMap
     }
   }

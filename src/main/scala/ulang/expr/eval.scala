@@ -13,9 +13,9 @@ object Env {
   val empty: Env = Map.empty
   val default: Env = Map("=" -> builtin.equal, "print" -> builtin.print)
 
-  def apply(dfs: List[(Id, Expr)], lex: Env): Env = {
+  def apply(dfs: List[(Free, Expr)], lex: Env): Env = {
     dfs.foldLeft(default) {
-      case (dyn, (Id(name), rhs)) =>
+      case (dyn, (Free(name), rhs)) =>
         dyn + (name -> eval.eval(rhs, lex, dyn))
     }
   }
@@ -34,7 +34,7 @@ object eval {
       if (id == arg) env
       else backtrack()
 
-    case Id(name) =>
+    case Free(name) =>
       (env get name) match {
         case Some(that) if builtin.equal.test(that, arg) => env
         case None => env + (name -> arg)
@@ -113,13 +113,13 @@ object eval {
     case Lit(any) =>
       any
 
-    case Id(name) if lex contains name =>
+    case Free(name) if lex contains name =>
       lex(name)
 
-    case Id(name) if dyn contains name =>
+    case Free(name) if dyn contains name =>
       dyn(name)
 
-    case Id(name) =>
+    case Free(name) =>
       val bound = lex.keys ++ dyn.keys
       ulang.error("unbound identifier " + name + " in " + bound.mkString("[", " ", "]"))
 

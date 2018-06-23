@@ -1,7 +1,7 @@
 package ulang.prove
 
 import ulang.expr.Expr
-import ulang.expr.Id
+import ulang.expr.Free
 import ulang.expr.App
 
 class congruence {

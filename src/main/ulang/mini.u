@@ -65,3 +65,13 @@ proof induction k : Nat
   | Zero : Nat -> sorry
   | Succ m : Nat -> sorry;
 end
+
+definition
+  test (k : Nat) =
+     Zero + k = k;
+end
+
+lemma
+  test (k : Nat)
+by
+end

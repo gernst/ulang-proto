@@ -30,7 +30,7 @@ object reify {
   def atom(atom: Atom): Expr = atom match {
     case Tag(name) =>
       App(Tag("Tag"), List(Lit(name)))
-    case Id(name) =>
+    case Free(name) =>
       App(Tag("Id"), List(Lit(name)))
   }
 

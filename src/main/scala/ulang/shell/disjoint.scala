@@ -19,7 +19,7 @@ object check {
 
   def disjoint(defs: List[Def], add: List[Def]) = {
     defs.collect {
-      case Def(UnApp(fun: Id, pats1), _, _) =>
+      case Def(UnApp(fun: Free, pats1), _, _) =>
         add.collect {
           case Def(UnApp(`fun`, pats2), _, _) =>
             if (unify.test(pats1, pats2))

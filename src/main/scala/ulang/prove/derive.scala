@@ -5,7 +5,7 @@ import bk.Control
 import ulang.Pretty
 import ulang.expr.App
 import ulang.expr.Expr
-import ulang.expr.Id
+import ulang.expr.Free
 import ulang.expr.Pat
 import ulang.expr.builtin.False
 import ulang.expr.builtin.True
@@ -90,7 +90,7 @@ object derive {
       ???
 
     case (Goal(_, prems, concl) :: constrs, (cs @ Case(pat, rule)) :: cases) =>
-      val App(fun: Id, args1) = expr
+      val App(fun: Free, args1) = expr
       val App(`fun`, args2) = concl
 
       {
@@ -115,7 +115,7 @@ object derive {
     if (!(ant contains expr))
       backtrack()
 
-    val App(fun: Id, args1) = expr
+    val App(fun: Free, args1) = expr
 
     val List(constrs) = ind.collect {
       case (pat, constrs) if rewrite.matches(pat, expr, dyn) =>
@@ -153,7 +153,7 @@ object derive {
   def equal(lhs: Expr, rhs: Expr, goal: Goal): Goal = (lhs, rhs) match {
     case _ if lhs == rhs =>
       goal
-    case (App(fun1: Id, args1), App(fun2: Id, args2)) if fun1 == fun2 =>
+    case (App(fun1: Free, args1), App(fun2: Free, args2)) if fun1 == fun2 =>
       (args1, args2).zipped.foldRight(goal) {
         case ((arg1, arg2), goal) => equal(arg1, arg2, goal)
       }
@@ -219,7 +219,7 @@ object derive {
         Step(List(goal), goal, rule)
       case Trivial =>
         val Goal(eqs, ant, suc) = goal
-        val lex = eqs collect { case (Id(name), rhs) => (name, rhs) }
+        val lex = eqs collect { case (Free(name), rhs) => (name, rhs) }
         trivial(process_plus(eqs, ant, suc, lex.toMap, dyn), rule)
       case Cut(phi) =>
         cut(phi, goal, rule)

@@ -1,17 +1,17 @@
 package ulang.expr
 
 object builtin {
-  val eq = Binary(Id("="))
+  val eq = Binary(Free("="))
   
   val Zero = Tag("0")
   val Succ = Unary(Tag("+1"))
   
   val True = Tag("True")
   val False = Tag("False")
-  val and = Binary(Id("and"))
-  val or = Binary(Id("or"))
-  val ==> = Binary(Id("==>"))
-  val <=> = Binary(Id("<=>"))
+  val and = Binary(Free("and"))
+  val or = Binary(Free("or"))
+  val ==> = Binary(Free("==>"))
+  val <=> = Binary(Free("<=>"))
   
   val Tuple = Nary(Tag("Tuple"))
   

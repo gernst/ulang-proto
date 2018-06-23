@@ -54,10 +54,10 @@ object grammar {
 
   val eq = LetEq(patarg ~ "=" ~ expr)
   val eqs = eq ~+ ","
-  val let = LetIn("let" ~ eqs ~ "in" ~ expr)
+  val let = LetIn.bind("let" ~ eqs ~ "in" ~ expr)
 
   val cond = "if" ~ expr
-  val cs = Case(pats ~ (cond ?) ~ "->" ~ expr)
+  val cs = Case.bind(pats ~ (cond ?) ~ "->" ~ expr)
   val cases = cs ~+ "|"
 
   val bind = Lambda("\\" ~ cases)

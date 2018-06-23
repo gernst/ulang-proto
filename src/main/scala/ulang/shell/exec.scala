@@ -7,7 +7,7 @@ import ulang.expr.App
 import ulang.expr.Atom
 import ulang.expr.Case
 import ulang.expr.Expr
-import ulang.expr.Id
+import ulang.expr.Free
 import ulang.expr.Lambda
 import ulang.expr.Tag
 import ulang.expr.UnApp
@@ -41,13 +41,13 @@ object exec {
     }
   }
 
-  def merge(dfs: List[Def], inds: List[Ind]): List[(Id, Expr)] = {
+  def merge(dfs: List[Def], inds: List[Ind]): List[(Free, Expr)] = {
     merge(dfs ++ define(inds))
   }
 
-  def merge(dfs: List[Def]): List[(Id, Expr)] = {
+  def merge(dfs: List[Def]): List[(Free, Expr)] = {
     val funs = dfs.distinct.collect {
-      case Def(UnApp(id: Id, pats), cond, rhs) if !pats.isEmpty =>
+      case Def(UnApp(id: Free, pats), cond, rhs) if !pats.isEmpty =>
         (id, Case(pats, cond, rhs))
     }
 
@@ -57,7 +57,7 @@ object exec {
     }
 
     val consts = dfs.collect {
-      case Def(id: Id, None, rhs) =>
+      case Def(id: Free, None, rhs) =>
         (id, rhs)
     }
 
@@ -109,7 +109,7 @@ object exec {
         test(ctx) {
           for (Test(phi) <- tests) {
             phi match {
-              case App(Id("="), List(lhs, rhs)) =>
+              case App(Free("="), List(lhs, rhs)) =>
                 eval.eval(lhs, dyn) expect eval.eval(rhs, dyn)
               case _ =>
                 eval.eval(phi, dyn) expect builtin.True
