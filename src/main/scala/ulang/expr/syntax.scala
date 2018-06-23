@@ -67,10 +67,10 @@ sealed trait Expr extends Pretty {
   def unbind(bound: List[Free], index: Int): Expr = ???
 }
 
-case class Lit(any: Any) extends Expr with Pat with Eq
+case class Lit(any: Any) extends Expr with Pat with Val with Eq
 
 sealed trait Atom extends Expr with Pat { def name: String }
-case class Tag(name: String) extends Atom with Eq
+case class Tag(name: String) extends Atom with Val with Eq
 
 case class Free(name: String) extends Atom {
   def in(pat: Pat): Boolean = pat match {

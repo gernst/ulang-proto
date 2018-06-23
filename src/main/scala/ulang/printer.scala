@@ -38,34 +38,15 @@ import ulang.shell.Notations
 import ulang.shell.Test
 import ulang.shell.Tests
 import ulang.expr.Bound
+import ulang.expr.Pat
+import ulang.expr.Expr
+import ulang.expr.Val
 
 trait Pretty {
   override def toString = printer.print(this)
 }
 
 object printer {
-  def print_number(n: Int, any: Any): String = any match {
-    case Obj(builtin.Succ, List(arg)) =>
-      print_number(n + 1, arg)
-    case builtin.Zero =>
-      n + ""
-    case _ =>
-      any + " + " + n
-  }
-
-  def print_list(any: Any): String = any match {
-    case App(builtin.Cons, List(arg1, arg2)) =>
-      ", " + arg1 + print_list(arg2)
-    case UnApp(builtin.Cons, List(arg1, arg2)) =>
-      ", " + arg1 + print_list(arg2)
-    case Obj(builtin.Cons, List(arg1, arg2)) =>
-      ", " + arg1 + print_list(arg2)
-    case builtin.Nil =>
-      "]"
-    case _ =>
-      "; " + any + "]"
-  }
-
   def print_derivation(deriv: Derivation, indent: Int = 0): String = {
     val sp = "  " * indent
 
@@ -91,10 +72,124 @@ object printer {
     }
   }
 
-  def print(any: Pretty): String = any match {
+  def print_number(n: Int, any: Val): String = any match {
+    case builtin.Succ(arg) =>
+      print_number(n + 1, arg)
+    case builtin.Zero =>
+      n + ""
+    case _ =>
+      any + " + " + n
+  }
+
+  def print_number(n: Int, pat: Pat): String = pat match {
+    case builtin.Succ(arg) =>
+      print_number(n + 1, arg)
+    case builtin.Zero =>
+      n + ""
+    case _ =>
+      pat + " + " + n
+  }
+
+  def print_number(n: Int, expr: Expr): String = expr match {
+    case builtin.Succ(arg) =>
+      print_number(n + 1, arg)
+    case builtin.Zero =>
+      n + ""
+    case _ =>
+      expr + " + " + n
+  }
+
+  def print_list(any: Val): String = any match {
+    case builtin.Cons(arg1, arg2) =>
+      ", " + arg1 + print_list(arg2)
+    case builtin.Nil =>
+      "]"
+    case _ =>
+      "; " + any + "]"
+  }
+
+  def print_list(pat: Pat): String = pat match {
+    case builtin.Cons(arg1, arg2) =>
+      ", " + arg1 + print_list(arg2)
+    case builtin.Nil =>
+      "]"
+    case _ =>
+      "; " + pat + "]"
+  }
+
+  def print_list(expr: Expr): String = expr match {
+    case builtin.Cons(arg1, arg2) =>
+      ", " + arg1 + print_list(arg2)
+    case builtin.Nil =>
+      "]"
+    case _ =>
+      "; " + expr + "]"
+  }
+
+  def print(any: Val): String = any match {
+    case Clos(cases, lex) =>
+      "\\ " + cases.mkString(" | ") + lex.keys.mkString(" [", ", ", "]")
+    case builtin.Succ(arg) =>
+      print_number(1, arg)
+    case builtin.Tuple(args @ _*) =>
+      args.mkString("(", ", ", ")")
+    case builtin.Cons(arg1, arg2) =>
+      "[" + arg1 + print_list(arg2)
+    case Obj(op: Tag, List(arg)) if operators.prefix_ops contains op =>
+      "(" + op + " " + arg + ")"
+    case Obj(op: Tag, List(arg)) if operators.postfix_ops contains op =>
+      "(" + arg + " " + op + ")"
+    case Obj(op: Tag, List(arg1, arg2)) if operators.infix_ops contains op =>
+      "(" + arg1 + " " + op + " " + arg2 + ")"
+    case Obj(op: Tag, args) =>
+      (op :: args).mkString("(", " ", ")")
+  }
+
+  def print(pat: Pat): String = pat match {
     case Wildcard =>
       "_"
+    case SubPat(name, pat) =>
+      name + " @ " + pat
+    case builtin.Tuple(args @ _*) =>
+      args.mkString("(", ", ", ")")
+    case builtin.Cons(arg1, arg2) =>
+      "[" + arg1 + print_list(arg2)
+    case UnApp(op @ Atom(name), List(arg)) if operators.prefix_ops contains op =>
+      "(" + name + " " + arg + ")"
+    case UnApp(op @ Atom(name), List(arg)) if operators.postfix_ops contains op =>
+      "(" + arg + " " + name + ")"
+    case UnApp(op @ Atom(name), List(arg1, arg2)) if operators.infix_ops contains op =>
+      "(" + arg1 + " " + name + " " + arg2 + ")"
+    case UnApp(fun, args) =>
+      (fun :: args).mkString("(", " ", ")")
+  }
 
+  def print(expr: Expr): String = expr match {
+    case Bound(index) =>
+      "#" + index
+    case builtin.Tuple(args @ _*) =>
+      args.mkString("(", ", ", ")")
+    case builtin.Cons(arg1, arg2) =>
+      "[" + arg1 + print_list(arg2)
+    case App(op @ Atom(name), List(arg)) if operators.prefix_ops contains op =>
+      "(" + name + " " + arg + ")"
+    case App(op @ Atom(name), List(arg)) if operators.postfix_ops contains op =>
+      "(" + arg + " " + name + ")"
+    case App(op @ Atom(name), List(arg1, arg2)) if operators.infix_ops contains op =>
+      "(" + arg1 + " " + name + " " + arg2 + ")"
+    case App(fun, args) =>
+      (fun :: args).mkString("(", " ", ")")
+    case Lambda(cases) =>
+      "\\" + cases.mkString(" | ")
+    case MatchWith(args, cases) =>
+      "match " + args.mkString(", ") + " with " + cases.mkString(" | ")
+    case LetIn(eqs, body) =>
+      "let " + eqs.mkString(", ") + " in " + body
+    case IfThenElse(test, iftrue, iffalse) =>
+      "if " + test + " then " + iftrue + " else " + iffalse
+  }
+
+  def print(any: Pretty): String = any match {
     case Lit(s: String) =>
       "\"" + s + "\""
     case Lit(i: Int) =>
@@ -108,55 +203,14 @@ object printer {
       "(" + op.name + ")"
     case op: Atom =>
       op.name
-      
-    case Bound(index) =>
-      "#" + index
 
-    case SubPat(name, pat) =>
-      name + " @ " + pat
-
-    case UnApp(builtin.Tuple, args) =>
-      args.mkString("(", ", ", ")")
-    case UnApp(builtin.Cons, List(arg1, arg2)) =>
-      "[" + arg1 + print_list(arg2)
-    case UnApp(op @ Atom(name), List(arg)) if operators.prefix_ops contains op =>
-      "(" + name + " " + arg + ")"
-    case UnApp(op @ Atom(name), List(arg)) if operators.postfix_ops contains op =>
-      "(" + arg + " " + name + ")"
-    case UnApp(op @ Atom(name), List(arg1, arg2)) if operators.infix_ops contains op =>
-      "(" + arg1 + " " + name + " " + arg2 + ")"
-    case UnApp(fun, args) =>
-      (fun :: args).mkString("(", " ", ")")
-
-    case App(builtin.Tuple, args) =>
-      args.mkString("(", ", ", ")")
-    case App(builtin.Cons, List(arg1, arg2)) =>
-      "[" + arg1 + print_list(arg2)
-    case App(op @ Atom(name), List(arg)) if operators.prefix_ops contains op =>
-      "(" + name + " " + arg + ")"
-    case App(op @ Atom(name), List(arg)) if operators.postfix_ops contains op =>
-      "(" + arg + " " + name + ")"
-    case App(op @ Atom(name), List(arg1, arg2)) if operators.infix_ops contains op =>
-      "(" + arg1 + " " + name + " " + arg2 + ")"
-    case App(fun, args) =>
-      (fun :: args).mkString("(", " ", ")")
+    case LetEq(pat, arg) =>
+      pat + " = " + arg
 
     case Case(pats, None, body) =>
       pats.mkString(", ") + " -> " + body
     case Case(pats, Some(cond), body) =>
       pats.mkString(", ") + " if " + cond + " -> " + body
-
-    case Lambda(cases) =>
-      "\\" + cases.mkString(" | ")
-    case MatchWith(args, cases) =>
-      "match " + args.mkString(", ") + " with " + cases.mkString(" | ")
-
-    case LetEq(pat, arg) =>
-      pat + " = " + arg
-    case LetIn(eqs, body) =>
-      "let " + eqs.mkString(", ") + " in " + body
-    case IfThenElse(test, iftrue, iffalse) =>
-      "if " + test + " then " + iftrue + " else " + iffalse
 
     case Def(lhs, None, rhs) =>
       lhs + " = " + rhs + ";"
@@ -191,24 +245,14 @@ object printer {
     case Ind(cases) =>
       cases.mkString("inductive definition\n  ", "\n  ", "\nend\n")
 
-    case Clos(cases, lex) =>
-      "\\ " + cases.mkString(" | ") + lex.keys.mkString(" [", ", ", "]")
-    case Obj(builtin.Succ, List(arg)) =>
-      print_number(1, arg)
-    case Obj(builtin.Tuple, args) =>
-      args.mkString("(", ", ", ")")
-    case Obj(builtin.Cons, List(arg1, arg2: Eq)) =>
-      "[" + arg1 + print_list(arg2)
-    case Obj(op: Tag, List(arg)) if operators.prefix_ops contains op =>
-      "(" + op + " " + arg + ")"
-    case Obj(op: Tag, List(arg)) if operators.postfix_ops contains op =>
-      "(" + arg + " " + op + ")"
-    case Obj(op: Tag, List(arg1, arg2)) if operators.infix_ops contains op =>
-      "(" + arg1 + " " + op + " " + arg2 + ")"
-    case Obj(op: Tag, args) =>
-      (op :: args).mkString("(", " ", ")")
-
     case deriv: Derivation =>
       print_derivation(deriv)
+
+    case pat: Pat =>
+      print(pat)
+    case expr: Expr =>
+      print(expr)
+    case any: Val =>
+      print(any)
   }
 }

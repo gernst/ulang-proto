@@ -1,29 +1,27 @@
 package ulang.expr
 
 object builtin {
-  val eq = Binary(Free("="))
-  
+  object eq extends Binary(Free("="))
+
   val Zero = Tag("0")
-  val Succ = Unary(Tag("+1"))
-  
+  object Succ extends Unary(Tag("+1"))
+
   val True = Tag("True")
   val False = Tag("False")
-  val and = Binary(Free("and"))
-  val or = Binary(Free("or"))
-  val ==> = Binary(Free("==>"))
-  val <=> = Binary(Free("<=>"))
-  
-  val Tuple = Nary(Tag("Tuple"))
-  
+  object and extends Binary(Free("and"))
+  object or extends Binary(Free("or"))
+  object ==> extends Binary(Free("==>"))
+  object <=> extends Binary(Free("<=>"))
+
+  object Tuple extends Nary(Tag("Tuple"))
+
   val Nil = Tag("Nil")
-  val Cons = Binary(Tag("Cons"))
-  
+  object Cons extends Binary(Tag("Cons"))
+
   val None = Tag("None")
-  val Some = Unary(Tag("Some"))
+  object Some extends Unary(Tag("Some"))
 
-  object print extends (List[Val] => Val) {
-    override def toString = "print"
-
+  object print extends Prim("print") {
     def apply(args: List[Val]): Val = args match {
       case List(obj) =>
         println(obj)
@@ -31,9 +29,7 @@ object builtin {
     }
   }
 
-  object equal extends (List[Val] => Val) {
-    override def toString = "="
-
+  object equal extends Prim("=") {
     def apply(args: List[Val]): Val = args match {
       case List(obj1, obj2) =>
         reify.boolean(test(obj1, obj2))

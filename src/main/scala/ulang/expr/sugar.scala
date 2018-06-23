@@ -1,13 +1,18 @@
 package ulang.expr
 
-case class Unary(op: Atom) {
+class Unary(val op: Atom) {
+  def unapply(p: Pat) = p match {
+    case UnApp(`op`, List(arg)) => Some(arg)
+    case _ => None
+  }
+
   def unapply(e: Expr) = e match {
     case App(`op`, List(arg)) => Some(arg)
     case _ => None
   }
 
-  def unapply(p: Pat) = p match {
-    case UnApp(`op`, List(arg)) => Some(arg)
+  def unapply(v: Val) = v match {
+    case Obj(`op`, List(arg)) => Some(arg)
     case _ => None
   }
 
@@ -20,14 +25,19 @@ case class Unary(op: Atom) {
   }
 }
 
-case class Binary(op: Atom) {
+class Binary(val op: Atom) {
+  def unapply(p: Pat) = p match {
+    case UnApp(`op`, List(arg1, arg2)) => Some((arg1, arg2))
+    case _ => None
+  }
+
   def unapply(e: Expr) = e match {
     case App(`op`, List(arg1, arg2)) => Some((arg1, arg2))
     case _ => None
   }
 
-  def unapply(p: Pat) = p match {
-    case UnApp(`op`, List(arg1, arg2)) => Some((arg1, arg2))
+  def unapply(v: Val) = v match {
+    case Obj(`op`, List(arg1, arg2)) => Some((arg1, arg2))
     case _ => None
   }
 
@@ -56,14 +66,19 @@ case class Binary(op: Atom) {
   }
 }
 
-case class Nary(op: Atom) {
+class Nary(val op: Atom) {
+  def unapplySeq(p: Pat) = p match {
+    case UnApp(`op`, args) => Some(args)
+    case _ => None
+  }
+
   def unapplySeq(e: Expr) = e match {
     case App(`op`, args) => Some(args)
     case _ => None
   }
 
-  def unapplySeq(p: Pat) = p match {
-    case UnApp(`op`, args) => Some(args)
+  def unapplySeq(v: Val) = v match {
+    case Obj(`op`, args) => Some(args)
     case _ => None
   }
 

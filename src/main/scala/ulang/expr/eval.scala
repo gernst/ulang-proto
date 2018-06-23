@@ -6,8 +6,9 @@ import ulang.Pretty
 
 trait Eq
 
-case class Clos(cases: List[Case], lex: Env) extends Pretty
-case class Obj(tag: Tag, args: List[Val]) extends Pretty with Eq
+abstract class Prim(name: String) extends Val with (List[Val] => Val)
+case class Clos(cases: List[Case], lex: Env) extends Val
+case class Obj(tag: Tag, args: List[Val]) extends Val with Eq
 
 object Env {
   val empty: Env = Map.empty
@@ -110,8 +111,8 @@ object eval {
     case tag: Tag =>
       tag
 
-    case Lit(any) =>
-      any
+    case lit: Lit =>
+      lit
 
     case Free(name) if lex contains name =>
       lex(name)

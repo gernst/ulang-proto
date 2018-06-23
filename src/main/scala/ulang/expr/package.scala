@@ -1,6 +1,6 @@
 package ulang
 
 package object expr {
-  type Val = Any
+  trait Val extends Pretty
   type Env = Map[String, Val]
 }

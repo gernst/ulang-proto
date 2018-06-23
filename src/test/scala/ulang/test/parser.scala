@@ -4,7 +4,7 @@ import arse._
 import tst.Test
 
 object parser extends Test {
-  val expr_eof = ulang.expr.grammar.pat.$
+  val expr_eof = ulang.expr.grammar.expr.$
 
   implicit object W extends Whitespace("\\s*")
   
@@ -13,7 +13,8 @@ object parser extends Test {
   }
 
   test("basic") {
-    println(parse("_"))
+    println(parse("\\x, y -> x y \\y z -> x y z"))
+    println(parse("let x = x, y = x in (x, y)"))
   }
 
   def main(args: Array[String]) {
