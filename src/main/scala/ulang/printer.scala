@@ -37,6 +37,7 @@ import ulang.shell.Ind
 import ulang.shell.Notations
 import ulang.shell.Test
 import ulang.shell.Tests
+import ulang.expr.Bound
 
 trait Pretty {
   override def toString = printer.print(this)
@@ -107,6 +108,9 @@ object printer {
       "(" + op.name + ")"
     case op: Atom =>
       op.name
+      
+    case Bound(index) =>
+      "#" + index
 
     case SubPat(name, pat) =>
       name + " @ " + pat
@@ -138,14 +142,14 @@ object printer {
       (fun :: args).mkString("(", " ", ")")
 
     case Case(pats, None, body) =>
-      pats.mkString(" ") + " -> " + body
+      pats.mkString(", ") + " -> " + body
     case Case(pats, Some(cond), body) =>
-      pats.mkString(" ") + " if " + cond + " -> " + body
+      pats.mkString(", ") + " if " + cond + " -> " + body
 
     case Lambda(cases) =>
-      "\\ " + cases.mkString(" | ")
+      "\\" + cases.mkString(" | ")
     case MatchWith(args, cases) =>
-      "match " + args.mkString(" ") + " with " + cases.mkString(" | ")
+      "match " + args.mkString(", ") + " with " + cases.mkString(" | ")
 
     case LetEq(pat, arg) =>
       pat + " = " + arg
