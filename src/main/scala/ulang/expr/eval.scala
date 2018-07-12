@@ -64,7 +64,7 @@ object eval {
       env
 
     case (pat :: pats, arg :: args) =>
-      bind(pats, args, bind(pat, arg, env)) // right to left evaluation
+      bind(pats, args, bind(pat, arg, env))
 
     case _ =>
       backtrack()
@@ -77,7 +77,7 @@ object eval {
       cond.map(eval(_, newlex, dyn)).foreach {
         case builtin.True =>
         case builtin.False => backtrack()
-        case res => ulang.error("not a boolean in pattern: " + res)
+        case res => ulang.error("not a boolean in pattern condition: " + res)
       }
       eval(body, newlex, dyn)
   }
