@@ -7,14 +7,12 @@ import arse.Postfix
 import arse.Prefix
 import arse.Right
 import ulang.expr.App
-import ulang.expr.Atom
+import ulang.expr.Id
 import ulang.expr.Case
 import ulang.expr.Clos
 import ulang.expr.Eq
 import ulang.expr.IfThenElse
 import ulang.expr.Lambda
-import ulang.expr.LetEq
-import ulang.expr.LetIn
 import ulang.expr.Lit
 import ulang.expr.MatchWith
 import ulang.expr.Obj
@@ -128,7 +126,7 @@ object printer {
 
   def print(any: Val): String = any match {
     case Clos(cases, lex) =>
-      "\\ " + cases.mkString(" | ") + lex.keys.mkString(" [", ", ", "]")
+      "\\ " + cases.mkString(" | ") + lex.mkString(" [", ", ", "]")
     case builtin.Succ(arg) =>
       print_number(1, arg)
     case builtin.Tuple(args @ _*) =>
@@ -149,33 +147,31 @@ object printer {
     case Wildcard =>
       "_"
     case SubPat(name, pat) =>
-      name + " @ " + pat
+      pat + " as " + name
     case builtin.Tuple(args @ _*) =>
       args.mkString("(", ", ", ")")
     case builtin.Cons(arg1, arg2) =>
       "[" + arg1 + print_list(arg2)
-    case UnApp(op @ Atom(name), List(arg)) if operators.prefix_ops contains op =>
+    case UnApp(op @ Id(name), List(arg)) if operators.prefix_ops contains op =>
       "(" + name + " " + arg + ")"
-    case UnApp(op @ Atom(name), List(arg)) if operators.postfix_ops contains op =>
+    case UnApp(op @ Id(name), List(arg)) if operators.postfix_ops contains op =>
       "(" + arg + " " + name + ")"
-    case UnApp(op @ Atom(name), List(arg1, arg2)) if operators.infix_ops contains op =>
+    case UnApp(op @ Id(name), List(arg1, arg2)) if operators.infix_ops contains op =>
       "(" + arg1 + " " + name + " " + arg2 + ")"
     case UnApp(fun, args) =>
       (fun :: args).mkString("(", " ", ")")
   }
 
   def print(expr: Expr): String = expr match {
-    case Bound(index) =>
-      "#" + index
     case builtin.Tuple(args @ _*) =>
       args.mkString("(", ", ", ")")
     case builtin.Cons(arg1, arg2) =>
       "[" + arg1 + print_list(arg2)
-    case App(op @ Atom(name), List(arg)) if operators.prefix_ops contains op =>
+    case App(op @ Id(name), List(arg)) if operators.prefix_ops contains op =>
       "(" + name + " " + arg + ")"
-    case App(op @ Atom(name), List(arg)) if operators.postfix_ops contains op =>
+    case App(op @ Id(name), List(arg)) if operators.postfix_ops contains op =>
       "(" + arg + " " + name + ")"
-    case App(op @ Atom(name), List(arg1, arg2)) if operators.infix_ops contains op =>
+    case App(op @ Id(name), List(arg1, arg2)) if operators.infix_ops contains op =>
       "(" + arg1 + " " + name + " " + arg2 + ")"
     case App(fun, args) =>
       (fun :: args).mkString("(", " ", ")")
@@ -183,13 +179,14 @@ object printer {
       "\\" + cases.mkString(" | ")
     case MatchWith(args, cases) =>
       "match " + args.mkString(", ") + " with " + cases.mkString(" | ")
-    case LetIn(eqs, body) =>
-      "let " + eqs.mkString(", ") + " in " + body
     case IfThenElse(test, iftrue, iffalse) =>
       "if " + test + " then " + iftrue + " else " + iffalse
   }
 
   def print(any: Pretty): String = any match {
+    case Bound(index) =>
+      "#" + index
+
     case Lit(s: String) =>
       "\"" + s + "\""
     case Lit(i: Int) =>
@@ -199,13 +196,10 @@ object printer {
 
     case builtin.Nil =>
       "[]"
-    case op: Atom if operators contains op =>
+    case op: Id if operators contains op =>
       "(" + op.name + ")"
-    case op: Atom =>
+    case op: Id =>
       op.name
-
-    case LetEq(pat, arg) =>
-      pat + " = " + arg
 
     case Case(pats, None, body) =>
       pats.mkString(", ") + " -> " + body

@@ -8,15 +8,15 @@ import arse._
 import arse.implicits._
 import sourcecode.Name
 
-object operators extends Syntax[Atom] {
-  def contains(name: String): Boolean = contains(Atom(name))
+object operators extends Syntax[Id] {
+  def contains(name: String): Boolean = contains(Id(name))
 
-  var data: Set[Atom] = Set()
+  var data: Set[Id] = Set()
 
-  var prefix_ops: Map[Atom, Int] = Map()
-  var postfix_ops: Map[Atom, Int] = Map()
+  var prefix_ops: Map[Id, Int] = Map()
+  var postfix_ops: Map[Id, Int] = Map()
 
-  var infix_ops: Map[Atom, (Assoc, Int)] = Map(
+  var infix_ops: Map[Id, (Assoc, Int)] = Map(
     builtin.eq.op -> (Non, 6))
 }
 
@@ -33,31 +33,28 @@ object grammar {
   val nonmixfix = name filterNot operators.contains
   val wildcard = Wildcard("_")
 
-  val atom = Atom(nonmixfix)
-  val anyatom = Atom(name)
+  val atom = Id(nonmixfix)
+  val anyatom = Id(name)
 
-  val pat: Mixfix[Atom, Pat] = M(inner_pat, anyatom, UnApp, operators)
+  val pat: Mixfix[Id, Pat] = M(inner_pat, anyatom, UnApp, operators)
   val pats = pat ~+ ","
 
-  val patarg: Parser[Pat] = P(("(" ~ patopen ~ ")") | any | patlist | wildcard | atom) ~ ("as" ~ nonmixfix).? map {
+  val patarg: Parser[Pat] = P(("(" ~ patopen ~ ")") | any | patlist | wildcard | atom) ~ ("as" ~ atom).? map {
     case pat ~ None => pat
-    case pat ~ Some(name) => SubPat(name, pat)
+    case pat ~ Some(id: Free) => SubPat(id, pat)
+    case _ => ???
   }
 
   val patargs = patarg.+
 
-  val expr: Mixfix[Atom, Expr] = M(inner_expr, anyatom, App, operators)
+  val expr: Mixfix[Id, Expr] = M(inner_expr, anyatom, App, operators)
   val exprs = expr ~+ ","
 
-  val arg: Parser[Expr] = P(("(" ~ open ~ ")") | bind | matches | ite | let | escape | any | list | atom)
+  val arg: Parser[Expr] = P(("(" ~ open ~ ")") | bind | matches | ite | escape | any | list | atom)
   val args = arg +
 
-  val eq = LetEq(patarg ~ "=" ~ expr)
-  val eqs = eq ~+ ","
-  val let = LetIn.bind("let" ~ eqs ~ "in" ~ expr)
-
   val cond = "if" ~ expr
-  val cs = Case.bind(pats ~ (cond ?) ~ "->" ~ expr)
+  val cs = Case.binding(pats ~ (cond ?) ~ "->" ~ expr)
   val cases = cs ~+ "|"
 
   val bind = Lambda("\\" ~ cases)

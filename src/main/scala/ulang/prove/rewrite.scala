@@ -39,7 +39,7 @@ object rewrite {
         case _ => backtrack()
       }
 
-    case SubPat(name, pat) =>
+    case SubPat(Free(name), pat) =>
       bind(pat, arg, env + (name -> arg), dyn)
 
     case UnApp(pfun, parg) =>
@@ -115,7 +115,7 @@ object rewrite {
 
       case App(fun: Free, args) =>
         apply(fun, rewrite(fun, lex, dyn), rewrite(args, lex, dyn), dyn)
-        
+
       case App(tag: Tag, args) =>
         App(tag, rewrite(args, lex, dyn))
 

@@ -28,15 +28,14 @@ object reify {
   def list_with_tail(es: List[Expr], et: Expr) = builtin.Cons(es, et)
 
   def atom(atom: Atom): Expr = atom match {
+    case Lit(value) =>
+      App(Tag("Lit"), List(atom))
+    case Bound(index) =>
+      App(Tag("Bound"), List(Lit(index)))
     case Tag(name) =>
       App(Tag("Tag"), List(Lit(name)))
     case Free(name) =>
       App(Tag("Id"), List(Lit(name)))
-  }
-
-  def reify(eq: LetEq): Expr = eq match {
-    case LetEq(pat, arg) =>
-      App(Tag("LetEq"), List(reify(pat), reify(arg)))
   }
 
   def reify(cs: Case): Expr = cs match {
@@ -68,8 +67,6 @@ object reify {
       App(Tag("Bind"), List(list(cases map reify)))
     case IfThenElse(test, iftrue, iffalse) =>
       App(Tag("IfThenElse"), List(reify(test), reify(iftrue), reify(iffalse)))
-    case LetIn(eqs, body) =>
-      App(Tag("LetIn"), List(list(eqs map reify), reify(body)))
     case MatchWith(args, cases) =>
       App(Tag("MatchWith"), List(list(args map reify), list(cases map reify)))
   }

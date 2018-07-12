@@ -22,7 +22,7 @@ package object ulang {
     import ulang.shell.shell._
 
     safe {
-      load("mini")
+      load("test")
       // load("base")
     }
     // repl()

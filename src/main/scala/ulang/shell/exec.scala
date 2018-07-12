@@ -4,7 +4,7 @@ import arse.Infix
 import arse.Postfix
 import arse.Prefix
 import ulang.expr.App
-import ulang.expr.Atom
+import ulang.expr.Id
 import ulang.expr.Case
 import ulang.expr.Expr
 import ulang.expr.Free
@@ -15,6 +15,7 @@ import ulang.expr.builtin
 import ulang.expr.eval
 import ulang.expr.operators
 import ulang.prove.derive
+import ulang.expr.Stack
 
 object exec {
   import shell.defs
@@ -22,7 +23,7 @@ object exec {
 
   def model = {
     import ulang.expr.Env
-    Env(merge(defs), Env.empty)
+    Env(merge(defs), Stack.empty)
   }
 
   def rewrites = {
@@ -48,7 +49,9 @@ object exec {
   def merge(dfs: List[Def]): List[(Free, Expr)] = {
     val funs = dfs.distinct.collect {
       case Def(UnApp(id: Free, pats), cond, rhs) if !pats.isEmpty =>
-        (id, Case(pats, cond, rhs))
+        val cs = Case.binding(pats, cond, rhs)
+        println(id + " = " + cs)
+        (id, cs)
     }
 
     val merged = group(funs).map {
@@ -58,6 +61,7 @@ object exec {
 
     val consts = dfs.collect {
       case Def(id: Free, None, rhs) =>
+        println(id + " = " + rhs)
         (id, rhs)
     }
 
@@ -87,11 +91,11 @@ object exec {
     case Notations(nots) =>
       nots foreach {
         case Fix(Prefix(prec), names) =>
-          for (name <- names) { operators.prefix_ops += (Atom(name) -> prec) }
+          for (name <- names) { operators.prefix_ops += (Id(name) -> prec) }
         case Fix(Postfix(prec), names) =>
-          for (name <- names) { operators.postfix_ops += (Atom(name) -> prec) }
+          for (name <- names) { operators.postfix_ops += (Id(name) -> prec) }
         case Fix(Infix(assoc, prec), names) =>
-          for (name <- names) { operators.infix_ops += (Atom(name) -> (assoc, prec)) }
+          for (name <- names) { operators.infix_ops += (Id(name) -> (assoc, prec)) }
         case Data(names) =>
           for (name <- names) { operators.data += Tag(name) }
         case not =>
@@ -122,8 +126,9 @@ object exec {
       val dyn = model
 
       for (expr <- exprs) {
+        ulang.out(expr)
         val res = eval.eval(expr, dyn)
-        ulang.out(expr + "\n  = " + res + ";")
+        ulang.out("  = " + res + ";")
       }
 
     case Thms(props) =>

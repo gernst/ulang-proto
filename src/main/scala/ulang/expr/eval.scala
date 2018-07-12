@@ -7,14 +7,14 @@ import ulang.Pretty
 trait Eq
 
 abstract class Prim(name: String) extends Val with (List[Val] => Val)
-case class Clos(cases: List[Case], lex: Env) extends Val
+case class Clos(cases: List[Case], lex: Stack) extends Val
 case class Obj(tag: Tag, args: List[Val]) extends Val with Eq
 
 object Env {
   val empty: Env = Map.empty
   val default: Env = Map("=" -> builtin.equal, "print" -> builtin.print)
 
-  def apply(dfs: List[(Free, Expr)], lex: Env): Env = {
+  def apply(dfs: List[(Free, Expr)], lex: Stack): Env = {
     dfs.foldLeft(default) {
       case (dyn, (Free(name), rhs)) =>
         dyn + (name -> eval.eval(rhs, lex, dyn))
@@ -22,53 +22,58 @@ object Env {
   }
 }
 
+object Stack {
+  val empty: Stack = List.empty
+}
+
 object eval {
-  def bind(pat: Pat, arg: Val, dyn: Env, env: Env): Env = pat match {
+  def bind(pat: Pat, arg: Val, env: Stack): Stack = pat match {
     case Wildcard =>
       env
 
-    case Lit(any) =>
-      if (any == arg) env
+    case lit: Lit =>
+      if (lit == arg) env
       else backtrack()
 
-    case id @ Tag(_) =>
+    case id: Tag =>
       if (id == arg) env
       else backtrack()
 
-    case Free(name) =>
-      (env get name) match {
-        case Some(that) if builtin.equal.test(that, arg) => env
-        case None => env + (name -> arg)
-        case _ => backtrack()
-      }
+    case Bound(index) =>
+      assert(index < env.length)
+      if (builtin.equal.test(arg, env(index))) env
+      else backtrack()
 
-    case SubPat(name, pat) =>
-      bind(pat, arg, dyn, env + (name -> arg))
+    case Free(name) =>
+      arg :: env
+
+    case SubPat(bound, pat) =>
+      bind(pat, arg, arg :: env)
 
     case UnApp(pfun, parg) =>
       arg match {
         case Obj(vfun, varg) =>
-          bind(parg, varg, dyn, bind(pfun, vfun, dyn, env))
+          bind(parg, varg, bind(pfun, vfun, env))
         case _ =>
           backtrack()
       }
   }
 
-  def bind(pats: List[Pat], args: List[Val], dyn: Env, env: Env): Env = (pats, args) match {
+  def bind(pats: List[Pat], args: List[Val], env: Stack): Stack = (pats, args) match {
     case (Nil, Nil) =>
       env
 
     case (pat :: pats, arg :: args) =>
-      bind(pats, args, dyn, bind(pat, arg, dyn, env))
+      bind(pats, args, bind(pat, arg, env)) // right to left evaluation
 
     case _ =>
       backtrack()
   }
 
-  def apply(cs: Case, args: List[Val], lex: Env, dyn: Env): Val = cs match {
+  def apply(cs: Case, args: List[Val], lex: Stack, dyn: Env): Val = cs match {
     case Case(pats, cond, body) =>
-      val env = bind(pats, args, dyn, Env.empty)
-      val newlex = lex ++ env
+      val env = bind(pats, args, Stack.empty)
+      val newlex = env ++ lex
       cond.map(eval(_, newlex, dyn)).foreach {
         case builtin.True =>
         case builtin.False => backtrack()
@@ -77,7 +82,7 @@ object eval {
       eval(body, newlex, dyn)
   }
 
-  def apply(cases: List[Case], args: List[Val], lex: Env, dyn: Env): Val = cases match {
+  def apply(cases: List[Case], args: List[Val], lex: Stack, dyn: Env): Val = cases match {
     case Nil =>
       backtrack()
 
@@ -100,38 +105,29 @@ object eval {
   }
 
   def eval(expr: Expr, dyn: Env): Val = {
-    eval(expr, Env.empty, dyn)
+    eval(expr, Stack.empty, dyn)
   }
 
-  def eval(exprs: List[Expr], lex: Env, dyn: Env): List[Val] = {
+  def eval(exprs: List[Expr], lex: Stack, dyn: Env): List[Val] = {
     exprs map (eval(_, lex, dyn))
   }
 
-  def eval(expr: Expr, lex: Env, dyn: Env): Val = expr match {
+  def eval(expr: Expr, lex: Stack, dyn: Env): Val = expr match {
     case tag: Tag =>
       tag
 
     case lit: Lit =>
       lit
 
-    case Free(name) if lex contains name =>
-      lex(name)
-
-    case Free(name) if dyn contains name =>
-      dyn(name)
+    case Bound(index) =>
+      assert(index < lex.length)
+      lex(index)
 
     case Free(name) =>
-      val bound = lex.keys ++ dyn.keys
-      ulang.error("unbound identifier " + name + " in " + bound.mkString("[", " ", "]"))
-
-    case LetIn(eqs, body) =>
-      val bindings = eqs.map {
-        case LetEq(pat, arg) => (pat, eval(arg, lex, dyn))
-      }
-      val (pats, args) = bindings.unzip
-      val env = bind(pats, args, dyn, Env.empty)
-      val newlex = lex ++ env
-      eval(body, newlex, dyn)
+      if (dyn contains name)
+        dyn(name)
+      else
+        ulang.error("unbound identifier " + name + " in " + dyn.keys.mkString("[", " ", "]"))
 
     case IfThenElse(test, arg1, arg2) =>
       eval(test, lex, dyn) match {

@@ -1,6 +1,6 @@
 package ulang.expr
 
-class Unary(val op: Atom) {
+class Unary(val op: Id) {
   def unapply(p: Pat) = p match {
     case UnApp(`op`, List(arg)) => Some(arg)
     case _ => None
@@ -25,7 +25,7 @@ class Unary(val op: Atom) {
   }
 }
 
-class Binary(val op: Atom) {
+class Binary(val op: Id) {
   def unapply(p: Pat) = p match {
     case UnApp(`op`, List(arg1, arg2)) => Some((arg1, arg2))
     case _ => None
@@ -66,7 +66,7 @@ class Binary(val op: Atom) {
   }
 }
 
-class Nary(val op: Atom) {
+class Nary(val op: Id) {
   def unapplySeq(p: Pat) = p match {
     case UnApp(`op`, args) => Some(args)
     case _ => None
