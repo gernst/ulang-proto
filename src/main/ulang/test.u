@@ -9,7 +9,6 @@ definition
   f x A = x;
   f y B = y;
   split (f z) (x,y) = (f, z, x, y);
-  (x, xs)
 end
 
 eval
@@ -17,7 +16,6 @@ eval
   f False A B;
   
   eq A A;
-  eq A B;
   
   f A B C;
   (g A B C D E F) Z;

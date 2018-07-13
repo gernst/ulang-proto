@@ -22,7 +22,7 @@ object parser extends Test {
     println(parse("\\x, y -> x y \\y z -> x y z"))
     println(parse("\\(C x) as x, x -> x"))
     
-    val pats = List(Free("x"), UnApp(Free("z"), List(Free("y"))), SubPat(Free("w"), UnApp(Free("x"), List(Free("w")))), Free("y"), Free("z"), Free("w"))
+    val pats = List(Free("x"), UnApp(Free("z"), Free("y")), SubPat(Free("w"), UnApp(Free("x"), Free("w"))), Free("y"), Free("z"), Free("w"))
     println(Pat.bind(pats, Nil, 0))
   }
 }

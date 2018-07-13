@@ -6,19 +6,23 @@ import arse.Non
 import arse.Postfix
 import arse.Prefix
 import arse.Right
-import ulang.expr.App
-import ulang.expr.Id
+import ulang.expr.Apps
+import ulang.expr.Bound
 import ulang.expr.Case
 import ulang.expr.Clos
-import ulang.expr.Eq
+import ulang.expr.Expr
+import ulang.expr.Id
 import ulang.expr.IfThenElse
 import ulang.expr.Lambda
 import ulang.expr.Lit
 import ulang.expr.MatchWith
 import ulang.expr.Obj
+import ulang.expr.Objs
+import ulang.expr.Pat
 import ulang.expr.SubPat
 import ulang.expr.Tag
-import ulang.expr.UnApp
+import ulang.expr.UnApps
+import ulang.expr.Val
 import ulang.expr.Wildcard
 import ulang.expr.builtin
 import ulang.expr.operators
@@ -35,10 +39,6 @@ import ulang.shell.Ind
 import ulang.shell.Notations
 import ulang.shell.Test
 import ulang.shell.Tests
-import ulang.expr.Bound
-import ulang.expr.Pat
-import ulang.expr.Expr
-import ulang.expr.Val
 
 trait Pretty {
   override def toString = printer.print(this)
@@ -139,7 +139,7 @@ object printer {
       "(" + arg + " " + op + ")"
     case Obj(op: Tag, List(arg1, arg2)) if operators.infix_ops contains op =>
       "(" + arg1 + " " + op + " " + arg2 + ")"
-    case Obj(op: Tag, args) =>
+    case Objs(op: Tag, args) =>
       (op :: args).mkString("(", " ", ")")
   }
 
@@ -152,13 +152,13 @@ object printer {
       args.mkString("(", ", ", ")")
     case builtin.Cons(arg1, arg2) =>
       "[" + arg1 + print_list(arg2)
-    case UnApp(op @ Id(name), List(arg)) if operators.prefix_ops contains op =>
+    case UnApps(op @ Id(name), List(arg)) if operators.prefix_ops contains op =>
       "(" + name + " " + arg + ")"
-    case UnApp(op @ Id(name), List(arg)) if operators.postfix_ops contains op =>
+    case UnApps(op @ Id(name), List(arg)) if operators.postfix_ops contains op =>
       "(" + arg + " " + name + ")"
-    case UnApp(op @ Id(name), List(arg1, arg2)) if operators.infix_ops contains op =>
+    case UnApps(op @ Id(name), List(arg1, arg2)) if operators.infix_ops contains op =>
       "(" + arg1 + " " + name + " " + arg2 + ")"
-    case UnApp(fun, args) =>
+    case UnApps(fun, args) =>
       (fun :: args).mkString("(", " ", ")")
   }
 
@@ -167,20 +167,20 @@ object printer {
       args.mkString("(", ", ", ")")
     case builtin.Cons(arg1, arg2) =>
       "[" + arg1 + print_list(arg2)
-    case App(op @ Id(name), List(arg)) if operators.prefix_ops contains op =>
+    case Apps(op @ Id(name), List(arg)) if operators.prefix_ops contains op =>
       "(" + name + " " + arg + ")"
-    case App(op @ Id(name), List(arg)) if operators.postfix_ops contains op =>
+    case Apps(op @ Id(name), List(arg)) if operators.postfix_ops contains op =>
       "(" + arg + " " + name + ")"
-    case App(op @ Id(name), List(arg1, arg2)) if operators.infix_ops contains op =>
+    case Apps(op @ Id(name), List(arg1, arg2)) if operators.infix_ops contains op =>
       "(" + arg1 + " " + name + " " + arg2 + ")"
-    case App(fun, args) =>
-      (fun :: args).mkString("(", " ", ")")
     case Lambda(cases) =>
       "\\" + cases.mkString(" | ")
-    case MatchWith(args, cases) =>
-      "match " + args.mkString(" ") + " with " + cases.mkString(" | ")
+    case MatchWith(arg, cases) =>
+      "match " + arg + " with " + cases.mkString(" | ")
     case IfThenElse(test, iftrue, iffalse) =>
       "if " + test + " then " + iftrue + " else " + iffalse
+    case Apps(fun, args) =>
+      (fun :: args).mkString("(", " ", ")")
   }
 
   def print(any: Pretty): String = any match {
@@ -201,15 +201,11 @@ object printer {
     case op: Id =>
       op.name
 
-    case Case(pats, None, body) =>
-      pats.mkString(" ") + " -> " + body
-    case Case(pats, Some(cond), body) =>
-      pats.mkString(" ") + " if " + cond + " -> " + body
+    case Case(pat, body) =>
+      pat + " -> " + body
 
-    case Def(lhs, None, rhs) =>
+    case Def(lhs, rhs) =>
       lhs + " = " + rhs + ";"
-    case Def(lhs, Some(cond), rhs) =>
-      lhs + " if " + cond + " = " + rhs + ";"
     case Test(phi) =>
       phi + ";"
 

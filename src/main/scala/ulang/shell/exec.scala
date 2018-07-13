@@ -16,6 +16,9 @@ import ulang.expr.eval
 import ulang.expr.operators
 import ulang.prove.derive
 import ulang.expr.Stack
+import ulang.expr.Lambdas
+import ulang.expr.UnApps
+import ulang.expr.UnApps
 
 object exec {
   import shell.defs
@@ -48,19 +51,20 @@ object exec {
 
   def merge(dfs: List[Def]): List[(Free, Expr)] = {
     val funs = dfs.distinct.collect {
-      case Def(UnApp(id: Free, pats), cond, rhs) if !pats.isEmpty =>
-        val cs = Case.binding(pats, cond, rhs)
-        println(id + " = \\" + cs)
+      case Def(UnApps(id: Free, pats), rhs) if !pats.isEmpty =>
+        println(id + pats.mkString(" ", " ", " = ") + rhs)
+        val cs = Lambda.binding(pats, rhs)
+        println(id + " = " + cs)
         (id, cs)
     }
 
     val merged = group(funs).map {
-      case (id, cases) =>
-        (id, Lambda(cases))
+      case (id, lambdas) =>
+        (id, lambdas reduce (_ | _))
     }
 
     val consts = dfs.collect {
-      case Def(id: Free, None, rhs) =>
+      case Def(id: Free, rhs) =>
         println(id + " = " + rhs)
         (id, rhs)
     }
@@ -75,9 +79,9 @@ object exec {
       case Ind(cases) =>
         cases.collect {
           case ant ==> suc =>
-            Def(suc.toPat, None, ant)
+            Def(suc.toPat, ant)
           case suc =>
-            Def(suc.toPat, None, builtin.True)
+            Def(suc.toPat, builtin.True)
         }
     }
   }
@@ -113,7 +117,7 @@ object exec {
         test(ctx) {
           for (Test(phi) <- tests) {
             phi match {
-              case App(Free("="), List(lhs, rhs)) =>
+              case builtin.eq(lhs, rhs) =>
                 eval.eval(lhs, dyn) expect eval.eval(rhs, dyn)
               case _ =>
                 eval.eval(phi, dyn) expect builtin.True

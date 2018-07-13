@@ -3,6 +3,7 @@ package ulang.prove
 import ulang.expr.Expr
 import ulang.expr.Free
 import ulang.expr.App
+import ulang.expr.Apps
 
 class congruence {
   val emptyUse: Set[Expr] = Set()
@@ -49,7 +50,7 @@ class congruence {
 
   def replace(e: Expr, e1: Expr, e2: Expr): Expr = e match {
     case `e1` => e2
-    case App(fun, args) => App(replace(fun, e1, e2), args map (replace(_, e1, e2)))
+    case App(fun, arg) => App(replace(fun, e1, e2), replace(arg, e1, e2))
     case _ => e
   }
 
@@ -67,7 +68,7 @@ class congruence {
   }
 
   def canonsig(e: Expr): Expr = e match {
-    case App(fun, args) =>
+    case Apps(fun, args) =>
       args flatMap use find (sig(_) == e) match {
         case Some(u) =>
           find(u)

@@ -6,7 +6,7 @@ sealed trait Pat extends Pretty {
   def free: List[Free] = this match {
     case Wildcard | _: Lit | _: Tag | _: Bound => List()
     case free: Free => List(free)
-    case UnApp(fun, args) => fun.free ++ args.flatMap(_.free)
+    case UnApp(fun, arg) => fun.free ++ arg.free
     case SubPat(bound, pat) => bound :: pat.free
   }
 
@@ -14,7 +14,7 @@ sealed trait Pat extends Pretty {
     case Wildcard => Wildcard
     case _: Free => Free("?")
     case _: Lit | _: Tag | _: Bound => this
-    case UnApp(fun, args) => UnApp(fun.anon, args map (_.anon))
+    case UnApp(fun, arg) => UnApp(fun.anon, arg.anon)
     case SubPat(bound, pat) => SubPat(???, pat.anon) // cannot put Wildcard, because.
   }
 
@@ -43,7 +43,7 @@ object Pat {
 sealed trait Expr extends Pretty {
   def toPat: Pat = this match {
     case atom: Id => atom
-    case App(fun, args) => UnApp(fun.toPat, args map (_.toPat))
+    case App(fun, arg) => UnApp(fun.toPat, arg.toPat)
     case _ => ulang.error("not a pattern: " + this)
   }
 
@@ -52,14 +52,14 @@ sealed trait Expr extends Pretty {
 }
 
 object Expr {
-  def bind(pats: List[Pat], body: Expr): Expr = {
-    val bound = pats.flatMap(_.free)
+  def bind(pat: Pat, body: Expr): Expr = {
+    val bound = pat.free
     body bind (bound.reverse, 0)
   }
 
-  def bind(pats: List[Pat], body: Option[Expr]): Option[Expr] = {
+  def bind(pats: List[Pat], body: Expr): Expr = {
     val bound = pats.flatMap(_.free)
-    body map (_ bind (bound.reverse, 0))
+    body bind (bound.reverse, 0)
   }
 }
 
@@ -92,7 +92,7 @@ object Id extends (String => Id) {
   }
 }
 
-case class Tag(name: String) extends Id with Val with Eq {
+case class Tag(name: String) extends Id with Data with Eq {
   def bind(bound: List[Free], index: Int) = this
 }
 
@@ -107,8 +107,8 @@ case class Free(name: String) extends Id {
       false
     case that: Free =>
       this == that
-    case UnApp(fun, args) =>
-      (this in fun) || (args exists (this in _))
+    case UnApp(fun, arg) =>
+      (this in fun) || (this in arg)
     case SubPat(_, pat) =>
       this in pat
   }
@@ -118,21 +118,19 @@ case class Free(name: String) extends Id {
       false
     case that: Free =>
       this == that
-    case App(fun, args) =>
-      (this in fun) || (args exists (this in _))
+    case App(fun, arg) =>
+      (this in fun) || (this in arg)
     case Lambda(cases) =>
       cases exists (this in _)
-    case MatchWith(args, cases) =>
-      (args exists (this in _)) || (cases exists (this in _))
+    case MatchWith(arg, cases) =>
+      (this in arg) || (cases exists (this in _))
     case IfThenElse(test, iftrue, iffalse) =>
       (this in test) || (this in iftrue) || (this in iffalse)
   }
 
   def in(cs: Case): Boolean = {
-    val Case(pats, cond, body) = cs
-    val free = (this in body) || (cond exists (this in _))
-    val bound = (pats exists (this in _))
-    free && !bound
+    val Case(pat, body) = cs
+    (this in body) && !(this in pat)
   }
 }
 
@@ -150,36 +148,33 @@ case class SubPat(name: Free, pat: Pat) extends Pat {
   }
 }
 
-case class UnApp(fun: Pat, args: List[Pat]) extends Pat {
+case class UnApp(fun: Pat, arg: Pat) extends Pat {
   // assert(!args.isEmpty)
   def bind(bound: List[Free], index: Int) = {
-    val _fun = fun bind (bound, index)
-    val _args = args map (_ bind (bound, index))
-    UnApp(_fun, _args)
+    UnApp(fun bind (bound, index), arg bind (bound, index))
   }
 }
 
-case class App(fun: Expr, args: List[Expr]) extends Expr {
+case class App(fun: Expr, arg: Expr) extends Expr {
   //assert(!args.isEmpty)
   def bind(bound: List[Free], index: Int) = {
-    App(fun bind (bound, index), args map (_ bind (bound, index)))
+    App(fun bind (bound, index), arg bind (bound, index))
   }
 }
 
-case class Case(pats: List[Pat], cond: Option[Expr], body: Expr) extends Pretty {
+case class Case(pat: Pat, body: Expr) extends Pretty {
   def bind(bound: List[Free], index: Int) = {
-    val shift = pats.flatMap(_.free).size
-    Case(pats, cond.map(_ bind (bound, index + shift)), body bind (bound, index + shift))
+    val shift = pat.free.size
+    Case(pat, body bind (bound, index + shift))
   }
 }
 
 object Case {
-  object binding extends ((List[Pat], Option[Expr], Expr) => Case) {
-    def apply(_pats: List[Pat], _cond: Option[Expr], _body: Expr): Case = {
-      val pats = Pat.linear(_pats)
-      val cond = Expr.bind(pats, _cond)
-      val body = Expr.bind(pats, _body)
-      Case(pats, cond, body)
+  object binding extends ((Pat, Expr) => Case) {
+    def apply(_pat: Pat, _body: Expr): Case = {
+      val pat = Pat.linear(_pat)
+      val body = Expr.bind(pat, _body)
+      Case(pat, body)
     }
   }
 }
@@ -187,24 +182,55 @@ object Case {
 object Cases {
   def bind(bound: List[Free], index: Int, cases: List[Case]) = {
     cases map {
-      case Case(pats, cond, body) =>
-        val shift = pats.flatMap(_.free).size
-        Case(pats, cond map (_ bind (bound, index + shift)), body bind (bound, index + shift))
+      case Case(pat, body) =>
+        val shift = pat.free.size
+        Case(pat, body bind (bound, index + shift))
     }
   }
 }
-
-case class LetEq()
 
 case class Lambda(cases: List[Case]) extends Expr {
   def bind(bound: List[Free], index: Int) = {
     Lambda(Cases.bind(bound, index, cases))
   }
+
+  def |(that: Lambda) = {
+    Lambda(this.cases ++ that.cases)
+  }
 }
 
-case class MatchWith(args: List[Expr], cases: List[Case]) extends Expr {
+object Lambda extends (List[Case] => Expr) {
+  def singleton(bound: Pat, body: Expr) = {
+    Lambda(List(Case(bound, body)))
+  }
+
+  object bindings extends (List[(List[Pat], Expr)] => Expr) {
+    def apply(cases: List[(List[Pat], Expr)]): Expr = {
+      assert(!cases.isEmpty)
+      val lambdas = cases map Lambda.binding.tupled
+      lambdas reduce (_ | _)
+    }
+  }
+
+  object binding extends ((List[Pat], Expr) => Lambda) {
+    def apply(_pats: List[Pat], _body: Expr): Lambda = {
+      val pats = Pat.linear(_pats)
+      println("linear pattern: " + pats.mkString(" "))
+      val body = Expr.bind(pats, _body)
+      pats.foldRight(body)(Lambda.singleton).asInstanceOf[Lambda] // XXX somewhat hacky
+    }
+  }
+}
+
+object Lambdas {
+  def apply(bound: List[Pat], fun: Expr): Expr = {
+    bound.foldRight(fun)(Lambda.singleton)
+  }
+}
+
+case class MatchWith(arg: Expr, cases: List[Case]) extends Expr {
   def bind(bound: List[Free], index: Int) = {
-    MatchWith(args map (_ bind (bound, index)), Cases.bind(bound, index, cases))
+    MatchWith(arg bind (bound, index), Cases.bind(bound, index, cases))
   }
 }
 

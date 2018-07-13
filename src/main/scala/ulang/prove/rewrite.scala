@@ -51,42 +51,31 @@ object rewrite {
       }
   }
 
-  def bind(pats: List[Pat], args: List[Expr], env: Env, dyn: Env): Env = (pats, args) match {
-    case (Nil, Nil) =>
-      env
-
-    case (pat :: pats, arg :: args) =>
-      bind(pats, args, bind(pat, arg, env, dyn), dyn)
-
-    case _ =>
-      backtrack()
-  }
-
-  def apply(cs: ulang.expr.Case, args: List[Expr], lex: Env, dyn: Env): Expr = cs match {
-    case ulang.expr.Case(pats, cond, body) =>
-      val env = bind(pats, args, dyn, Env.empty)
+  def apply(cs: ulang.expr.Case, arg: Expr, lex: Env, dyn: Env): Expr = cs match {
+    case ulang.expr.Case(pat, body) =>
+      val env = bind(pat, arg, dyn, Env.empty)
       val newlex = lex ++ env
-      cond.map(rewrite(_, newlex, dyn)).foreach {
+      /* cond.map(rewrite(_, newlex, dyn)).foreach {
         case builtin.True =>
         case _ => backtrack()
-      }
+      } */
       rewrite(body, newlex, dyn)
   }
 
-  def apply(cases: List[ulang.expr.Case], args: List[Expr], lex: Env, dyn: Env): Expr = cases match {
+  def apply(cases: List[ulang.expr.Case], arg: Expr, lex: Env, dyn: Env): Expr = cases match {
     case Nil =>
       backtrack()
 
     case cs :: rest =>
-      apply(cs, args, lex, dyn) or apply(rest, args, lex, dyn)
+      apply(cs, arg, lex, dyn) or apply(rest, arg, lex, dyn)
   }
 
-  def apply(id: Free, fun: Expr, args: List[Expr], dyn: Env): Expr = {
+  def apply(id: Free, fun: Expr, arg: Expr, dyn: Env): Expr = {
     val res = fun match {
       case Lambda(cases) =>
-        apply(cases, args, Env.empty, dyn) or App(id, args)
+        apply(cases, arg, Env.empty, dyn) or App(id, arg)
       case _ =>
-        App(id, args)
+        App(id, arg)
     }
     res
   }
@@ -113,11 +102,11 @@ object rewrite {
           case newtest => IfThenElse(newtest, newarg1, newarg2)
         }
 
-      case App(fun: Free, args) =>
-        apply(fun, rewrite(fun, lex, dyn), rewrite(args, lex, dyn), dyn)
+      case App(fun: Free, arg) =>
+        apply(fun, rewrite(fun, lex, dyn), rewrite(arg, lex, dyn), dyn)
 
-      case App(tag: Tag, args) =>
-        App(tag, rewrite(args, lex, dyn))
+      case App(tag: Tag, arg) =>
+        App(tag, rewrite(arg, lex, dyn))
 
       case _ =>
         expr

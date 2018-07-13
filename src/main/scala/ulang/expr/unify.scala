@@ -4,9 +4,14 @@ import bk.Control
 import bk.backtrack
 
 object unify {
-  def test(pat1: List[Pat], pat2: List[Pat]) = {
+  def test(pat1: Pat, pat2: Pat) = {
     val u = new unify;
     { u.unify(pat1, pat2); true } or { false }
+  }
+  
+  def test(pats1: List[Pat], pats2: List[Pat]) = {
+    val u = new unify;
+    { u.unify(pats1, pats2); true } or { false }
   }
 
   def apply(pat1: Pat, pat2: Pat): Option[Map[Pat, Pat]] = {
@@ -27,20 +32,14 @@ object unify {
     case _: Free | Wildcard | _: Bound => Wildcard
     case _: Tag | _: Lit => p
     case SubPat(name, pat) => unbind(pat)
-    case UnApp(fun, args) => UnApp(unbind(fun), args.map(unbind))
-  }
-
-  def merges(ps1: List[Pat], ps2: List[Pat]): List[Pat] = {
-    (ps1, ps2).zipped map {
-      case (p1, p2) => merge(p1, p2)
-    }
+    case UnApp(fun, arg) => UnApp(unbind(fun), unbind(arg))
   }
 
   def merge(p1: Pat, p2: Pat): Pat = (p1, p2) match {
     case (SubPat(name1, pat1), SubPat(name2, pat2)) =>
       merge(pat1, pat2)
-    case (UnApp(fun1, args1), UnApp(fun2, args2)) =>
-      UnApp(merge(fun1, fun2), merges(args1, args2))
+    case (UnApp(fun1, arg1), UnApp(fun2, arg2)) =>
+      UnApp(merge(fun1, fun2), merge(arg1, arg2))
     case _ =>
       if (p1 == p2) p1 else Wildcard
   }

@@ -29,18 +29,18 @@ object reify {
 
   def atom(atom: Atom): Expr = atom match {
     case Lit(value) =>
-      App(Tag("Lit"), List(atom))
+      App(Tag("Lit"), atom)
     case Bound(index) =>
-      App(Tag("Bound"), List(Lit(index)))
+      App(Tag("Bound"), Lit(index))
     case Tag(name) =>
-      App(Tag("Tag"), List(Lit(name)))
+      App(Tag("Tag"), Lit(name))
     case Free(name) =>
-      App(Tag("Id"), List(Lit(name)))
+      App(Tag("Id"), Lit(name))
   }
 
   def reify(cs: Case): Expr = cs match {
-    case Case(pats, cond, body) =>
-      App(Tag("Case"), List(list(pats map reify), option(cond map reify), reify(body)))
+    case Case(pat, body) =>
+      Apps(Tag("Case"), List(reify(pat), reify(body)))
   }
 
   def reify(pat: Pat): Expr = pat match {
@@ -51,9 +51,9 @@ object reify {
     case a: Atom =>
       atom(a)
     case SubPat(name, pat) =>
-      App(Tag("SubPat"), List(Lit(name), reify(pat)))
-    case UnApp(fun, args) =>
-      App(Tag("App"), List(reify(fun), list(args map reify)))
+      Apps(Tag("SubPat"), List(Lit(name), reify(pat)))
+    case UnApp(fun, arg) =>
+      Apps(Tag("App"), List(reify(fun), reify(arg)))
   }
 
   def reify(expr: Expr): Expr = expr match {
@@ -61,14 +61,14 @@ object reify {
       l
     case a: Atom =>
       atom(a)
-    case App(fun, args) =>
-      App(Tag("App"), List(reify(fun), list(args map reify)))
+    case App(fun, arg) =>
+      Apps(Tag("App"), List(reify(fun), reify(arg)))
     case Lambda(cases) =>
-      App(Tag("Bind"), List(list(cases map reify)))
+      Apps(Tag("Bind"), List(list(cases map reify)))
     case IfThenElse(test, iftrue, iffalse) =>
-      App(Tag("IfThenElse"), List(reify(test), reify(iftrue), reify(iffalse)))
-    case MatchWith(args, cases) =>
-      App(Tag("MatchWith"), List(list(args map reify), list(cases map reify)))
+      Apps(Tag("IfThenElse"), List(reify(test), reify(iftrue), reify(iffalse)))
+    case MatchWith(arg, cases) =>
+      Apps(Tag("MatchWith"), List(reify(arg), list(cases map reify)))
   }
 
 }

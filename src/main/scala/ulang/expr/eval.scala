@@ -6,9 +6,34 @@ import ulang.Pretty
 
 trait Eq
 
-abstract class Prim(name: String) extends Val with (List[Val] => Val)
+case class Prim(name: String, arity: Int, fun: List[Val] => Val, curried: List[Val] = Nil) extends Val with (Val => Val) {
+  assert(arity >= 0)
+
+  def apply(arg: Val) = {
+    if (arity == 0) fun(curried.reverse)
+    else Prim(name, arity - 1, fun, arg :: curried)
+  }
+}
+
 case class Clos(cases: List[Case], lex: Stack) extends Val
-case class Obj(tag: Tag, args: List[Val]) extends Val with Eq
+case class Obj(tag: Data, arg: Val) extends Data with Eq
+
+object Objs extends ((Data, List[Val]) => Val) {
+  def apply(fun: Data, args: List[Val]): Val = {
+    args.foldLeft(fun)(Obj)
+  }
+
+  def flatten(any: Data, args: List[Val]): (Data, List[Val]) = any match {
+    case Obj(fun, arg) =>
+      flatten(fun, arg :: args)
+    case _ =>
+      (any, args)
+  }
+
+  def unapply(any: Data): Option[(Data, List[Val])] = {
+    Some(flatten(any, Nil))
+  }
+}
 
 object Env {
   val empty: Env = Map.empty
@@ -41,7 +66,7 @@ object eval {
 
     case Bound(index) =>
       assert(index < env.length)
-      if (builtin.equal.test(arg, env(index))) env
+      if (builtin.test(arg, env(index))) env
       else backtrack()
 
     case Free(name) =>
@@ -59,46 +84,35 @@ object eval {
       }
   }
 
-  def bind(pats: List[Pat], args: List[Val], env: Stack): Stack = (pats, args) match {
-    case (Nil, Nil) =>
-      env
-
-    case (pat :: pats, arg :: args) =>
-      bind(pats, args, bind(pat, arg, env))
-
-    case _ =>
-      backtrack()
-  }
-
-  def apply(cs: Case, args: List[Val], lex: Stack, dyn: Env): Val = cs match {
-    case Case(pats, cond, body) =>
-      val env = bind(pats, args, Stack.empty)
-      val newlex = env ++ lex
-      cond.map(eval(_, newlex, dyn)).foreach {
+  def apply(cs: Case, arg: Val, lex: Stack, dyn: Env): Val = cs match {
+    case Case(pats, body) =>
+      val env = bind(pats, arg, lex)
+      // val newlex = env ++ lex
+      /* cond.map(eval(_, newlex, dyn)).foreach {
         case builtin.True =>
         case builtin.False => backtrack()
         case res => ulang.error("not a boolean in pattern condition: " + res)
-      }
-      eval(body, newlex, dyn)
+      } */
+      eval(body, env, dyn)
   }
 
-  def apply(cases: List[Case], args: List[Val], lex: Stack, dyn: Env): Val = cases match {
+  def apply(cases: List[Case], arg: Val, lex: Stack, dyn: Env): Val = cases match {
     case Nil =>
       backtrack()
 
     case cs :: rest =>
-      apply(cs, args, lex, dyn) or apply(rest, args, lex, dyn)
+      apply(cs, arg, lex, dyn) or apply(rest, arg, lex, dyn)
   }
 
-  def apply(fun: Val, args: List[Val], dyn: Env): Val = fun match {
-    case tag: Tag =>
-      Obj(tag, args)
+  def apply(fun: Val, arg: Val, dyn: Env): Val = fun match {
+    case data: Data =>
+      Obj(data, arg)
 
     case Clos(cases, lex) =>
-      apply(cases, args, lex, dyn) or ulang.error(fun + " mismatches " + args.mkString(" "))
+      apply(cases, arg, lex, dyn) or ulang.error(fun + " mismatches " + arg)
 
     case f: (List[Val] => Val) @unchecked =>
-      f(args)
+      f(List(arg))
 
     case _ =>
       ulang.error("not a function " + fun)
@@ -106,10 +120,6 @@ object eval {
 
   def eval(expr: Expr, dyn: Env): Val = {
     eval(expr, Stack.empty, dyn)
-  }
-
-  def eval(exprs: List[Expr], lex: Stack, dyn: Env): List[Val] = {
-    exprs map (eval(_, lex, dyn))
   }
 
   def eval(expr: Expr, lex: Stack, dyn: Env): Val = expr match {
@@ -136,12 +146,12 @@ object eval {
         case res => ulang.error("not a boolean in test: " + res)
       }
 
-    case App(fun, args) =>
-      val res = apply(eval(fun, lex, dyn), eval(args, lex, dyn), dyn)
+    case App(fun, arg) =>
+      val res = apply(eval(fun, lex, dyn), eval(arg, lex, dyn), dyn)
       res
 
-    case MatchWith(args, cases) =>
-      apply(cases, eval(args, lex, dyn), lex, dyn)
+    case MatchWith(arg, cases) =>
+      apply(cases, eval(arg, lex, dyn), lex, dyn)
 
     case Lambda(cases) =>
       Clos(cases, lex)

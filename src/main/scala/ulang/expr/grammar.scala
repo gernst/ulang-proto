@@ -36,7 +36,7 @@ object grammar {
   val atom = Id(nonmixfix)
   val anyatom = Id(name)
 
-  val pat: Mixfix[Id, Pat] = M(inner_pat, anyatom, UnApp, operators)
+  val pat: Mixfix[Id, Pat] = M(inner_pat, anyatom, UnApps, operators)
   val pats = pat ~+ ","
 
   val patarg: Parser[Pat] = P(("(" ~ patopen ~ ")") | any | patlist | wildcard | atom) ~ ("as" ~ atom).? map {
@@ -47,21 +47,24 @@ object grammar {
 
   val patargs = patarg.+
 
-  val expr: Mixfix[Id, Expr] = M(inner_expr, anyatom, App, operators)
+  val expr: Mixfix[Id, Expr] = M(inner_expr, anyatom, Apps, operators)
   val exprs = expr ~+ ","
 
   val arg: Parser[Expr] = P(("(" ~ open ~ ")") | bind | matches | ite | quote | any | list | atom)
   val args = arg +
 
   val cond = "if" ~ expr
-  val cs = Case.binding(patargs ~ (cond ?) ~ "->" ~ expr)
+  val cs = Case.binding(patarg ~ "->" ~ expr)
   val cases = cs ~+ "|"
-  
+
   // val let = "let" ~ eqs
 
-  val bind = Lambda("\\" ~ cases)
+  val css = patargs ~ "->" ~ expr
+  val bindings = css ~+ "|"
+  val bind = Lambda.bindings("\\" ~ bindings)
+  
   val ite = IfThenElse("if" ~ expr ~ "then" ~ expr ~ "else" ~ expr)
-  val matches = MatchWith("match" ~ args ~ "with" ~ cases)
+  val matches = MatchWith("match" ~ arg ~ "with" ~ cases)
 
   val any = (string | char) map { Lit(_) }
 
@@ -73,14 +76,12 @@ object grammar {
 
   val inner_pat = (patarg +) map {
     case Nil => ???
-    case const :: Nil => const
-    case fun :: args => UnApp(fun, args)
+    case fun :: args => UnApps(fun, args)
   }
 
   val inner_expr = (arg +) map {
     case Nil => ???
-    case const :: Nil => const
-    case fun :: args => App(fun, args)
+    case fun :: args => Apps(fun, args)
   }
 
   val quote = "`" ~ expr map reify.reify

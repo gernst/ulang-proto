@@ -14,6 +14,7 @@ import ulang.expr.builtin.eq
 import ulang.expr.builtin.==>
 import ulang.expr.unify
 import ulang.expr.builtin
+import ulang.expr.Apps
 
 sealed trait Derivation extends Pretty
 
@@ -90,8 +91,8 @@ object derive {
       ???
 
     case (Goal(_, prems, concl) :: constrs, (cs @ Case(pat, rule)) :: cases) =>
-      val App(fun: Free, args1) = expr
-      val App(`fun`, args2) = concl
+      val Apps(fun: Free, args1) = expr
+      val Apps(`fun`, args2) = concl
 
       {
         val lex = rewrite.bind(pat, concl, Env.empty, dyn)
@@ -153,7 +154,7 @@ object derive {
   def equal(lhs: Expr, rhs: Expr, goal: Goal): Goal = (lhs, rhs) match {
     case _ if lhs == rhs =>
       goal
-    case (App(fun1: Free, args1), App(fun2: Free, args2)) if fun1 == fun2 =>
+    case (Apps(fun1: Free, args1), Apps(fun2: Free, args2)) if fun1 == fun2 =>
       (args1, args2).zipped.foldRight(goal) {
         case ((arg1, arg2), goal) => equal(arg1, arg2, goal)
       }
