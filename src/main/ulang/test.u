@@ -4,7 +4,12 @@ definition
   eq x x = True;
   eq x y = False;
   f a b c = (a,b,c);
-  g = \a,b,c,d,e,f -> \z -> (a,b,c,d,e,f, z);
+  g = \a b c d e f -> \z -> (a,b,c,d,e,f, z);
+  h = \a -> \a -> (a, b);
+  f x A = x;
+  f y B = y;
+  split (f z) (x,y) = (f, z, x, y);
+  (x, xs)
 end
 
 eval
@@ -16,4 +21,6 @@ eval
   
   f A B C;
   (g A B C D E F) Z;
+  
+  split (A B) (C, D);
 end

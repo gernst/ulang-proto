@@ -50,7 +50,7 @@ object exec {
     val funs = dfs.distinct.collect {
       case Def(UnApp(id: Free, pats), cond, rhs) if !pats.isEmpty =>
         val cs = Case.binding(pats, cond, rhs)
-        println(id + " = " + cs)
+        println(id + " = \\" + cs)
         (id, cs)
     }
 

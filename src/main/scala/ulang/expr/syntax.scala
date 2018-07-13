@@ -10,6 +10,14 @@ sealed trait Pat extends Pretty {
     case SubPat(bound, pat) => bound :: pat.free
   }
 
+  def anon: Pat = this match {
+    case Wildcard => Wildcard
+    case _: Free => Free("?")
+    case _: Lit | _: Tag | _: Bound => this
+    case UnApp(fun, args) => UnApp(fun.anon, args map (_.anon))
+    case SubPat(bound, pat) => SubPat(???, pat.anon) // cannot put Wildcard, because.
+  }
+
   def bind(bound: List[Free], index: Int): Pat
 }
 
@@ -181,10 +189,12 @@ object Cases {
     cases map {
       case Case(pats, cond, body) =>
         val shift = pats.flatMap(_.free).size
-        Case(pats, cond.map(_ bind (bound, index + shift)), body bind (bound, index + shift))
+        Case(pats, cond map (_ bind (bound, index + shift)), body bind (bound, index + shift))
     }
   }
 }
+
+case class LetEq()
 
 case class Lambda(cases: List[Case]) extends Expr {
   def bind(bound: List[Free], index: Int) = {

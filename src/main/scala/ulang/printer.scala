@@ -178,7 +178,7 @@ object printer {
     case Lambda(cases) =>
       "\\" + cases.mkString(" | ")
     case MatchWith(args, cases) =>
-      "match " + args.mkString(", ") + " with " + cases.mkString(" | ")
+      "match " + args.mkString(" ") + " with " + cases.mkString(" | ")
     case IfThenElse(test, iftrue, iffalse) =>
       "if " + test + " then " + iftrue + " else " + iffalse
   }
@@ -202,9 +202,9 @@ object printer {
       op.name
 
     case Case(pats, None, body) =>
-      pats.mkString(", ") + " -> " + body
+      pats.mkString(" ") + " -> " + body
     case Case(pats, Some(cond), body) =>
-      pats.mkString(", ") + " if " + cond + " -> " + body
+      pats.mkString(" ") + " if " + cond + " -> " + body
 
     case Def(lhs, None, rhs) =>
       lhs + " = " + rhs + ";"
