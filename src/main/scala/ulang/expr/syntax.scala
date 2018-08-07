@@ -215,7 +215,6 @@ object Lambda extends (List[Case] => Expr) {
   object binding extends ((List[Pat], Expr) => Lambda) {
     def apply(_pats: List[Pat], _body: Expr): Lambda = {
       val pats = Pat.linear(_pats)
-      println("linear pattern: " + pats.mkString(" "))
       val body = Expr.bind(pats, _body)
       pats.foldRight(body)(Lambda.singleton).asInstanceOf[Lambda] // XXX somewhat hacky
     }

@@ -134,10 +134,8 @@ object eval {
       lex(index)
 
     case Free(name) =>
-      if (dyn contains name)
-        dyn(name)
-      else
-        ulang.error("unbound identifier " + name + " in " + dyn.keys.mkString("[", " ", "]"))
+      if (dyn contains name) dyn(name)
+      else ulang.error("unbound identifier " + name + " in " + dyn.keys.mkString("[", " ", "]"))
 
     case IfThenElse(test, arg1, arg2) =>
       eval(test, lex, dyn) match {
