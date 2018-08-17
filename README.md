@@ -11,15 +11,12 @@ See `src/ulang` for some examples on the syntax.
 - pattern matching in function definitions, match expressions, let bindings, and lambdas
   with optional conditions
 - list/tuple literals
-- exceptions, optional lazy values
 - builtin unit test syntax
 - a primitive interactive repl
-- ad-hoc overloading of functions (based on arity and checked disjoint patterns),
-  note that this rules out partial function applications.
-- embedded sublanguage definitions with (LL) grammars and interpreters
+- ad-hoc overloading of functions
 
 ## Library + Code
-- primitive data types booleans, option, (church) numerals, lists, streams with useful functions
+- primitive data types booleans, option, (unary) numerals, lists with useful functions
 - a red-black tree implementation
 - regular expression matching
 - combinator parsing
@@ -30,8 +27,8 @@ See `src/ulang` for some examples on the syntax.
     f x y
     \x -> f x
     
-    /* abstractions can pattern match */
-    \(x,y) if x <= y -> y - x | ...
+    /* abstractions can pattern match and take several cases */
+    \ Zero m -> Zero | (Succ n) m -> ...
     if p then a else b 
     
     // tuple, list literals
@@ -40,23 +37,15 @@ See `src/ulang` for some examples on the syntax.
     
     (<) // infix identifier (can be used as local variable) 
     
+    match a with
+      p -> e
+    | s -> d
+    
+    
+Currently broken
+
     // parallel let
     let x = A, y = B in e
     // destructuring let
     let (x,y) = unzip zs in ...
-    
-    // match many values at once
-    match a, b, c with
-      p, q, r -> e
-    | s, t, u -> d
-    
-    raise x, y
-
-    try e
-    catch a, b -> c | ... // same syntax as match
-    
-    $ delayed
-    
-    // experimental: expression reification
-    `e
     

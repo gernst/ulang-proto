@@ -5,7 +5,7 @@ definition
   eq x y = False;
   f a b c = (a,b,c);
   g = \a b c d e f -> \z -> (a,b,c,d,e,f, z);
-  h = \a -> \a -> (a, b);
+  h a a = (a, B);
   f x A = x;
   f y B = y;
   split (f z) (x,y) = (f, z, x, y);
@@ -18,7 +18,12 @@ eval
   eq A A;
   
   f A B C;
-  (g A B C D E F) Z;
+  g A B C D E F Z;
+  h A A;
   
   split (A B) (C, D);
+  
+  match (A,B) with
+    (x,C) -> x
+  | z -> (z, C);
 end
