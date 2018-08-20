@@ -13,11 +13,11 @@ import ulang.expr.Expr
 import ulang.expr.Id
 import ulang.expr.IfThenElse
 import ulang.expr.Lambda
+import ulang.expr.Lazy
 import ulang.expr.Lit
 import ulang.expr.MatchWith
 import ulang.expr.Pat
 import ulang.expr.SubPat
-import ulang.expr.Tag
 import ulang.expr.UnApps
 import ulang.expr.Wildcard
 import ulang.expr.builtin
@@ -35,7 +35,6 @@ import ulang.shell.Ind
 import ulang.shell.Notations
 import ulang.shell.Test
 import ulang.shell.Tests
-import ulang.expr.Lazy
 
 trait Pretty {
   override def toString = printer.print(this)

@@ -224,12 +224,6 @@ object Lambda extends (List[Case] => Expr) {
   }
 }
 
-object Lambdas {
-  def apply(bound: List[Pat], fun: Expr): Expr = {
-    bound.foldRight(fun)(Lambda.singleton)
-  }
-}
-
 case class MatchWith(arg: Expr, cases: List[Case]) extends Expr {
   def bind(bound: List[Free], index: Int) = {
     MatchWith(arg bind (bound, index), Cases.bind(bound, index, cases))
@@ -239,6 +233,18 @@ case class MatchWith(arg: Expr, cases: List[Case]) extends Expr {
 case class IfThenElse(test: Expr, iftrue: Expr, iffalse: Expr) extends Expr {
   def bind(bound: List[Free], index: Int) = {
     IfThenElse(test bind (bound, index), iftrue bind (bound, index), iffalse bind (bound, index))
+  }
+}
+
+object LetEq extends ((Pat, Expr) => (Pat, Expr)) {
+  def apply(pat: Pat, arg: Expr) = (pat, arg)
+}
+
+object LetIn extends ((List[(Pat, Expr)], Expr) => Expr) {
+  def apply(eqs: List[(Pat, Expr)], body: Expr) = {
+    val (pats, args) = eqs.unzip
+    val fun = Lambda.binding(pats, body)
+    Apps(fun, args)
   }
 }
 

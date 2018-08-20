@@ -86,7 +86,7 @@ object eval {
           backtrack()
       }
   }
-
+  
   def apply(cs: Case, arg: Expr, lex: Stack): Expr = cs match {
     case Case(pats, body) =>
       val env = bind(pats, arg, lex)
@@ -116,9 +116,6 @@ object eval {
 
     case _ =>
       App(fun, arg)
-
-    case _ =>
-      ulang.error("not a function " + fun)
   }
 
   def defer(expr: Expr, lex: Stack): Expr = expr match {

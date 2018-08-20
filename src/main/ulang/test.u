@@ -21,6 +21,8 @@ eval
   f True  A B;
   f False A B;
   
+  let x = A in x;
+  
   eq A A;
   
   f A B C;

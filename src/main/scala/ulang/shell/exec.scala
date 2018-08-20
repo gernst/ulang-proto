@@ -16,7 +16,6 @@ import ulang.expr.eval
 import ulang.expr.operators
 import ulang.prove.derive
 import ulang.expr.Stack
-import ulang.expr.Lambdas
 import ulang.expr.UnApps
 import ulang.expr.UnApps
 import ulang.expr.Env
