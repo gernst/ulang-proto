@@ -19,6 +19,7 @@ import ulang.expr.Stack
 import ulang.expr.Lambdas
 import ulang.expr.UnApps
 import ulang.expr.UnApps
+import ulang.expr.Env
 
 object exec {
   import shell.defs
@@ -111,27 +112,27 @@ object exec {
       defs ++= add
 
     case Tests(tests) =>
-      val dyn = model
+      Env.current = model
 
       new tst.Test {
         test(ctx) {
           for (Test(phi) <- tests) {
             phi match {
               case builtin.eq(lhs, rhs) =>
-                eval.eval(lhs, dyn) expect eval.eval(rhs, dyn)
+                eval.eval(lhs) expect eval.eval(rhs)
               case _ =>
-                eval.eval(phi, dyn) expect builtin.True
+                eval.eval(phi) expect builtin.True
             }
           }
         }
       }
 
     case Evals(exprs) =>
-      val dyn = model
+      Env.current = model
 
       for (expr <- exprs) {
         ulang.out(expr)
-        val res = eval.eval(expr, dyn)
+        val res = eval.eval(expr)
         ulang.out("  = " + res + ";")
       }
 

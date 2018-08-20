@@ -2,6 +2,8 @@ package ulang.expr
 
 import ulang.Pretty
 
+sealed trait HasEq
+
 sealed trait Pat extends Pretty {
   def free: List[Free] = this match {
     case Wildcard | _: Lit | _: Tag | _: Bound => List()
@@ -47,6 +49,7 @@ sealed trait Expr extends Pretty {
     case _ => ulang.error("not a pattern: " + this)
   }
 
+  def force: Expr = this
   def bind(bound: List[Free], index: Int): Expr
   def unbind(bound: List[Free], index: Int): Expr = ???
 }
@@ -67,7 +70,7 @@ sealed trait Atom extends Expr with Pat {
   def bind(bound: List[Free], index: Int): Atom
 }
 
-case class Lit(any: Any) extends Atom with Val with Eq {
+case class Lit(any: Any) extends Atom {
   def bind(bound: List[Free], index: Int) = this
 }
 
@@ -92,7 +95,7 @@ object Id extends (String => Id) {
   }
 }
 
-case class Tag(name: String) extends Id with Data with Eq {
+case class Tag(name: String) extends Id with HasEq {
   def bind(bound: List[Free], index: Int) = this
 }
 
@@ -155,7 +158,7 @@ case class UnApp(fun: Pat, arg: Pat) extends Pat {
   }
 }
 
-case class App(fun: Expr, arg: Expr) extends Expr {
+case class App(fun: Expr, arg: Expr) extends Expr with HasEq {
   //assert(!args.isEmpty)
   def bind(bound: List[Free], index: Int) = {
     App(fun bind (bound, index), arg bind (bound, index))
@@ -236,5 +239,15 @@ case class MatchWith(arg: Expr, cases: List[Case]) extends Expr {
 case class IfThenElse(test: Expr, iftrue: Expr, iffalse: Expr) extends Expr {
   def bind(bound: List[Free], index: Int) = {
     IfThenElse(test bind (bound, index), iftrue bind (bound, index), iffalse bind (bound, index))
+  }
+}
+
+case class Lazy(expr: Expr, lex: Stack) extends Expr {
+  def bind(bound: List[Free], index: Int) = {
+    ulang.error("cannot bind a deferred value")
+  }
+
+  override lazy val force = {
+    eval.eval(expr, lex)
   }
 }

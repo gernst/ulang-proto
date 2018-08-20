@@ -9,20 +9,16 @@ import arse.Right
 import ulang.expr.Apps
 import ulang.expr.Bound
 import ulang.expr.Case
-import ulang.expr.Clos
 import ulang.expr.Expr
 import ulang.expr.Id
 import ulang.expr.IfThenElse
 import ulang.expr.Lambda
 import ulang.expr.Lit
 import ulang.expr.MatchWith
-import ulang.expr.Obj
-import ulang.expr.Objs
 import ulang.expr.Pat
 import ulang.expr.SubPat
 import ulang.expr.Tag
 import ulang.expr.UnApps
-import ulang.expr.Val
 import ulang.expr.Wildcard
 import ulang.expr.builtin
 import ulang.expr.operators
@@ -39,6 +35,7 @@ import ulang.shell.Ind
 import ulang.shell.Notations
 import ulang.shell.Test
 import ulang.shell.Tests
+import ulang.expr.Lazy
 
 trait Pretty {
   override def toString = printer.print(this)
@@ -70,15 +67,6 @@ object printer {
     }
   }
 
-  def print_number(n: Int, any: Val): String = any match {
-    case builtin.Succ(arg) =>
-      print_number(n + 1, arg)
-    case builtin.Zero =>
-      n + ""
-    case _ =>
-      any + " + " + n
-  }
-
   def print_number(n: Int, pat: Pat): String = pat match {
     case builtin.Succ(arg) =>
       print_number(n + 1, arg)
@@ -97,15 +85,6 @@ object printer {
       expr + " + " + n
   }
 
-  def print_list(any: Val): String = any match {
-    case builtin.Cons(arg1, arg2) =>
-      ", " + arg1 + print_list(arg2)
-    case builtin.Nil =>
-      "]"
-    case _ =>
-      "; " + any + "]"
-  }
-
   def print_list(pat: Pat): String = pat match {
     case builtin.Cons(arg1, arg2) =>
       ", " + arg1 + print_list(arg2)
@@ -122,25 +101,6 @@ object printer {
       "]"
     case _ =>
       "; " + expr + "]"
-  }
-
-  def print(any: Val): String = any match {
-    case Clos(cases, lex) =>
-      "\\ " + cases.mkString(" | ") + lex.mkString(" [", ", ", "]")
-    case builtin.Succ(arg) =>
-      print_number(1, arg)
-    case builtin.Tuple(args @ _*) =>
-      args.mkString("(", ", ", ")")
-    case builtin.Cons(arg1, arg2) =>
-      "[" + arg1 + print_list(arg2)
-    case Obj(op: Tag, List(arg)) if operators.prefix_ops contains op =>
-      "(" + op + " " + arg + ")"
-    case Obj(op: Tag, List(arg)) if operators.postfix_ops contains op =>
-      "(" + arg + " " + op + ")"
-    case Obj(op: Tag, List(arg1, arg2)) if operators.infix_ops contains op =>
-      "(" + arg1 + " " + op + " " + arg2 + ")"
-    case Objs(op: Tag, args) =>
-      (op :: args).mkString("(", " ", ")")
   }
 
   def print(pat: Pat): String = pat match {
@@ -179,6 +139,10 @@ object printer {
       "match " + arg + " with " + cases.mkString(" | ")
     case IfThenElse(test, iftrue, iffalse) =>
       "if " + test + " then " + iftrue + " else " + iffalse
+    case Lazy(expr, Nil) =>
+      expr + ""
+    case Lazy(expr, lex) =>
+      expr + lex.mkString(" where [", ", ", "]")
     case Apps(fun, args) =>
       (fun :: args).mkString("(", " ", ")")
   }
@@ -242,7 +206,5 @@ object printer {
       print(pat)
     case expr: Expr =>
       print(expr)
-    case any: Val =>
-      print(any)
   }
 }

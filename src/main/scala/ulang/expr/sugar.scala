@@ -45,11 +45,6 @@ class Unary(val op: Id) {
     case _ => None
   }
 
-  def unapply(v: Val) = v match {
-    case Obj(`op`, arg) => Some(arg)
-    case _ => None
-  }
-
   def apply(arg: Expr) = {
     App(op, arg)
   }
@@ -67,11 +62,6 @@ class Binary(val op: Id) {
 
   def unapply(e: Expr) = e match {
     case App(App(`op`, arg1), arg2) => Some((arg1, arg2))
-    case _ => None
-  }
-
-  def unapply(v: Val) = v match {
-    case Objs(`op`, List(arg1, arg2)) => Some((arg1, arg2))
     case _ => None
   }
 
@@ -108,11 +98,6 @@ class Nary(val op: Id) {
 
   def unapplySeq(e: Expr) = e match {
     case Apps(`op`, args) => Some(args)
-    case _ => None
-  }
-
-  def unapplySeq(v: Val) = v match {
-    case Objs(`op`, args) => Some(args)
     case _ => None
   }
 
