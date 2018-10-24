@@ -134,8 +134,6 @@ object printer {
       "(" + arg1 + " " + name + " " + arg2 + ")"
     case Lambda(cases) =>
       "\\" + cases.mkString(" | ")
-    case MatchWith(arg, cases) =>
-      "match " + arg + " with " + cases.mkString(" | ")
     case IfThenElse(test, iftrue, iffalse) =>
       "if " + test + " then " + iftrue + " else " + iffalse
     case Lazy(expr, Nil) =>

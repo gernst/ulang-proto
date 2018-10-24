@@ -1,8 +1,8 @@
 definition
-  f True  x y = x;
-  f False x y = y;
   eq x x = True;
   eq x y = False;
+  f True  x y = x;
+  f False x y = y;
   f a b c = (a,b,c);
   g = \a b c d e f -> \z -> (a,b,c,d,e,f, z);
   h a a = (a, B);
@@ -18,12 +18,12 @@ definition
 end
 
 eval
+  eq A A;
+  
   f True  A B;
   f False A B;
   
   let x = A in x;
-  
-  eq A A;
   
   f A B C;
   g A B C D E F Z;

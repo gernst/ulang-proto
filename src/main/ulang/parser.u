@@ -5,15 +5,15 @@ end
 definition
   bind f (Success a src)
     = let (Parser p) = (f a)
-       in p src;
-
+      in p src;
+      
   bind f Failure
     = Failure;
   
   filter p (Success a src)
     = if (p a)
-       then (Success a src)
-       else Failure;
+      then (Success a src)
+      else Failure;
   filter p Failure
     = Failure;
 end

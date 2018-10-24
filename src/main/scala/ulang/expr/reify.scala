@@ -67,8 +67,6 @@ object reify {
       Apps(Tag("Bind"), List(list(cases map reify)))
     case IfThenElse(test, iftrue, iffalse) =>
       Apps(Tag("IfThenElse"), List(reify(test), reify(iftrue), reify(iffalse)))
-    case MatchWith(arg, cases) =>
-      Apps(Tag("MatchWith"), List(reify(arg), list(cases map reify)))
   }
 
 }

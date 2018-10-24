@@ -64,6 +64,14 @@ object Expr {
     val bound = pats.flatMap(_.free)
     body bind (bound.reverse, 0)
   }
+
+  def merge(exprs: List[Expr]): Expr = {
+    val partitioning = exprs.partition { case _: Lambda => true; case _ => false }
+    partitioning match {
+      case (Nil, List(res)) => res // XXX: can't overload based on arity
+      case (lambdas: List[Lambda] @unchecked, Nil) => Lambda.merge(lambdas)
+    }
+  }
 }
 
 sealed trait Atom extends Expr with Pat {
@@ -121,12 +129,12 @@ case class Free(name: String) extends Id {
       false
     case that: Free =>
       this == that
+    case Lazy(expr, lex) =>
+      (this in expr) || (lex exists (this in _))
     case App(fun, arg) =>
       (this in fun) || (this in arg)
     case Lambda(cases) =>
       cases exists (this in _)
-    case MatchWith(arg, cases) =>
-      (this in arg) || (cases exists (this in _))
     case IfThenElse(test, iftrue, iffalse) =>
       (this in test) || (this in iftrue) || (this in iffalse)
   }
@@ -196,10 +204,6 @@ case class Lambda(cases: List[Case]) extends Expr {
   def bind(bound: List[Free], index: Int) = {
     Lambda(Cases.bind(bound, index, cases))
   }
-
-  def |(that: Lambda) = {
-    Lambda(this.cases ++ that.cases)
-  }
 }
 
 object Lambda extends (List[Case] => Expr) {
@@ -207,11 +211,9 @@ object Lambda extends (List[Case] => Expr) {
     Lambda(List(Case(bound, body)))
   }
 
-  object bindings extends (List[(List[Pat], Expr)] => Expr) {
-    def apply(cases: List[(List[Pat], Expr)]): Expr = {
-      assert(!cases.isEmpty)
-      val lambdas = cases map Lambda.binding.tupled
-      lambdas reduce (_ | _)
+  object merge extends (List[Lambda] => Lambda) {
+    def apply(lambdas: List[Lambda]): Lambda = {
+      Lambda(lambdas.flatMap(_.cases))
     }
   }
 
@@ -224,20 +226,10 @@ object Lambda extends (List[Case] => Expr) {
   }
 }
 
-case class MatchWith(arg: Expr, cases: List[Case]) extends Expr {
-  def bind(bound: List[Free], index: Int) = {
-    MatchWith(arg bind (bound, index), Cases.bind(bound, index, cases))
-  }
-}
-
 case class IfThenElse(test: Expr, iftrue: Expr, iffalse: Expr) extends Expr {
   def bind(bound: List[Free], index: Int) = {
     IfThenElse(test bind (bound, index), iftrue bind (bound, index), iffalse bind (bound, index))
   }
-}
-
-object LetEq extends ((Pat, Expr) => (Pat, Expr)) {
-  def apply(pat: Pat, arg: Expr) = (pat, arg)
 }
 
 object LetIn extends ((List[(Pat, Expr)], Expr) => Expr) {
@@ -245,6 +237,12 @@ object LetIn extends ((List[(Pat, Expr)], Expr) => Expr) {
     val (pats, args) = eqs.unzip
     val fun = Lambda.binding(pats, body)
     Apps(fun, args)
+  }
+}
+
+object MatchWith extends ((List[Expr], Lambda) => Expr) {
+  def apply(args: List[Expr], cases: Lambda) = {
+    Apps(cases, args)
   }
 }
 

@@ -1,0 +1,25 @@
+f = \x y -> e
+forall x y. f x y = e
+
+res = let C x y = C 1 2 in  x + y
+forall x y. x = 1 and y = 2 ==> res = x + y
+
+\x y -> e
+\(x, y) -> e
+\(A x y) (B z) -> e
+
+if p x y then f x y else g x y
+
+let x = e, y = f in h x y
+let (C x y) = ... in ...
+
+match f x y with
+| A b -> ...
+| C d e f -> ...
+
+let
+  square x = x * x;
+  triple x = x * square x;
+in
+  square 13;
+end

@@ -19,6 +19,7 @@ import ulang.expr.Stack
 import ulang.expr.UnApps
 import ulang.expr.UnApps
 import ulang.expr.Env
+import ulang.expr.Pat
 
 object exec {
   import shell.defs
@@ -50,7 +51,16 @@ object exec {
   }
 
   def merge(dfs: List[Def]): List[(Free, Expr)] = {
-    val funs = dfs.distinct.collect {
+    println("merging")
+    val bnd = dfs map {
+      case Def(UnApps(id: Free, _pats), _body) =>
+        val pats = Pat.linear(_pats)
+        val body = Expr.bind(pats, _body)
+        (id, pats.foldRight(body)(Lambda.singleton))
+    }
+
+    bnd map println
+    /* val funs = dfs.distinct.collect {
       case Def(UnApps(id: Free, pats), rhs) if !pats.isEmpty =>
         println(id + pats.mkString(" ", " ", " = ") + rhs)
         val cs = Lambda.binding(pats, rhs)
@@ -70,6 +80,8 @@ object exec {
     }
 
     merged.toList ++ consts
+    */
+    ???
   }
 
   def define(inds: List[Ind]): List[Def] = {

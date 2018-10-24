@@ -165,8 +165,5 @@ object eval {
         case builtin.False => eval(arg2, lex)
         case res => ulang.error("not a boolean in test: " + res)
       }
-
-    case MatchWith(arg, cases) =>
-      apply(cases, eval(arg, lex), lex)
   }
 }

@@ -50,21 +50,17 @@ object grammar {
   val expr: Mixfix[Id, Expr] = M(inner_expr, anyatom, Apps, operators)
   val exprs = expr ~+ ","
 
-  val arg: Parser[Expr] = P(("(" ~ open ~ ")") | bind | matches | ite | let | quote | any | list | atom)
+  val arg: Parser[Expr] = P(("(" ~ open ~ ")") | lambda | matches | ite | let | quote | any | list | atom)
   val args = arg +
 
-  val cond = "if" ~ expr
-  val cs = Case.binding(patarg ~ "->" ~ expr)
-  val cases = cs ~+ "|"
-
-  val css = patargs ~ "->" ~ expr
-  val bindings = css ~+ "|"
-  val bind = Lambda.bindings("\\" ~ bindings)
+  val abs = Lambda.binding(patargs ~ "->" ~ expr)
+  val bindings = Lambda.merge(abs ~+ "|")
+  val lambda = "\\" ~ bindings
 
   val ite = IfThenElse("if" ~ expr ~ "then" ~ expr ~ "else" ~ expr)
-  val matches = MatchWith("match" ~ arg ~ "with" ~ cases)
+  val matches = MatchWith("match" ~ args ~ "with" ~ bindings)
 
-  val eq = LetEq(patarg ~ "=" ~ arg)
+  val eq = patarg ~ "=" ~ expr // TODO: pat_high instead of patarg
   val eqs = eq ~+ ","
   val let = LetIn("let" ~ eqs ~ "in" ~ expr)
 
@@ -81,7 +77,7 @@ object grammar {
     case fun :: args => UnApps(fun, args)
   }
 
-  val inner_expr = (arg +) map {
+  val inner_expr = args map {
     case Nil => ???
     case fun :: args => Apps(fun, args)
   }
