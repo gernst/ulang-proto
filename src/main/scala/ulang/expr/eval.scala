@@ -59,10 +59,6 @@ object eval {
     case Wildcard =>
       env
 
-    case lit: Lit =>
-      if (lit == arg) env
-      else backtrack()
-
     case id: Tag =>
       if (id == arg.force) env
       else backtrack()

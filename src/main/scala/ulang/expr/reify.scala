@@ -28,8 +28,6 @@ object reify {
   def list_with_tail(es: List[Expr], et: Expr) = builtin.Cons(es, et)
 
   def atom(atom: Atom): Expr = atom match {
-    case Lit(value) =>
-      App(Tag("Lit"), atom)
     case Bound(index) =>
       App(Tag("Bound"), Lit(index))
     case Tag(name) =>
@@ -46,8 +44,6 @@ object reify {
   def reify(pat: Pat): Expr = pat match {
     case Wildcard =>
       Tag("_")
-    case l: Lit =>
-      l
     case a: Atom =>
       atom(a)
     case SubPat(name, pat) =>

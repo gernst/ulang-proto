@@ -24,10 +24,6 @@ object rewrite {
     case Wildcard =>
       env
 
-    case Lit(any) =>
-      if (any == arg) env
-      else backtrack()
-
     case id @ Tag(_) =>
       if (id == arg) env
       else backtrack()

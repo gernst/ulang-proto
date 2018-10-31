@@ -78,7 +78,7 @@ sealed trait Atom extends Expr with Pat {
   def bind(bound: List[Free], index: Int): Atom
 }
 
-case class Lit(any: Any) extends Atom {
+case class Lit(any: Any) extends Expr {
   def bind(bound: List[Free], index: Int) = this
 }
 

@@ -39,7 +39,7 @@ object grammar {
   val pat: Mixfix[Id, Pat] = M(inner_pat, anyatom, UnApps, operators)
   val pats = pat ~+ ","
 
-  val patarg: Parser[Pat] = P(("(" ~ patopen ~ ")") | any | patlist | wildcard | atom) ~ ("as" ~ atom).? map {
+  val patarg: Parser[Pat] = P(("(" ~ patopen ~ ")") | patlist | wildcard | atom) ~ ("as" ~ atom).? map {
     case pat ~ None => pat
     case pat ~ Some(id: Free) => SubPat(id, pat)
     case _ => ???
