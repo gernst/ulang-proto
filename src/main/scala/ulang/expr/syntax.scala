@@ -49,8 +49,10 @@ case class Var(name: String) extends Id {
       this == that
     case UnApp(fun, arg) =>
       (this in fun) || (this in arg)
-    case SubPat(_, pat) =>
+    case Named(pat, _) =>
       this in pat
+    case Cond(pat, cond) =>
+      (this in pat) || (this in cond)
   }
 
   def in(expr: Expr): Boolean = expr match {
@@ -65,24 +67,25 @@ case class Var(name: String) extends Id {
   }
 
   def in(cs: Case): Boolean = {
-    val Case(pat, cond, body) = cs
-    ((this in body) || (cond exists (this in _))) && !(this in pat)
+    val Case(pat, body) = cs
+    (this in body) && !(this in pat)
   }
 }
 
 case object Wildcard extends Pat
-case class SubPat(name: Id, pat: Pat) extends Pat
+case class Named(pat: Pat, name: Id) extends Pat
+case class Cond(pat: Pat, cond: Expr) extends Pat
 case class UnApp(fun: Pat, arg: Pat) extends Pat
 
 case class App(fun: Expr, arg: Expr) extends Expr
 
-case class Case(pat: Pat, cond: Option[Expr], body: Expr) extends Pretty
+case class Case(pat: Pat, body: Expr) extends Pretty
 
 case class Lambda(cases: List[Case]) extends Expr
 
 object Lambda extends ((Pat, Expr) => Expr) {
   def apply(pat: Pat, body: Expr) = {
-    Lambda(List(Case(pat, None, body)))
+    Lambda(List(Case(pat, body)))
   }
 }
 
@@ -91,5 +94,5 @@ case class Defer(expr: Expr, lex: Env, dyn: Env) extends Val {
 }
 
 case class Obj(fun: Data, arg: Val) extends Data
-case class Bind(pat: Pat, cond: Option[Expr], body: Expr, lex: Env) extends Pretty
+case class Bind(pat: Pat, body: Expr, lex: Env) extends Pretty
 case class Fun(binds: List[Bind], res: List[Data] = Nil) extends Norm

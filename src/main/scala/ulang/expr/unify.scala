@@ -31,12 +31,12 @@ object unify {
   def unbind(p: Pat): Pat = p match {
     case _: Var | Wildcard => Wildcard
     case _: Tag | _: Lit => p
-    case SubPat(name, pat) => unbind(pat)
+    case Named(name, pat) => unbind(pat)
     case UnApp(fun, arg) => UnApp(unbind(fun), unbind(arg))
   }
 
   def merge(p1: Pat, p2: Pat): Pat = (p1, p2) match {
-    case (SubPat(name1, pat1), SubPat(name2, pat2)) =>
+    case (Named(name1, pat1), Named(name2, pat2)) =>
       merge(pat1, pat2)
     case (UnApp(fun1, arg1), UnApp(fun2, arg2)) =>
       UnApp(merge(fun1, fun2), merge(arg1, arg2))

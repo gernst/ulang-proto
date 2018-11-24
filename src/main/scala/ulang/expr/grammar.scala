@@ -41,7 +41,7 @@ object grammar {
 
   val patarg: Parser[Pat] = P(("(" ~ patopen ~ ")") | patlist | wildcard | atom) ~ ("as" ~ atom).? map {
     case pat ~ None => pat
-    case pat ~ Some(id: Var) => SubPat(id, pat)
+    case pat ~ Some(x: Var) => Named(pat, x)
     case _ => ???
   }
 

@@ -27,7 +27,7 @@ object exec {
 
   def model = {
     import ulang.expr.Env
-    Env(merge(defs), Env.empty)
+    Env(merge(defs))
   }
 
   def rewrites = {
@@ -52,8 +52,8 @@ object exec {
 
   def merge(dfs: List[Def]): List[(Var, Expr)] = {
     val funs = dfs.distinct.collect {
-      case Def(UnApps(id: Var, pats), cond, rhs) if !pats.isEmpty =>
-        println(id + pats.mkString(" ", " ", " = ") + rhs)
+      case Def(UnApps(id: Var, pats), rhs) if !pats.isEmpty =>
+        // println(id + pats.mkString(" ", " ", " = ") + rhs)
         val lambda = Lambdas(pats, rhs)
         val Lambda(cases) = lambda
         (id, cases)
@@ -65,8 +65,8 @@ object exec {
     }
 
     val consts = dfs.collect {
-      case Def(id: Var, cond, rhs) =>
-        println(id + " = " + rhs)
+      case Def(id: Var, rhs) =>
+        // println(id + " = " + rhs)
         (id, rhs)
     }
 
@@ -80,9 +80,9 @@ object exec {
       case Ind(cases) =>
         cases.collect {
           case ant ==> suc =>
-            Def(suc.toPat, None, ant)
+            Def(suc.toPat, ant)
           case suc =>
-            Def(suc.toPat, None, builtin.True)
+            Def(suc.toPat, builtin.True)
         }
     }
   }

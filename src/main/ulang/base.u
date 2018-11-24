@@ -7,20 +7,20 @@ definition
   id x = x;
   const x = \y -> x;
   apply f a = f a;
-  
-  curry   f = \x -> \y ->  f x y;
-  uncurry f = \x y -> (f x) y;
-  tupled  f = \(x, y) -> f x y;
-  
-  g . f = \x -> g (f x);
-  
+  curry f x y = f (x, y);
+  tupled f (x,y) = f x y;
+  (g . f) x = g (f x);
   ite True  a b = a;
   ite False a b = b;
 end
 
 test
   id A = A;
-  (const A) B = A;
+  const A B = A;
+  apply id A = A;
+  curry id A B = (A, B);
+  tupled id (A, B) = (A B);
+  (A . B) C = (A (B C));
   (if True  then X else Y) = X;
   (if False then X else Y) = Y;
 end

@@ -44,8 +44,10 @@ object reify {
       Tag("_")
     case a: Id =>
       atom(a)
-    case SubPat(name, pat) =>
-      Apps(Tag("SubPat"), List(Lit(name), reify(pat)))
+    case Named(pat, name) =>
+      Apps(Tag("Named"), List(reify(pat), Lit(name)))
+    case Cond(pat, expr) =>
+      Apps(Tag("Cond"), List(reify(pat), reify(expr)))
     case UnApp(fun, arg) =>
       Apps(Tag("App"), List(reify(fun), reify(arg)))
   }

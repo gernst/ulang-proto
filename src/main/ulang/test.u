@@ -10,11 +10,6 @@ definition
   f y B = y;
   split (f z) (x,y) = (f, z, x, y);
   numbers n = [n; numbers (Succ n)];
-  head [x; xs] = x;
-  0 = Zero;
-  1 = Succ 0;
-  2 = Succ 1;
-  3 = Succ 2;
 end
 
 eval
@@ -30,10 +25,6 @@ eval
   h A A;
   
   split (A B) (C, D);
-  
-  match (A,B) with
-    (x,C) -> x
-  | z -> (z, C);
   
   numbers 0;
   head (numbers 0);

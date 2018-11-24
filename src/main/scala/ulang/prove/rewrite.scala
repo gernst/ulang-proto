@@ -8,7 +8,7 @@ import ulang.expr.Var
 import ulang.expr.Lambda
 import ulang.expr.Lit
 import ulang.expr.Pat
-import ulang.expr.SubPat
+import ulang.expr.Named
 import ulang.expr.Tag
 import ulang.expr.UnApp
 import ulang.expr.Wildcard
@@ -34,7 +34,7 @@ object rewrite {
         case _ => backtrack()
       }
 
-    case SubPat(Var(name), pat) =>
+    case Named(Var(name), pat) =>
       bind(pat, arg, env + (name -> arg), dyn)
 
     case UnApp(pfun, parg) =>

@@ -17,7 +17,7 @@ object Env {
   val empty: Env = Map.empty
   val default: Env = empty // Map("=" -> builtin.equal, "print" -> builtin.print)
 
-  def apply(dfs: List[(Var, Expr)], dyn: Env): Env = {
+  def apply(dfs: List[(Var, Expr)]): Env = {
     dfs.foldLeft(default) {
       case (dyn, (x, rhs)) =>
         dyn + (x -> eval.eval(rhs, dyn))
@@ -35,7 +35,8 @@ object eval {
       env
 
     case x: Var if env contains x =>
-      ???
+      if (equal(env(x), arg)) env
+      else backtrack()
 
     case x: Var =>
       env + (x -> arg)
@@ -44,8 +45,13 @@ object eval {
       if (tag == norm(arg)) env
       else backtrack()
 
-    case SubPat(x, pat) =>
+    case Named(pat, x) =>
       bind(pat, arg, env + (x -> arg))
+
+    case Cond(pat, cond) =>
+      val newenv = bind(pat, arg, env)
+      if (equal(arg, builtin.True)) newenv
+      else backtrack()
 
     case UnApp(fun1, arg1) =>
       norm(arg) match {
@@ -60,16 +66,8 @@ object eval {
   }
 
   def apply(bn: Bind, arg: Val, dyn: Env): Norm = bn match {
-    case Bind(pat, cond, body, lex) =>
-      val env = bind(pat, arg, lex)
-
-      cond.map(eval(_, env, dyn)).foreach {
-        case builtin.True =>
-        case builtin.False => backtrack()
-        case res => ulang.error("not a boolean in pattern condition: " + res)
-      }
-
-      eval(body, env, dyn)
+    case Bind(pat, body, lex) =>
+      eval(body, bind(pat, arg, lex), dyn)
   }
 
   def apply(cases: List[Bind], arg: Val, dyn: Env): List[Norm] = cases match {
@@ -88,14 +86,16 @@ object eval {
     val consts = norms collect {
       case Fun(_, res) => res
       case res: Data => List(res)
-      case res => ulang.error("dropped result: " + res)
+      case res => ulang.error("dropped result: " + res) // note: currently unreachable
     }
 
     (binds.flatten, consts.flatten) match {
       case (Nil, Nil) =>
         ulang.error("undefined")
-      case (Nil, List(res)) => res
-      case (Nil, res) => ulang.error("non-deterministic result: " + res.mkString("[", ", ", "]"))
+      case (Nil, res :: rest) =>
+        // if (!rest.isEmpty)
+        //   ulang.warning("ignoring results: " + rest.mkString("[", ", ", "]"))
+        res
       case (binds, res) => Fun(binds, res)
     }
   }
@@ -107,7 +107,7 @@ object eval {
   }
 
   def defer(cases: List[Case], lex: Env): List[Bind] = {
-    cases map { case Case(pat, cond, body) => Bind(pat, cond, body, lex) }
+    cases map { case Case(pat, body) => Bind(pat, body, lex) }
   }
 
   def defer(expr: Expr, lex: Env, dyn: Env): Val = expr match {

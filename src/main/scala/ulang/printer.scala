@@ -15,7 +15,7 @@ import ulang.expr.Lambda
 import ulang.expr.Defer
 import ulang.expr.Lit
 import ulang.expr.Pat
-import ulang.expr.SubPat
+import ulang.expr.Named
 import ulang.expr.UnApps
 import ulang.expr.Wildcard
 import ulang.expr.builtin
@@ -107,7 +107,7 @@ object printer {
   def print(pat: Pat): String = pat match {
     case Wildcard =>
       "_"
-    case SubPat(name, pat) =>
+    case Named(name, pat) =>
       pat + " as " + name
     case builtin.Tuple(args @ _*) =>
       args.mkString("(", ", ", ")")
@@ -135,7 +135,7 @@ object printer {
     case Apps(op @ Id(name), List(arg1, arg2)) if operators.infix_ops contains op =>
       "(" + arg1 + " " + name + " " + arg2 + ")"
     case Lambda(cases) =>
-      "\\" + cases.mkString(" | ")
+      "(\\" + cases.mkString(" | ") + ")"
     /* case IfThenElse(test, iftrue, iffalse) =>
       "if " + test + " then " + iftrue + " else " + iffalse */
     case Apps(fun, args) =>
@@ -168,24 +168,16 @@ object printer {
     case op: Id =>
       op.name
 
-    case Case(pat, None, body) =>
+    case Case(pat, body) =>
       pat + " -> " + body
-    case Case(pat, Some(cond), body) =>
-      pat + " if " + cond + " -> " + body
 
-    case Bind(pat, None, body, lex) if lex.isEmpty =>
+    case Bind(pat, body, lex) if lex.isEmpty =>
       pat + " -> " + body
-    case Bind(pat, None, body, lex) =>
+    case Bind(pat, body, lex) =>
       pat + " -> " + body + lex.mkString(" where [", ", ", "]")
-    case Bind(pat, Some(cond), body, lex) if lex.isEmpty =>
-      pat + " if " + cond + " -> " + body
-    case Bind(pat, Some(cond), body, lex) =>
-      pat + " if " + cond + " -> " + body + lex.mkString(" where [", ", ", "]")
 
-    case Def(lhs, None, rhs) =>
+    case Def(lhs, rhs) =>
       lhs + " = " + rhs + ";"
-    case Def(lhs, Some(cond), rhs) =>
-      lhs + " if " + cond + " = " + rhs + ";"
       
     case Test(phi) =>
       phi + ";"
