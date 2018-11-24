@@ -7,7 +7,7 @@ import ulang.expr.App
 import ulang.expr.Id
 import ulang.expr.Case
 import ulang.expr.Expr
-import ulang.expr.Free
+import ulang.expr.Var
 import ulang.expr.Lambda
 import ulang.expr.Tag
 import ulang.expr.UnApp
@@ -46,22 +46,20 @@ object exec {
     }
   }
 
-  def merge(dfs: List[Def], inds: List[Ind]): List[(Free, Expr)] = {
+  def merge(dfs: List[Def], inds: List[Ind]): List[(Var, Expr)] = {
     merge(dfs ++ define(inds))
   }
 
-  def merge(dfs: List[Def]): List[(Free, Expr)] = {
+  def merge(dfs: List[Def]): List[(Var, Expr)] = {
     println("merging")
     val bnd = dfs map {
-      case Def(UnApps(id: Free, _pats), _body) =>
-        val pats = Pat.linear(_pats)
-        val body = Expr.bind(pats, _body)
+      case Def(UnApps(id: Var, pats), body) =>
         (id, pats.foldRight(body)(Lambda.singleton))
     }
 
     bnd map println
     /* val funs = dfs.distinct.collect {
-      case Def(UnApps(id: Free, pats), rhs) if !pats.isEmpty =>
+      case Def(UnApps(id: Var, pats), rhs) if !pats.isEmpty =>
         println(id + pats.mkString(" ", " ", " = ") + rhs)
         val cs = Lambda.binding(pats, rhs)
         println(id + " = " + cs)
@@ -74,7 +72,7 @@ object exec {
     }
 
     val consts = dfs.collect {
-      case Def(id: Free, rhs) =>
+      case Def(id: Var, rhs) =>
         println(id + " = " + rhs)
         (id, rhs)
     }

@@ -34,6 +34,12 @@ object Apps extends ((Expr, List[Expr]) => Expr) {
   }
 }
 
+object Lambdas extends ((List[Pat], Expr) => Expr) {
+  def apply(pats: List[Pat], body: Expr) = {
+    pats.foldRight(body)(Lambda)
+  }
+}
+
 class Unary(val op: Id) {
   def unapply(p: Pat) = p match {
     case UnApp(`op`, arg) => Some(arg)
@@ -87,6 +93,26 @@ class Binary(val op: Id) {
 
   def apply(zero: Pat, args: List[Pat]): Pat = {
     args.foldLeft(zero)(apply)
+  }
+}
+
+class Ternary(val op: Id) {
+  def unapply(p: Pat) = p match {
+    case UnApp(UnApp(UnApp(`op`, arg1), arg2), arg3) => Some((arg1, arg2, arg3))
+    case _ => None
+  }
+
+  def unapply(e: Expr) = e match {
+    case App(App(App(`op`, arg1), arg2), arg3) => Some((arg1, arg2, arg3))
+    case _ => None
+  }
+
+  def apply(arg1: Expr, arg2: Expr, arg3: Expr): Expr = {
+    App(App(App(op, arg1), arg2), arg3)
+  }
+
+  def apply(arg1: Pat, arg2: Pat, arg3: Pat): Pat = {
+    UnApp(UnApp(UnApp(op, arg1), arg2), arg3)
   }
 }
 

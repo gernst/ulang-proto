@@ -16,150 +16,113 @@ import ulang.Pretty
 object Env {
   val empty: Env = Map.empty
   val default: Env = empty // Map("=" -> builtin.equal, "print" -> builtin.print)
-  var current: Env = default
 
-  def apply(dfs: List[(Free, Expr)], lex: Stack): Env = {
+  def apply(dfs: List[(Var, Expr)], dyn: Env): Env = {
     dfs.foldLeft(default) {
-      case (dyn, (Free(name), rhs)) =>
-        dyn + (name -> eval.eval(rhs, lex))
+      case (dyn, (x, rhs)) =>
+        dyn + (x -> eval.eval(rhs, dyn))
     }
   }
-}
-
-object Stack {
-  val empty: Stack = List.empty
 }
 
 object eval {
-  def hasEq(e: Expr) = e match {
-    case _: HasEq => true
-    case _ => false
-  }
-
-  def isEq(e1: Expr, e2: Expr): Boolean = {
-    val f1 = e1.force
-    val f2 = e2.force
-
-    if (!hasEq(f1) || !hasEq(f2))
-      sys.error("equality not supported for " + f1 + " and " + f2)
-
-    (e1, e2) match {
-      case (Lit(any1), Lit(any2)) =>
-        any1 == any2
-      case (Tag(name1), Tag(name2)) =>
-        name1 == name2
-      case (App(fun1, arg1), App(fun2, arg2)) =>
-        return isEq(fun1, fun2) && isEq(arg1, arg2)
-      case _ =>
-        false
-    }
-  }
-
-  def bind(pat: Pat, arg: Expr, env: Stack): Stack = pat match {
+  def bind(pat: Pat, arg: Val, env: Env): Env = pat match {
     case Wildcard =>
       env
 
-    case id: Tag =>
-      if (id == arg.force) env
+    case id: Id =>
+      env + (id -> arg)
+
+    case tag: Tag =>
+      if (tag == norm(arg)) env
       else backtrack()
 
-    case Bound(index) =>
-      assert(index < env.length)
-      if (isEq(arg, env(index))) env
-      else backtrack()
-
-    case Free(name) =>
-      arg :: env
-
-    case SubPat(bound, pat) =>
-      bind(pat, arg, arg :: env)
+    case SubPat(id, pat) =>
+      bind(pat, arg, env + (id -> arg))
 
     case UnApp(fun1, arg1) =>
-      arg.force match {
-        case App(fun2, arg2) =>
+      norm(arg) match {
+        case Obj(fun2, arg2) =>
           bind(arg1, arg2, bind(fun1, fun2, env))
         case _ =>
           backtrack()
       }
+
+    case _ =>
+      backtrack()
   }
-  
-  def apply(cs: Case, arg: Expr, lex: Stack): Expr = cs match {
-    case Case(pats, body) =>
-      val env = bind(pats, arg, lex)
+
+  def apply(bn: Bind, arg: Val, dyn: Env): Norm = bn match {
+    case Bind(pat, body, lex) =>
+      val env = bind(pat, arg, lex)
       // val newlex = env ++ lex
       /* cond.map(eval(_, newlex)).foreach {
         case builtin.True =>
         case builtin.False => backtrack()
         case res => ulang.error("not a boolean in pattern condition: " + res)
       } */
-      eval(body, env)
+      eval(body, env, dyn)
   }
 
-  def apply(cases: List[Case], arg: Expr, lex: Stack): Expr = cases match {
+  def apply(cases: List[Bind], arg: Val, dyn: Env): List[Norm] = cases match {
     case Nil =>
-      backtrack()
+      Nil
 
-    case cs :: rest =>
-      apply(cs, arg, lex) or apply(rest, arg, lex)
+    case bind :: rest =>
+      { apply(bind, arg, dyn) :: apply(rest, arg, dyn) } or { apply(rest, arg, dyn) }
   }
 
-  def apply(fun: Expr, arg: Expr): Expr = fun match {
-    case Lazy(Lambda(cases), env) =>
-      apply(cases, arg, env) or ulang.error(fun + " mismatches " + arg)
+  def merge(norms: List[Norm]): Norm = {
+    val binds = norms collect {
+      case Fun(binds, _) => binds
+    }
 
-    case Lit(f: (List[Expr] => Expr) @unchecked) =>
-      f(List(arg))
+    val consts = norms collect {
+      case const: Const => List(const)
+      case Fun(_, res) => res
+    }
 
-    case _ =>
-      App(fun, arg)
+    (binds.flatten, consts.flatten) match {
+      case (Nil, Nil) => sys.error("undefined")
+      case (Nil, List(res)) => res
+      case (Nil, _) => sys.error("non-deterministic")
+      case (binds, res) => Fun(binds, res)
+    }
   }
 
-  def defer(expr: Expr, lex: Stack): Expr = expr match {
-    case _: Tag =>
-      expr
-    case Bound(index) =>
-      lex(index)
-    case _: Lazy =>
-      sys.error("unexpected lazy value " + expr + " in defer")
-    case _ =>
-      Lazy(expr, lex)
+  def apply(fun: Norm, arg: Val, dyn: Env): Norm = fun match {
+    case tag: Tag => Obj(tag, arg)
+    case Fun(cases, res) => merge(apply(cases, arg, dyn))
+    case _ => sys.error("not a function: " + fun)
   }
 
-  def eval(expr: Expr): Expr = {
-    eval(expr, Stack.empty)
+  def defer(cases: List[Case], lex: Env): List[Bind] = {
+    cases map { case Case(pat, body) => Bind(pat, body, lex) }
   }
 
-  def eval(expr: Expr, lex: Stack): Expr = expr match {
-    case tag: Tag =>
-      tag
+  def defer(expr: Expr, lex: Env, dyn: Env): Val = expr match {
+    case tag: Tag => tag
+    case id: Id if lex contains id => lex(id)
+    case id: Id if dyn contains id => dyn(id)
+    case Lambda(cases) => Fun(defer(cases, lex))
+    case _ => Defer(expr, lex, dyn)
+  }
 
-    case lit: Lit =>
-      lit
+  def norm(arg: Val): Norm = arg match {
+    case d: Defer => d.norm
+    case n: Norm => n
+  }
 
-    case _: Lazy =>
-      expr
+  def eval(expr: Expr, dyn: Env): Norm = {
+    val lex = Env.empty
+    eval(expr, lex, dyn)
+  }
 
-    case _: Lambda =>
-      defer(expr, lex)
-
-    case Bound(index) =>
-      assert(index < lex.length)
-      lex(index)
-
-    case Free(name) =>
-      val dyn = Env.current
-      if (dyn contains name) eval(dyn(name), lex)
-      else ulang.error("unbound identifier " + name + " in " + dyn.keys.mkString("[", " ", "]"))
-
-    case App(fun, arg) =>
-      val res = apply(eval(fun, lex), defer(arg, lex))
-      res
-
-    case IfThenElse(test, arg1, arg2) =>
-      eval(test, lex) match {
-        case builtin.True => eval(arg1, lex)
-        case builtin.False => eval(arg2, lex)
-        case res => ulang.error("not a boolean in test: " + res)
-      }
+  def eval(expr: Expr, lex: Env, dyn: Env): Norm = expr match {
+    case tag: Tag => tag
+    case id: Id if lex contains id => norm(lex(id))
+    case id: Id if dyn contains id => norm(dyn(id))
+    case Lambda(cases) => Fun(defer(cases, lex))
+    case App(fun, arg) => apply(eval(fun, lex, dyn), defer(arg, lex, dyn), dyn)
   }
 }

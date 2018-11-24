@@ -7,15 +7,13 @@ import arse.Postfix
 import arse.Prefix
 import arse.Right
 import ulang.expr.Apps
-import ulang.expr.Bound
 import ulang.expr.Case
 import ulang.expr.Expr
 import ulang.expr.Id
-import ulang.expr.IfThenElse
+import ulang.expr.builtin.IfThenElse
 import ulang.expr.Lambda
-import ulang.expr.Lazy
+import ulang.expr.Defer
 import ulang.expr.Lit
-import ulang.expr.MatchWith
 import ulang.expr.Pat
 import ulang.expr.SubPat
 import ulang.expr.UnApps
@@ -35,6 +33,7 @@ import ulang.shell.Ind
 import ulang.shell.Notations
 import ulang.shell.Test
 import ulang.shell.Tests
+import ulang.expr.Val
 
 trait Pretty {
   override def toString = printer.print(this)
@@ -136,18 +135,18 @@ object printer {
       "\\" + cases.mkString(" | ")
     case IfThenElse(test, iftrue, iffalse) =>
       "if " + test + " then " + iftrue + " else " + iffalse
-    case Lazy(expr, Nil) =>
+    case Defer(expr, Nil) =>
       expr + ""
-    case Lazy(expr, lex) =>
+    case Defer(expr, lex) =>
       expr + lex.mkString(" where [", ", ", "]")
     case Apps(fun, args) =>
       (fun :: args).mkString("(", " ", ")")
   }
 
   def print(any: Pretty): String = any match {
-    case Bound(index) =>
-      "#" + index
-
+    case _: Val =>
+      ???
+      
     case Lit(s: String) =>
       "\"" + s + "\""
     case Lit(i: Int) =>

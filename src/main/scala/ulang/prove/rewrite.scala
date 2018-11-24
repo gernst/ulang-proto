@@ -4,8 +4,7 @@ import bk.Control
 import bk.backtrack
 import ulang.expr.App
 import ulang.expr.Expr
-import ulang.expr.Free
-import ulang.expr.IfThenElse
+import ulang.expr.Var
 import ulang.expr.Lambda
 import ulang.expr.Lit
 import ulang.expr.Pat
@@ -28,14 +27,14 @@ object rewrite {
       if (id == arg) env
       else backtrack()
 
-    case Free(name) =>
+    case Var(name) =>
       (env get name) match {
         case Some(that) if that == arg => env
         case None => env + (name -> arg)
         case _ => backtrack()
       }
 
-    case SubPat(Free(name), pat) =>
+    case SubPat(Var(name), pat) =>
       bind(pat, arg, env + (name -> arg), dyn)
 
     case UnApp(pfun, parg) =>
@@ -66,7 +65,7 @@ object rewrite {
       apply(cs, arg, lex, dyn) or apply(rest, arg, lex, dyn)
   }
 
-  def apply(id: Free, fun: Expr, arg: Expr, dyn: Env): Expr = {
+  def apply(id: Var, fun: Expr, arg: Expr, dyn: Env): Expr = {
     val res = fun match {
       case Lambda(cases) =>
         apply(cases, arg, Env.empty, dyn) or App(id, arg)
@@ -82,23 +81,13 @@ object rewrite {
 
   def rewrite(expr: Expr, lex: Env, dyn: Env): Expr = {
     val res = expr match {
-      case Free(name) if lex contains name =>
+      case Var(name) if lex contains name =>
         lex(name)
 
-      case Free(name) if dyn contains name =>
+      case Var(name) if dyn contains name =>
         dyn(name)
 
-      case IfThenElse(test, arg1, arg2) =>
-        lazy val newarg1 = rewrite(arg1, lex, dyn)
-        lazy val newarg2 = rewrite(arg2, lex, dyn)
-
-        rewrite(test, lex, dyn) match {
-          case builtin.True => newarg1
-          case builtin.False => newarg2
-          case newtest => IfThenElse(newtest, newarg1, newarg2)
-        }
-
-      case App(fun: Free, arg) =>
+      case App(fun: Var, arg) =>
         apply(fun, rewrite(fun, lex, dyn), rewrite(arg, lex, dyn), dyn)
 
       case App(tag: Tag, arg) =>

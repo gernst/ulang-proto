@@ -41,7 +41,7 @@ object grammar {
 
   val patarg: Parser[Pat] = P(("(" ~ patopen ~ ")") | patlist | wildcard | atom) ~ ("as" ~ atom).? map {
     case pat ~ None => pat
-    case pat ~ Some(id: Free) => SubPat(id, pat)
+    case pat ~ Some(id: Var) => SubPat(id, pat)
     case _ => ???
   }
 
@@ -50,19 +50,20 @@ object grammar {
   val expr: Mixfix[Id, Expr] = M(inner_expr, anyatom, Apps, operators)
   val exprs = expr ~+ ","
 
-  val arg: Parser[Expr] = P(("(" ~ open ~ ")") | lambda | matches | ite | let | quote | any | list | atom)
+  val arg: Parser[Expr] = P(("(" ~ open ~ ")") | lambda | ite | /* matches | let | */ quote | any | list | atom)
   val args = arg +
 
-  val abs = Lambda.binding(patargs ~ "->" ~ expr)
-  val bindings = Lambda.merge(abs ~+ "|")
-  val lambda = "\\" ~ bindings
+  val lambda = Lambdas("\\" ~ patargs ~ "->" ~ expr)
 
-  val ite = IfThenElse("if" ~ expr ~ "then" ~ expr ~ "else" ~ expr)
-  val matches = MatchWith("match" ~ args ~ "with" ~ bindings)
+  val ite = ("if" ~ expr ~ "then" ~ expr ~ "else" ~ expr) map {
+    case test ~ left ~ right => builtin.IfThenElse(test, left, right)
+  }
+  
+  // val matches = MatchWith("match" ~ args ~ "with" ~ bindings)
 
   val eq = patarg ~ "=" ~ expr // TODO: pat_high instead of patarg
   val eqs = eq ~+ ","
-  val let = LetIn("let" ~ eqs ~ "in" ~ expr)
+  // val let = LetIn("let" ~ eqs ~ "in" ~ expr)
 
   val any = (string | char) map { Lit(_) }
 

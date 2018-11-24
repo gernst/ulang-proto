@@ -29,7 +29,7 @@ object unify {
   }
 
   def unbind(p: Pat): Pat = p match {
-    case _: Free | Wildcard | _: Bound => Wildcard
+    case _: Var | Wildcard => Wildcard
     case _: Tag | _: Lit => p
     case SubPat(name, pat) => unbind(pat)
     case UnApp(fun, arg) => UnApp(unbind(fun), unbind(arg))
@@ -60,7 +60,7 @@ class unify {
     }
   }
 
-  def union(p1: Free, p2: Pat) {
+  def union(p1: Var, p2: Pat) {
     rep += (find(p1) -> find(p2))
   }
 
@@ -75,11 +75,11 @@ class unify {
   def unify(p1: Pat, p2: Pat): Unit = (find(p1), find(p2)) match {
     case (r1, r2) if r1 == r2 =>
 
-    case (id: Free, a) if !(id in a) =>
-      union(id, a)
+    case (x: Var, a) if !(x in a) =>
+      union(x, a)
 
-    case (a, id: Free) =>
-      unify(id, a)
+    case (a, x: Var) =>
+      unify(x, a)
 
     case (UnApp(fun1, args1), UnApp(fun2, args2)) =>
       unify(fun1, fun2)

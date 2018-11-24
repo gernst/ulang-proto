@@ -1,7 +1,7 @@
 package ulang.prove
 
 import ulang.expr.Expr
-import ulang.expr.Free
+import ulang.expr.Var
 import ulang.expr.App
 import ulang.expr.Apps
 

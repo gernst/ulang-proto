@@ -1,17 +1,18 @@
 package ulang.expr
 
 object builtin {
-  object eq extends Binary(Free("="))
+  object eq extends Binary(Var("="))
 
   val Zero = Tag("0")
   object Succ extends Unary(Tag("+1"))
 
   val True = Tag("True")
   val False = Tag("False")
-  object and extends Binary(Free("and"))
-  object or extends Binary(Free("or"))
-  object ==> extends Binary(Free("==>"))
-  object <=> extends Binary(Free("<=>"))
+  object and extends Binary(Var("and"))
+  object or extends Binary(Var("or"))
+  object ==> extends Binary(Var("==>"))
+  object <=> extends Binary(Var("<=>"))
+  object IfThenElse extends Ternary(Var("if then else"))
 
   object Tuple extends Nary(Tag("Tuple"))
 
