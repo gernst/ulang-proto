@@ -78,7 +78,7 @@ object eval {
       { apply(bind, arg, dyn) :: apply(rest, arg, dyn) } or { apply(rest, arg, dyn) }
   }
 
-  def merge(norms: List[Norm]): Norm = {
+  def merge(norms: List[Norm]): Option[Norm] = {
     val binds = norms collect {
       case Fun(binds, _) => binds
     }
@@ -91,18 +91,24 @@ object eval {
 
     (binds.flatten, consts.flatten) match {
       case (Nil, Nil) =>
-        ulang.error("undefined")
+        // ulang.error("undefined")
+        None
       case (Nil, res :: rest) =>
         // if (!rest.isEmpty)
         //   ulang.warning("ignoring results: " + rest.mkString("[", ", ", "]"))
-        res
-      case (binds, res) => Fun(binds, res)
+        Some(res)
+      case (binds, res) =>
+        Some(Fun(binds, res))
     }
   }
 
   def apply(fun: Norm, arg: Val, dyn: Env): Norm = fun match {
     case obj: Data => Obj(obj, arg)
-    case Fun(cases, res) => merge(apply(cases, arg, dyn))
+    case Fun(cases, res) =>
+      merge(apply(cases, arg, dyn)) match {
+        case None => cases map println; ulang.error("unmatched: " + norm(arg))
+        case Some(res) => res
+      }
     case _ => ulang.error("not a function: " + fun)
   }
 
@@ -141,12 +147,17 @@ object eval {
     const(eval(expr, dyn))
   }
 
-  def eval(expr: Expr, lex: Env, dyn: Env): Norm = expr match {
-    case tag: Tag => tag
-    case x: Var if lex contains x => norm(lex(x))
-    case x: Var if dyn contains x => norm(dyn(x))
-    case x: Var => ulang.error("unbound variable: " + x)
-    case Lambda(cases) => Fun(defer(cases, lex))
-    case App(fun, arg) => apply(eval(fun, lex, dyn), defer(arg, lex, dyn), dyn)
+  def eval(expr: Expr, lex: Env, dyn: Env): Norm = {
+    val res = expr match {
+      case tag: Tag => tag
+      case x: Var if lex contains x => norm(lex(x))
+      case x: Var if dyn contains x => norm(dyn(x))
+      case x: Var => ulang.error("unbound variable: " + x)
+      case Lambda(cases) => Fun(defer(cases, lex))
+      case App(fun, arg) => apply(eval(fun, lex, dyn), defer(arg, lex, dyn), dyn)
+    }
+    // println("eval " + expr)
+    // println("  = " + res)
+    res
   }
 }

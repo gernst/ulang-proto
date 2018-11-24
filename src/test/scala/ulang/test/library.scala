@@ -7,6 +7,7 @@ object library {
     safe {
       load("base")
       load("test")
+      load("compiler")
     }
   }
 }

@@ -81,7 +81,7 @@ definition
 
   index x [] = None;
   index x [x; xs] = Some 0;
-  index x [_; xs] = index x xs +1;
+  index x [_; xs] = map (+1) (index x xs);
   
   lookup _ [] = None;
   lookup x [(x,y); xs] = Some y;
@@ -112,6 +112,7 @@ test
   filter even [0, 1, 2, 3, 4] = [0, 2, 4];
   partition even [0, 1, 2, 3, 4] = ([0, 2, 4], [1, 3]);
   
+  index C [A, B, C, D] = Some 2;
   exists even [1, 2, 3];
   forall even [0, 2, 4];
   

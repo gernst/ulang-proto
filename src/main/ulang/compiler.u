@@ -1,13 +1,9 @@
 definition
-  debruijn e
-    = debruijn e [];
-
   debruijn (Const z) stack
     = Const z;
 
   debruijn (Var x) stack
-    = match index x stack with
-         | Some i -> Var i;
+    = Var (the (index x stack));
   
   debruijn (Let x e b) stack
     = Let (debruijn e stack) (debruijn b [x; stack]);
@@ -70,8 +66,7 @@ definition
     = exec code [x; env] stack;
     
   exec [Load i; code] env stack
-    = match get i env with
-       | Some x -> exec code env [x; stack];
+    = exec code env [the (get i env); stack];
 
   exec [Close c; code] env stack
     = exec code env [Closure c env; stack];
@@ -82,16 +77,14 @@ definition
   exec [Return; _] env [x, Cont c e; stack]
     = exec c e [x; stack];
   
-  ulang e = compile (beta (debruijn e));
-  //  ulang e = (compile . beta . debruijn) e;
+  ulang e = compile (beta (debruijn e []));
     
-  
-  prog = (App (Lambda X (Var X)) (Const Y)); 
+  prog = (App (Lambda X (Var X)) (Const Y));
+  code = ulang prog;
 end
 
 eval
-  let code = print (ulang prog)
-  in exec code [] [];
+  exec code [] [];
 end
 
 definition
@@ -102,9 +95,7 @@ definition
     =  (       code, [x; env],    stack);
     
   step (Load i, code, env,     stack)
-    = match get i env with
-       | Some x ->
-       (        code, env, [x; stack]);
+    =  (        code, env, [get i env; stack]);
 
   step (Close c, code, env,                 stack)
     =  (         code, env, [Closure c env; stack]);
