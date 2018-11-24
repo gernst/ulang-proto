@@ -22,13 +22,20 @@ object Env {
       case (dyn, (x, rhs)) =>
         dyn + (x -> eval.eval(rhs, dyn))
     }
-  }  
+  }
 }
 
 object eval {
+  def equal(v1: Val, v2: Val): Boolean = {
+    return const(v1) == const(v2)
+  }
+
   def bind(pat: Pat, arg: Val, env: Env): Env = pat match {
     case Wildcard =>
       env
+
+    case x: Var if env contains x =>
+      ???
 
     case x: Var =>
       env + (x -> arg)
@@ -53,14 +60,15 @@ object eval {
   }
 
   def apply(bn: Bind, arg: Val, dyn: Env): Norm = bn match {
-    case Bind(pat, body, lex) =>
+    case Bind(pat, cond, body, lex) =>
       val env = bind(pat, arg, lex)
-      // val newlex = env ++ lex
-      /* cond.map(eval(_, newlex)).foreach {
+
+      cond.map(eval(_, env, dyn)).foreach {
         case builtin.True =>
         case builtin.False => backtrack()
         case res => ulang.error("not a boolean in pattern condition: " + res)
-      } */
+      }
+
       eval(body, env, dyn)
   }
 
@@ -78,32 +86,35 @@ object eval {
     }
 
     val consts = norms collect {
-      case const: Const => List(const)
       case Fun(_, res) => res
+      case res: Data => List(res)
+      case res => ulang.error("dropped result: " + res)
     }
 
     (binds.flatten, consts.flatten) match {
-      case (Nil, Nil) => sys.error("undefined")
+      case (Nil, Nil) =>
+        ulang.error("undefined")
       case (Nil, List(res)) => res
-      case (Nil, res) => sys.error("non-deterministic result: " + res.mkString("[", ", ", "]"))
+      case (Nil, res) => ulang.error("non-deterministic result: " + res.mkString("[", ", ", "]"))
       case (binds, res) => Fun(binds, res)
     }
   }
 
   def apply(fun: Norm, arg: Val, dyn: Env): Norm = fun match {
-    case const: Const => Obj(const, arg)
+    case obj: Data => Obj(obj, arg)
     case Fun(cases, res) => merge(apply(cases, arg, dyn))
-    case _ => sys.error("not a function: " + fun)
+    case _ => ulang.error("not a function: " + fun)
   }
 
   def defer(cases: List[Case], lex: Env): List[Bind] = {
-    cases map { case Case(pat, body) => Bind(pat, body, lex) }
+    cases map { case Case(pat, cond, body) => Bind(pat, cond, body, lex) }
   }
 
   def defer(expr: Expr, lex: Env, dyn: Env): Val = expr match {
     case tag: Tag => tag
-    case x: Var if lex contains x => lex(x)
+    /* case x: Var if lex contains x => lex(x)
     case x: Var if dyn contains x => dyn(x)
+    case x: Var => ulang.error("unbound variable: " + x) */
     case Lambda(cases) => Fun(defer(cases, lex))
     case _ => Defer(expr, lex, dyn)
   }
@@ -113,15 +124,28 @@ object eval {
     case n: Norm => n
   }
 
+  def const(arg: Val): Data = arg match {
+    case c: Const => c
+    case d: Defer => const(d.norm)
+    case Obj(fun, arg) => Obj(const(fun), const(arg))
+    case Fun(Nil, List(res)) => res
+    case _: Fun => ulang.error("not constant: " + arg)
+  }
+
   def eval(expr: Expr, dyn: Env): Norm = {
     val lex = Env.empty
     eval(expr, lex, dyn)
+  }
+
+  def strict(expr: Expr, dyn: Env): Data = {
+    const(eval(expr, dyn))
   }
 
   def eval(expr: Expr, lex: Env, dyn: Env): Norm = expr match {
     case tag: Tag => tag
     case x: Var if lex contains x => norm(lex(x))
     case x: Var if dyn contains x => norm(dyn(x))
+    case x: Var => ulang.error("unbound variable: " + x)
     case Lambda(cases) => Fun(defer(cases, lex))
     case App(fun, arg) => apply(eval(fun, lex, dyn), defer(arg, lex, dyn), dyn)
   }

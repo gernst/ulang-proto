@@ -30,7 +30,7 @@ object grammar {
   val cond_high = "if" ~ expr_high
   val pat_high = pat above 7
 
-  val df = Def(pat_high ~ "=" ~ expr)
+  val df = Def(pat_high ~ cond_high.? ~ "=" ~ expr)
 
   def proof = "proof" ~ rule ~ ";"
   val thm = Thm(expr ~ ";" ~ (proof ?))

@@ -143,14 +143,14 @@ object printer {
   }
 
   def print(v: Val): String = v match {
-    case Defer(expr, lex, dyn) if lex.isEmpty && dyn.isEmpty =>
+    case Defer(expr, lex, dyn) if lex.isEmpty =>
       expr + ""
     case Defer(expr, lex, dyn) =>
-      expr + (dyn ++ lex).mkString(" where [", ", ", "]")
+      expr + lex.mkString(" where [", ", ", "]")
     case Obj(fun, arg) =>
       "(" + fun + " " + arg + ")"
     case Fun(binds, res) =>
-      ???
+      (binds ++ res).mkString("(", " | ", ")")
   }
 
   def print(any: Pretty): String = any match {
@@ -168,16 +168,25 @@ object printer {
     case op: Id =>
       op.name
 
-    case Case(pat, body) =>
+    case Case(pat, None, body) =>
       pat + " -> " + body
-      
-    case Bind(pat, body, lex) if lex.isEmpty =>
-      pat + " -> " + body
-    case Bind(pat, body, lex) =>
-      pat + " -> " + body + lex.mkString(" where [", ", ", "]")
+    case Case(pat, Some(cond), body) =>
+      pat + " if " + cond + " -> " + body
 
-    case Def(lhs, rhs) =>
+    case Bind(pat, None, body, lex) if lex.isEmpty =>
+      pat + " -> " + body
+    case Bind(pat, None, body, lex) =>
+      pat + " -> " + body + lex.mkString(" where [", ", ", "]")
+    case Bind(pat, Some(cond), body, lex) if lex.isEmpty =>
+      pat + " if " + cond + " -> " + body
+    case Bind(pat, Some(cond), body, lex) =>
+      pat + " if " + cond + " -> " + body + lex.mkString(" where [", ", ", "]")
+
+    case Def(lhs, None, rhs) =>
       lhs + " = " + rhs + ";"
+    case Def(lhs, Some(cond), rhs) =>
+      lhs + " if " + cond + " = " + rhs + ";"
+      
     case Test(phi) =>
       phi + ";"
 

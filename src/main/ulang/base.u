@@ -14,8 +14,8 @@ definition
   
   g . f = \x -> g (f x);
   
-  (if True  then a else b) = a;
-  (if False then a else b) = b;
+  ite True  a b = a;
+  ite False a b = b;
 end
 
 test

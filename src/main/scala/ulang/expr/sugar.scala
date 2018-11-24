@@ -1,5 +1,12 @@
 package ulang.expr
 
+object LetIn extends ((List[(Pat, Expr)], Expr) => Expr) {
+  def apply(eqs: List[(Pat, Expr)], body: Expr): Expr = {
+    val (pats, args) = eqs.unzip
+    Apps(Lambdas(pats, body), args)
+  }
+}
+
 object UnApps extends ((Pat, List[Pat]) => Pat) {
   def apply(fun: Pat, args: List[Pat]): Pat = {
     args.foldLeft(fun)(UnApp)

@@ -52,11 +52,10 @@ object exec {
 
   def merge(dfs: List[Def]): List[(Var, Expr)] = {
     val funs = dfs.distinct.collect {
-      case Def(UnApps(id: Var, pats), rhs) if !pats.isEmpty =>
+      case Def(UnApps(id: Var, pats), cond, rhs) if !pats.isEmpty =>
         println(id + pats.mkString(" ", " ", " = ") + rhs)
         val lambda = Lambdas(pats, rhs)
         val Lambda(cases) = lambda
-        println(id + " = " + lambda)
         (id, cases)
     }
 
@@ -66,7 +65,7 @@ object exec {
     }
 
     val consts = dfs.collect {
-      case Def(id: Var, rhs) =>
+      case Def(id: Var, cond, rhs) =>
         println(id + " = " + rhs)
         (id, rhs)
     }
@@ -81,9 +80,9 @@ object exec {
       case Ind(cases) =>
         cases.collect {
           case ant ==> suc =>
-            Def(suc.toPat, ant)
+            Def(suc.toPat, None, ant)
           case suc =>
-            Def(suc.toPat, builtin.True)
+            Def(suc.toPat, None, builtin.True)
         }
     }
   }
@@ -120,9 +119,9 @@ object exec {
           for (Test(phi) <- tests) {
             phi match {
               case builtin.eq(lhs, rhs) =>
-                eval.eval(lhs, dyn) expect eval.eval(rhs, dyn)
+                eval.strict(lhs, dyn) expect eval.strict(rhs, dyn)
               case _ =>
-                eval.eval(phi, dyn) expect builtin.True
+                eval.strict(phi, dyn) expect builtin.True
             }
           }
         }

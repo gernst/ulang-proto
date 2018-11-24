@@ -13,7 +13,7 @@ object builtin {
   object ==> extends Binary(Var("==>"))
   object <=> extends Binary(Var("<=>"))
 
-  object IfThenElse extends Ternary(Var("if then else"))
+  object IfThenElse extends Ternary(Var("ite"))
   
   object Tuple extends Nary(Tag("Tuple"))
 

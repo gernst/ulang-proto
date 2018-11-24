@@ -5,7 +5,7 @@ import ulang.expr._
 object check {
   def disjoint(defs: List[Def]) = {
     defs collect {
-      case Def(fun, Lambda(cases)) =>
+      case Def(fun, _, Lambda(cases)) =>
         cases.tails.foreach {
           case Case(pat1, _) :: xs =>
             for (Case(pat2, _) <- xs) {
@@ -19,9 +19,9 @@ object check {
 
   def disjoint(defs: List[Def], add: List[Def]) = {
     defs.collect {
-      case Def(UnApps(fun: Var, pats1), _) =>
+      case Def(UnApps(fun: Var, pats1), _, _) =>
         add.collect {
-          case Def(UnApps(`fun`, pats2), _) =>
+          case Def(UnApps(`fun`, pats2), _, _) =>
             if (unify.test(pats1, pats2))
               ulang.warning("patterns " + UnApps(fun, pats1) + " and " + UnApps(fun, pats2) + " overlap")
         }

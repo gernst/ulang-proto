@@ -14,7 +14,8 @@ sealed trait Expr extends Pretty {
 
 sealed trait Val extends Pretty
 sealed trait Norm extends Val
-sealed trait Const extends Norm
+sealed trait Data extends Norm
+sealed trait Const extends Data
 
 case class Lit(any: Any) extends Expr with Const
 
@@ -64,8 +65,8 @@ case class Var(name: String) extends Id {
   }
 
   def in(cs: Case): Boolean = {
-    val Case(pat, body) = cs
-    (this in body) && !(this in pat)
+    val Case(pat, cond, body) = cs
+    ((this in body) || (cond exists (this in _))) && !(this in pat)
   }
 }
 
@@ -75,13 +76,13 @@ case class UnApp(fun: Pat, arg: Pat) extends Pat
 
 case class App(fun: Expr, arg: Expr) extends Expr
 
-case class Case(pat: Pat, body: Expr) extends Pretty
+case class Case(pat: Pat, cond: Option[Expr], body: Expr) extends Pretty
 
 case class Lambda(cases: List[Case]) extends Expr
 
 object Lambda extends ((Pat, Expr) => Expr) {
   def apply(pat: Pat, body: Expr) = {
-    Lambda(List(Case(pat, body)))
+    Lambda(List(Case(pat, None, body)))
   }
 }
 
@@ -89,6 +90,6 @@ case class Defer(expr: Expr, lex: Env, dyn: Env) extends Val {
   lazy val norm = eval.eval(expr, lex, dyn)
 }
 
-case class Obj(fun: Const, arg: Val) extends Const
-case class Bind(pat: Pat, body: Expr, lex: Env) extends Pretty
-case class Fun(binds: List[Bind], res: List[Const] = Nil) extends Norm
+case class Obj(fun: Data, arg: Val) extends Data
+case class Bind(pat: Pat, cond: Option[Expr], body: Expr, lex: Env) extends Pretty
+case class Fun(binds: List[Bind], res: List[Data] = Nil) extends Norm

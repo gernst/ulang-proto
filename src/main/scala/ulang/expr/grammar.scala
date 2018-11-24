@@ -39,7 +39,7 @@ object grammar {
   val pat: Mixfix[Id, Pat] = M(inner_pat, anyatom, UnApps, operators)
   val pats = pat ~+ ","
 
-  val patarg: Parser[Pat] = P(("(" ~ patopen ~ ")") | pat_ite | patlist | wildcard | atom) ~ ("as" ~ atom).? map {
+  val patarg: Parser[Pat] = P(("(" ~ patopen ~ ")") | patlist | wildcard | atom) ~ ("as" ~ atom).? map {
     case pat ~ None => pat
     case pat ~ Some(id: Var) => SubPat(id, pat)
     case _ => ???
@@ -50,15 +50,11 @@ object grammar {
   val expr: Mixfix[Id, Expr] = M(inner_expr, anyatom, Apps, operators)
   val exprs = expr ~+ ","
 
-  val arg: Parser[Expr] = P(("(" ~ open ~ ")") | lambda | ite | /* matches | let | */ quote | any | list | atom)
+  val arg: Parser[Expr] = P(("(" ~ open ~ ")") | lambda | ite | /* matches | */ let | quote | any | list | atom)
   val args = arg +
 
   val lambda = Lambdas("\\" ~ patargs ~ "->" ~ expr)
 
-  val pat_ite = ("if" ~ pat ~ "then" ~ pat ~ "else" ~ pat) map {
-    case test ~ left ~ right => builtin.IfThenElse(test, left, right)
-  }
-  
   val ite = ("if" ~ expr ~ "then" ~ expr ~ "else" ~ expr) map {
     case test ~ left ~ right => builtin.IfThenElse(test, left, right)
   }
@@ -67,7 +63,7 @@ object grammar {
 
   val eq = patarg ~ "=" ~ expr // TODO: pat_high instead of patarg
   val eqs = eq ~+ ","
-  // val let = LetIn("let" ~ eqs ~ "in" ~ expr)
+  val let = LetIn("let" ~ eqs ~ "in" ~ expr)
 
   val any = (string | char) map { Lit(_) }
 
