@@ -133,12 +133,12 @@ object printer {
       "(" + arg1 + " " + name + " " + arg2 + ")"
     case Lambda(cases) =>
       "\\" + cases.mkString(" | ")
-    case IfThenElse(test, iftrue, iffalse) =>
+    /* case IfThenElse(test, iftrue, iffalse) =>
       "if " + test + " then " + iftrue + " else " + iffalse
     case Defer(expr, Nil) =>
       expr + ""
     case Defer(expr, lex) =>
-      expr + lex.mkString(" where [", ", ", "]")
+      expr + lex.mkString(" where [", ", ", "]") */
     case Apps(fun, args) =>
       (fun :: args).mkString("(", " ", ")")
   }

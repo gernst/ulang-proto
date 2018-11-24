@@ -15,11 +15,11 @@ import ulang.expr.builtin
 import ulang.expr.eval
 import ulang.expr.operators
 import ulang.prove.derive
-import ulang.expr.Stack
 import ulang.expr.UnApps
 import ulang.expr.UnApps
 import ulang.expr.Env
 import ulang.expr.Pat
+import ulang.expr.Lambdas
 
 object exec {
   import shell.defs
@@ -27,7 +27,7 @@ object exec {
 
   def model = {
     import ulang.expr.Env
-    Env(merge(defs), Stack.empty)
+    Env(merge(defs), Env.empty)
   }
 
   def rewrites = {
@@ -54,7 +54,7 @@ object exec {
     println("merging")
     val bnd = dfs map {
       case Def(UnApps(id: Var, pats), body) =>
-        (id, pats.foldRight(body)(Lambda.singleton))
+        (id, Lambdas(pats, body))
     }
 
     bnd map println
@@ -121,27 +121,27 @@ object exec {
       defs ++= add
 
     case Tests(tests) =>
-      Env.current = model
+      val dyn = model
 
       new tst.Test {
         test(ctx) {
           for (Test(phi) <- tests) {
             phi match {
               case builtin.eq(lhs, rhs) =>
-                eval.eval(lhs) expect eval.eval(rhs)
+                eval.eval(lhs, dyn) expect eval.eval(rhs, dyn)
               case _ =>
-                eval.eval(phi) expect builtin.True
+                eval.eval(phi, dyn) expect builtin.True
             }
           }
         }
       }
 
     case Evals(exprs) =>
-      Env.current = model
+      val dyn = model
 
       for (expr <- exprs) {
         ulang.out(expr)
-        val res = eval.eval(expr)
+        val res = eval.eval(expr, dyn)
         ulang.out("  = " + res + ";")
       }
 

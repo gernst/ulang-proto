@@ -22,7 +22,7 @@ object Env {
       case (dyn, (x, rhs)) =>
         dyn + (x -> eval.eval(rhs, dyn))
     }
-  }
+  }  
 }
 
 object eval {

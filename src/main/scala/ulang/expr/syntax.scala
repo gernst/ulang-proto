@@ -80,6 +80,10 @@ case class Case(pat: Pat, body: Expr) extends Pretty
 case class Lambda(cases: List[Case]) extends Expr
 
 object Lambda extends ((Pat, Expr) => Expr) {
+  def apply(pat: Pat, body: Expr) = {
+    Lambda(List(Case(pat, body)))
+  }
+
   object merge extends (List[Expr] => Lambda) {
     def apply(lambdas: List[Expr]): Lambda = {
       ??? // Lambda(lambdas.flatMap(_.cases))
