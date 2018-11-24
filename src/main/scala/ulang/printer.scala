@@ -34,6 +34,9 @@ import ulang.shell.Notations
 import ulang.shell.Test
 import ulang.shell.Tests
 import ulang.expr.Val
+import ulang.expr.Obj
+import ulang.expr.Fun
+import ulang.expr.Bind
 
 trait Pretty {
   override def toString = printer.print(this)
@@ -134,19 +137,23 @@ object printer {
     case Lambda(cases) =>
       "\\" + cases.mkString(" | ")
     /* case IfThenElse(test, iftrue, iffalse) =>
-      "if " + test + " then " + iftrue + " else " + iffalse
-    case Defer(expr, Nil) =>
-      expr + ""
-    case Defer(expr, lex) =>
-      expr + lex.mkString(" where [", ", ", "]") */
+      "if " + test + " then " + iftrue + " else " + iffalse */
     case Apps(fun, args) =>
       (fun :: args).mkString("(", " ", ")")
   }
 
-  def print(any: Pretty): String = any match {
-    case _: Val =>
+  def print(v: Val): String = v match {
+    case Defer(expr, lex, dyn) if lex.isEmpty && dyn.isEmpty =>
+      expr + ""
+    case Defer(expr, lex, dyn) =>
+      expr + (dyn ++ lex).mkString(" where [", ", ", "]")
+    case Obj(fun, arg) =>
+      "(" + fun + " " + arg + ")"
+    case Fun(binds, res) =>
       ???
-      
+  }
+
+  def print(any: Pretty): String = any match {
     case Lit(s: String) =>
       "\"" + s + "\""
     case Lit(i: Int) =>
@@ -163,6 +170,11 @@ object printer {
 
     case Case(pat, body) =>
       pat + " -> " + body
+      
+    case Bind(pat, body, lex) if lex.isEmpty =>
+      pat + " -> " + body
+    case Bind(pat, body, lex) =>
+      pat + " -> " + body + lex.mkString(" where [", ", ", "]")
 
     case Def(lhs, rhs) =>
       lhs + " = " + rhs + ";"
@@ -202,5 +214,8 @@ object printer {
       print(pat)
     case expr: Expr =>
       print(expr)
+    case v: Val =>
+      print(v)
+
   }
 }

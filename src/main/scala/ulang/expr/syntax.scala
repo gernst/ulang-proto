@@ -83,12 +83,6 @@ object Lambda extends ((Pat, Expr) => Expr) {
   def apply(pat: Pat, body: Expr) = {
     Lambda(List(Case(pat, body)))
   }
-
-  object merge extends (List[Expr] => Lambda) {
-    def apply(lambdas: List[Expr]): Lambda = {
-      ??? // Lambda(lambdas.flatMap(_.cases))
-    }
-  }
 }
 
 case class Defer(expr: Expr, lex: Env, dyn: Env) extends Val {
@@ -96,5 +90,5 @@ case class Defer(expr: Expr, lex: Env, dyn: Env) extends Val {
 }
 
 case class Obj(fun: Const, arg: Val) extends Const
-case class Bind(pat: Pat, body: Expr, lex: Env)
+case class Bind(pat: Pat, body: Expr, lex: Env) extends Pretty
 case class Fun(binds: List[Bind], res: List[Const] = Nil) extends Norm

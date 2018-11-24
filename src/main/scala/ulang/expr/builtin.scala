@@ -12,8 +12,9 @@ object builtin {
   object or extends Binary(Var("or"))
   object ==> extends Binary(Var("==>"))
   object <=> extends Binary(Var("<=>"))
-  object IfThenElse extends Ternary(Var("if then else"))
 
+  object IfThenElse extends Ternary(Var("if then else"))
+  
   object Tuple extends Nary(Tag("Tuple"))
 
   val Nil = Tag("Nil")

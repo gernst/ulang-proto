@@ -30,15 +30,15 @@ object eval {
     case Wildcard =>
       env
 
-    case id: Id =>
-      env + (id -> arg)
+    case x: Var =>
+      env + (x -> arg)
 
     case tag: Tag =>
       if (tag == norm(arg)) env
       else backtrack()
 
-    case SubPat(id, pat) =>
-      bind(pat, arg, env + (id -> arg))
+    case SubPat(x, pat) =>
+      bind(pat, arg, env + (x -> arg))
 
     case UnApp(fun1, arg1) =>
       norm(arg) match {
@@ -85,13 +85,13 @@ object eval {
     (binds.flatten, consts.flatten) match {
       case (Nil, Nil) => sys.error("undefined")
       case (Nil, List(res)) => res
-      case (Nil, _) => sys.error("non-deterministic")
+      case (Nil, res) => sys.error("non-deterministic result: " + res.mkString("[", ", ", "]"))
       case (binds, res) => Fun(binds, res)
     }
   }
 
   def apply(fun: Norm, arg: Val, dyn: Env): Norm = fun match {
-    case tag: Tag => Obj(tag, arg)
+    case const: Const => Obj(const, arg)
     case Fun(cases, res) => merge(apply(cases, arg, dyn))
     case _ => sys.error("not a function: " + fun)
   }
@@ -102,8 +102,8 @@ object eval {
 
   def defer(expr: Expr, lex: Env, dyn: Env): Val = expr match {
     case tag: Tag => tag
-    case id: Id if lex contains id => lex(id)
-    case id: Id if dyn contains id => dyn(id)
+    case x: Var if lex contains x => lex(x)
+    case x: Var if dyn contains x => dyn(x)
     case Lambda(cases) => Fun(defer(cases, lex))
     case _ => Defer(expr, lex, dyn)
   }
@@ -120,8 +120,8 @@ object eval {
 
   def eval(expr: Expr, lex: Env, dyn: Env): Norm = expr match {
     case tag: Tag => tag
-    case id: Id if lex contains id => norm(lex(id))
-    case id: Id if dyn contains id => norm(dyn(id))
+    case x: Var if lex contains x => norm(lex(x))
+    case x: Var if dyn contains x => norm(dyn(x))
     case Lambda(cases) => Fun(defer(cases, lex))
     case App(fun, arg) => apply(eval(fun, lex, dyn), defer(arg, lex, dyn), dyn)
   }

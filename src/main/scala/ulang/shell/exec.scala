@@ -51,24 +51,18 @@ object exec {
   }
 
   def merge(dfs: List[Def]): List[(Var, Expr)] = {
-    println("merging")
-    val bnd = dfs map {
-      case Def(UnApps(id: Var, pats), body) =>
-        (id, Lambdas(pats, body))
-    }
-
-    bnd map println
-    /* val funs = dfs.distinct.collect {
+    val funs = dfs.distinct.collect {
       case Def(UnApps(id: Var, pats), rhs) if !pats.isEmpty =>
         println(id + pats.mkString(" ", " ", " = ") + rhs)
-        val cs = Lambda.binding(pats, rhs)
-        println(id + " = " + cs)
-        (id, cs)
+        val lambda = Lambdas(pats, rhs)
+        val Lambda(cases) = lambda
+        println(id + " = " + lambda)
+        (id, cases)
     }
 
     val merged = group(funs).map {
-      case (id, lambdas) =>
-        (id, lambdas reduce (_ | _))
+      case (id, cases) =>
+        (id, Lambda(cases.flatten))
     }
 
     val consts = dfs.collect {
@@ -78,8 +72,6 @@ object exec {
     }
 
     merged.toList ++ consts
-    */
-    ???
   }
 
   def define(inds: List[Ind]): List[Def] = {

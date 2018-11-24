@@ -13,11 +13,16 @@ definition
   tupled  f = \(x, y) -> f x y;
   
   g . f = \x -> g (f x);
+  
+  (if True  then a else b) = a;
+  (if False then a else b) = b;
 end
 
 test
   id A = A;
   (const A) B = A;
+  (if True  then X else Y) = X;
+  (if False then X else Y) = Y;
 end
 
 eval
