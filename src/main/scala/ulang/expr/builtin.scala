@@ -10,8 +10,8 @@ object builtin {
   val False = Tag("False")
   object and extends Binary(Var("and"))
   object or extends Binary(Var("or"))
-  object ==> extends Binary(Var("==>"))
-  object <=> extends Binary(Var("<=>"))
+  object implies extends Binary(Var("==>"))
+  object eqv extends Binary(Var("<=>"))
 
   object IfThenElse extends Ternary(Var("ite"))
   

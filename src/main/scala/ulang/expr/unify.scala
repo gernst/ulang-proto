@@ -8,7 +8,7 @@ object unify {
     val u = new unify;
     { u.unify(pat1, pat2); true } or { false }
   }
-  
+
   def test(pats1: List[Pat], pats2: List[Pat]) = {
     val u = new unify;
     { u.unify(pats1, pats2); true } or { false }
@@ -84,6 +84,14 @@ class unify {
     case (UnApp(fun1, args1), UnApp(fun2, args2)) =>
       unify(fun1, fun2)
       unify(args1, args2)
+
+    case (Named(pat1, x1), Named(pat2, x2)) =>
+      unify(x1, x2)
+      unify(pat1, pat2)
+
+    case (Cond(pat1, cond1), Cond(pat2, cond2)) =>
+      ulang.warning("imprecise overlap check: " + cond1 + " and " + cond2)
+      unify(pat1, pat2)
 
     case _ =>
       backtrack()

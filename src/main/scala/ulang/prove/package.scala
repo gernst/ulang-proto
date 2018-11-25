@@ -6,21 +6,24 @@ import ulang.expr.Pat
 import ulang.expr.unify
 
 package object prove {
-  type Env = Map[String, Expr]
+  type Env = Map[Var, Expr]
   type Ind = List[(Pat, List[Goal])]
 
   object Env {
     val empty: Env = Map()
 
     def apply(dfs: List[(Var, Expr)]): Env = {
-      val pairs = dfs.map { case (Var(name), rhs) => (name, rhs) }
-      pairs.toMap
+      Map(dfs: _*)
+    }
+    
+    def free(env: Env) = {
+      
     }
   }
 
   object Ind {
     import derive.assert
-    
+
     def apply(inds: List[ulang.shell.Ind]): Ind = {
       val pairs = inds.collect {
         case ulang.shell.Ind(cases) if !cases.isEmpty =>

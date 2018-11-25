@@ -24,6 +24,7 @@ object grammar {
   val fixity = prefix | postfix | infix
 
   val fix = Fix(fixity ~ names)
+  val binder = Binder("binder" ~ names)
   val data = Data("data" ~ names)
 
   val expr_high = expr above 7
@@ -39,7 +40,7 @@ object grammar {
 
   val def_ = (df ~ ";") *
   val test_ = (test ~ ";") *
-  val notation_ = ((fix | data) ~ ";") *
+  val notation_ = ((fix | data | binder) ~ ";") *
   val expr_ = (expr ~ ";") *
   val thm_ = thm *
 

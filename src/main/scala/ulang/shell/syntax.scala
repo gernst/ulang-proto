@@ -8,6 +8,7 @@ import ulang.prove.Rule
 
 sealed trait Notation extends Pretty
 case class Data(names: List[String]) extends Notation
+case class Binder(names: List[String]) extends Notation
 case class Fix(fixity: Fixity, names: List[String]) extends Notation
 
 case class Def(lhs: Pat, rhs: Expr) extends Pretty

@@ -74,12 +74,13 @@ object exec {
   }
 
   def define(inds: List[Ind]): List[Def] = {
-    import builtin.==>
+    import builtin.implies
 
     inds.flatMap {
-      case Ind(cases) =>
+      case ind @ Ind(cases) =>
+        ulang.warning("assuming patterns don't overlap: " + ind)
         cases.collect {
-          case ant ==> suc =>
+          case ant implies suc =>
             Def(suc.toPat, ant)
           case suc =>
             Def(suc.toPat, builtin.True)
@@ -101,6 +102,8 @@ object exec {
           for (name <- names) { operators.postfix_ops += (Id(name) -> prec) }
         case Fix(Infix(assoc, prec), names) =>
           for (name <- names) { operators.infix_ops += (Id(name) -> (assoc, prec)) }
+        case Binder(names) =>
+          for(name <- names) { operators.bind_ops += Id(name) }
         case Data(names) =>
           for (name <- names) { operators.data += Tag(name) }
         case not =>

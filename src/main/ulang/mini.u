@@ -1,18 +1,36 @@
 notation
+  data 0 +1;
+  postfix 11 +1 -1;
   prefix 5 not;
   infix left  4 and;
   infix left  3 or;
   infix right 2 ==>;
   infix 5 :;
   infix 7 +;
+  binder forall exists;
 end
 
 definition
   id x = x;
   test A = X;
   test B = Y;
+  (not True) = False;
+  (not False) = True;
   (x = x) = True;
-  1 = Succ Zero;
+  (x = y) = False;
+  1 = 0 +1;
+  (forall) f = (f = \x -> True);
+end
+
+test
+  X = X;
+  not X = Y;
+end
+
+theorem
+  X = Y;
+  forall x -> True;
+  (\x y -> A x) y = \z -> (A y);
 end
 
 definition
@@ -34,8 +52,8 @@ proof induction b : Bool
 end
 
 inductive definition
-  Zero : Nat;
-  n : Nat ==> Succ(n) : Nat;
+  0 : Nat;
+  n : Nat ==> n +1 : Nat;
 end
 
 theorem
@@ -46,32 +64,22 @@ theorem
   test A;
   True : Bool;
   False : Bool;
-  n : Nat ==> (Succ n) : Nat;
+  n : Nat ==> n +1 : Nat;
   (F a b x) = (F a d z) ==> False;
 end
 
 definition
-  n + Zero = n;
-  n + (Succ m) = Succ (n + m);
+  n + 0 = n;
+  n + (m +1) = (n + m) +1;
 end
 
 theorem
-  1 + 1 = Succ (Succ Zero);
+  1 + 1 = 0 +1 +1;
 end
 
 theorem
-  k : Nat ==> Zero + k = k;
+  k : Nat ==> 0 + k = k;
 proof induction k : Nat
-  | Zero : Nat -> sorry
-  | Succ m : Nat -> sorry;
-end
-
-definition
-  test (k : Nat) =
-     Zero + k = k;
-end
-
-lemma
-  test (k : Nat)
-by
+  | 0 : Nat -> sorry
+  | m +1 : Nat -> sorry;
 end

@@ -11,7 +11,7 @@ import ulang.expr.builtin.False
 import ulang.expr.builtin.True
 import ulang.expr.builtin.and
 import ulang.expr.builtin.eq
-import ulang.expr.builtin.==>
+import ulang.expr.builtin.implies
 import ulang.expr.unify
 import ulang.expr.builtin
 import ulang.expr.Apps
@@ -95,7 +95,7 @@ object derive {
       val Apps(`fun`, args2) = concl
 
       {
-        val lex = rewrite.bind(pat, concl, Env.empty, dyn)
+        val lex = rewrite.bind(pat, concl, Env.empty)
 
         val eqs = (args1, args2).zipped.map {
           case (arg1, arg2) => builtin.eq(arg1, arg2)
@@ -116,10 +116,11 @@ object derive {
     if (!(ant contains expr))
       backtrack()
 
-    val App(fun: Var, args1) = expr
+    val Apps(fun: Var, args1) = expr
 
     val List(constrs) = ind.collect {
-      case (pat, constrs) if rewrite.matches(pat, expr, dyn) =>
+      // XXX: inductive predicate is treated as a variable!
+      case (pat, constrs) if rewrite.matches(pat, expr) =>
         constrs
     }
 
@@ -180,7 +181,7 @@ object derive {
   }
 
   def assert(phi: Expr, goal: Goal): Goal = phi match {
-    case phi ==> psi =>
+    case phi implies psi =>
       assume(phi, assert(psi, goal))
     case _ =>
       val Goal(eqs, ant, suc) = goal
@@ -220,8 +221,8 @@ object derive {
         Step(List(goal), goal, rule)
       case Trivial =>
         val Goal(eqs, ant, suc) = goal
-        val lex = eqs collect { case (Var(name), rhs) => (name, rhs) }
-        trivial(process_plus(eqs, ant, suc, lex.toMap, dyn), rule)
+        val lex = eqs collect { case (x: Var, rhs) => (x, rhs) }
+        trivial(process_plus(eqs, ant, suc, Map(lex: _*), dyn), rule)
       case Cut(phi) =>
         cut(phi, goal, rule)
       case Induction(expr, cases) =>

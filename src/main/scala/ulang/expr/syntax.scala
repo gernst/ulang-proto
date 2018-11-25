@@ -49,10 +49,10 @@ case class Var(name: String) extends Id {
       this == that
     case UnApp(fun, arg) =>
       (this in fun) || (this in arg)
-    case Named(pat, _) =>
-      this in pat
+    case Named(pat, x) =>
+      (this in pat) || (this == x)
     case Cond(pat, cond) =>
-      (this in pat) || (this in cond)
+      (this in pat) // || (this in cond)
   }
 
   def in(expr: Expr): Boolean = expr match {
@@ -73,7 +73,7 @@ case class Var(name: String) extends Id {
 }
 
 case object Wildcard extends Pat
-case class Named(pat: Pat, name: Id) extends Pat
+case class Named(pat: Pat, name: Var) extends Pat
 case class Cond(pat: Pat, cond: Expr) extends Pat
 case class UnApp(fun: Pat, arg: Pat) extends Pat
 

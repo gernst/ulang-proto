@@ -46,7 +46,7 @@ object eval {
       else backtrack()
 
     case Named(pat, x) =>
-      bind(pat, arg, env + (x -> arg))
+      bind(pat, arg, bind(x, arg, env))
 
     case Cond(pat, cond) =>
       val newenv = bind(pat, arg, env)
@@ -135,7 +135,8 @@ object eval {
     case d: Defer => const(d.norm)
     case Obj(fun, arg) => Obj(const(fun), const(arg))
     case Fun(Nil, List(res)) => res
-    case _: Fun => ulang.error("not constant: " + arg)
+    case _: Fun => 
+      ulang.error("not constant: " + arg)
   }
 
   def eval(expr: Expr, dyn: Env): Norm = {
