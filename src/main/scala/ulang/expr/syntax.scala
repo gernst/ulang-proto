@@ -67,8 +67,8 @@ case class Var(name: String) extends Id {
   }
 
   def in(cs: Case): Boolean = {
-    val Case(pat, body) = cs
-    (this in body) && !(this in pat)
+    val Case(pats, body) = cs
+    (this in body) && !(pats exists (this in _))
   }
 }
 
@@ -79,20 +79,32 @@ case class UnApp(fun: Pat, arg: Pat) extends Pat
 
 case class App(fun: Expr, arg: Expr) extends Expr
 
-case class Case(pat: Pat, body: Expr) extends Pretty
+case class Case(pats: List[Pat], body: Expr) extends Pretty {
+  def arity = pats.length
+}
 
-case class Lambda(cases: List[Case]) extends Expr
+case class Lambda(cases: List[Case]) extends Expr {
+  assert(!cases.isEmpty)
+  assert(cases forall (_.arity == arity))
+  def arity = cases.head.arity
+}
 
-object Lambda extends ((Pat, Expr) => Expr) {
-  def apply(pat: Pat, body: Expr) = {
-    Lambda(List(Case(pat, body)))
+object Lambda extends ((List[Pat], Expr) => Expr) {
+  def apply(pats: List[Pat], body: Expr) = {
+    Lambda(List(Case(pats, body)))
   }
 }
 
 case class Defer(expr: Expr, lex: Env, dyn: Env) extends Val {
-  lazy val norm = eval.eval(expr, lex, dyn)
+  lazy val norm = eval.norm(expr, lex, dyn)
 }
 
 case class Obj(fun: Data, arg: Val) extends Data
-case class Bind(pat: Pat, body: Expr, lex: Env) extends Pretty
-case class Fun(binds: List[Bind], res: List[Data] = Nil) extends Norm
+
+case class Fun(cases: List[Case], rargs: List[Val], lex: Env) extends Norm {
+  assert(!cases.isEmpty)
+  assert(cases forall (_.arity == arity))
+  assert(rargs.length <= arity)
+  def arity = cases.head.arity
+  def isComplete = arity == rargs.length
+}

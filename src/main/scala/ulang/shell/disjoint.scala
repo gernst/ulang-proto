@@ -7,10 +7,10 @@ object check {
     defs collect {
       case Def(fun, Lambda(cases)) =>
         cases.tails.foreach {
-          case Case(pat1, _) :: xs =>
-            for (Case(pat2, _) <- xs) {
-              if (unify.test(pat1, pat2))
-                ulang.warning("patterns " + UnApp(fun, pat1) + " and " + UnApp(fun, pat2) + " overlap")
+          case Case(pats1, _) :: xs =>
+            for (Case(pats2, _) <- xs) {
+              if (unify.test(pats1, pats2))
+                ulang.warning("patterns " + UnApps(fun, pats1) + " and " + UnApps(fun, pats2) + " overlap")
             }
           case Nil =>
         }

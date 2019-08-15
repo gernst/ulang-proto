@@ -7,6 +7,7 @@ import arse.Postfix
 import arse.Prefix
 import arse.Right
 import ulang.expr.Apps
+import ulang.expr.Objs
 import ulang.expr.Case
 import ulang.expr.Expr
 import ulang.expr.Id
@@ -36,7 +37,7 @@ import ulang.shell.Tests
 import ulang.expr.Val
 import ulang.expr.Obj
 import ulang.expr.Fun
-import ulang.expr.Bind
+
 
 trait Pretty {
   override def toString = printer.print(this)
@@ -86,6 +87,15 @@ object printer {
       expr + " + " + n
   }
 
+  def print_number(n: Int, any: Val): String = any match {
+    case builtin.Succ(arg) =>
+      print_number(n + 1, arg)
+    case builtin.Zero =>
+      n + ""
+    case _ =>
+      any + " + " + n
+  }
+
   def print_list(pat: Pat): String = pat match {
     case builtin.Cons(arg1, arg2) =>
       ", " + arg1 + print_list(arg2)
@@ -104,6 +114,15 @@ object printer {
       "; " + expr + "]"
   }
 
+  def print_list(any: Val): String = any match {
+    case builtin.Cons(arg1, arg2) =>
+      ", " + arg1 + print_list(arg2)
+    case builtin.Nil =>
+      "]"
+    case _ =>
+      "; " + any + "]"
+  }
+
   def print(pat: Pat): String = pat match {
     case Wildcard =>
       "_"
@@ -111,6 +130,8 @@ object printer {
       pat + " as " + name
     case builtin.Tuple(args @ _*) =>
       args.mkString("(", ", ", ")")
+    case builtin.Succ(arg) =>
+      print_number(1, arg)
     case builtin.Cons(arg1, arg2) =>
       "[" + arg1 + print_list(arg2)
     case UnApps(op @ Id(name), List(arg)) if operators.prefix_ops contains op =>
@@ -126,6 +147,8 @@ object printer {
   def print(expr: Expr): String = expr match {
     case builtin.Tuple(args @ _*) =>
       args.mkString("(", ", ", ")")
+    case builtin.Succ(arg) =>
+      print_number(1, arg)
     case builtin.Cons(arg1, arg2) =>
       "[" + arg1 + print_list(arg2)
     case Apps(op @ Id(name), List(arg)) if operators.prefix_ops contains op =>
@@ -143,14 +166,26 @@ object printer {
   }
 
   def print(v: Val): String = v match {
+    case builtin.Tuple(args @ _*) =>
+      args.mkString("(", ", ", ")")
+    case builtin.Succ(arg) =>
+      print_number(1, arg)
+    case builtin.Cons(arg1, arg2) =>
+      "[" + arg1 + print_list(arg2)
+    case Objs(op @ Id(name), List(arg)) if operators.prefix_ops contains op =>
+      "(" + name + " " + arg + ")"
+    case Objs(op @ Id(name), List(arg)) if operators.postfix_ops contains op =>
+      "(" + arg + " " + name + ")"
+    case Objs(op @ Id(name), List(arg1, arg2)) if operators.infix_ops contains op =>
+      "(" + arg1 + " " + name + " " + arg2 + ")"
     case Defer(expr, lex, dyn) if lex.isEmpty =>
       expr + ""
     case Defer(expr, lex, dyn) =>
       expr + lex.mkString(" where [", ", ", "]")
     case Obj(fun, arg) =>
       "(" + fun + " " + arg + ")"
-    case Fun(binds, res) =>
-      (binds ++ res).mkString("(", " | ", ")")
+    case Fun(binds, rargs, lex) =>
+      binds.mkString("(", " | ", ")") + rargs.mkString(" [", ", ", "]")
   }
 
   def print(any: Pretty): String = any match {
@@ -171,14 +206,14 @@ object printer {
     case Case(pat, body) =>
       pat + " -> " + body
 
-    case Bind(pat, body, lex) if lex.isEmpty =>
+    /* case Bind(pat, body, lex) if lex.isEmpty =>
       pat + " -> " + body
     case Bind(pat, body, lex) =>
-      pat + " -> " + body + lex.mkString(" where [", ", ", "]")
+      pat + " -> " + body + lex.mkString(" where [", ", ", "]") */
 
     case Def(lhs, rhs) =>
       lhs + " = " + rhs + ";"
-      
+
     case Test(phi) =>
       phi + ";"
 

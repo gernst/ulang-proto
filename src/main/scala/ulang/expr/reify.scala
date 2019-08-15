@@ -35,8 +35,8 @@ object reify {
   }
 
   def reify(cs: Case): Expr = cs match {
-    case Case(pat, body) =>
-      Apps(Tag("Case"), List(reify(pat), reify(body)))
+    case Case(pats, body) =>
+      Apps(Tag("Case"), List(list(pats map reify), reify(body)))
   }
 
   def reify(pat: Pat): Expr = pat match {

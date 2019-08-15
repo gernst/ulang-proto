@@ -30,14 +30,16 @@ definition
   foldl f z [] = z;
   foldl f z [x; xs] = foldl f (f z x) xs;
 
-  unfoldl f [f y; x] xs = unfoldl f y [x; xs];
+  unfoldl f (f z x) xs = unfoldl f z [x; xs];
   unfoldl f z xs = (z, xs);
 
   foldr f z [] = z;
   foldr f z [x; xs] = f x (foldr f z xs);
   
-  unfoldr f (f x y) = [x; unfoldr f y];
-  unfoldr f z = z;
+  unfoldr f (f x y) xs =
+    let (z, ys) = unfoldr f y xs
+     in (z, [x;ys]);
+  unfoldr f z xs = (z, xs);
   
   forall p [] = True;
   forall p [x; xs] = if not p x then False else forall p xs;
@@ -61,7 +63,7 @@ definition
   filter p [x; xs]
     = let ys = (filter p xs)
       in if (p x) then [x; ys] else ys;
-       
+
   partition p [] = ([], []);
   partition p [x; xs]
     = let (ys,zs) = partition p xs
@@ -89,9 +91,9 @@ definition
   
   store x z xs = [(x,z); xs];
   
-  reverse [] ys = ys;
-  reverse [x; xs] ys = reverse xs [x; ys];
-  reverse xs = reverse xs [];
+  reverse_rec [] ys = ys;
+  reverse_rec [x; xs] ys = reverse_rec xs [x; ys];
+  reverse xs = reverse_rec xs [];
   
   qsort (<) []
     = [];
@@ -104,6 +106,11 @@ eval
   [1, 2, 3] ** [A, B, C];
   
   let ys = [C] in ([A, B; ys], ys);
+  
+  foldl F Z [A, B, C];
+  foldr F Z [A, B, C];
+  unfoldl F (foldl F Z [A, B, C]) [];
+  unfoldr F (foldr F Z [A, B, C]) [];
 end
 
 test

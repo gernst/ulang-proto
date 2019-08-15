@@ -3,7 +3,7 @@ package ulang.expr
 object LetIn extends ((List[(Pat, Expr)], Expr) => Expr) {
   def apply(eqs: List[(Pat, Expr)], body: Expr): Expr = {
     val (pats, args) = eqs.unzip
-    Apps(Lambdas(pats, body), args)
+    Apps(Lambda(pats, body), args)
   }
 }
 
@@ -41,9 +41,20 @@ object Apps extends ((Expr, List[Expr]) => Expr) {
   }
 }
 
-object Lambdas extends ((List[Pat], Expr) => Expr) {
-  def apply(pats: List[Pat], body: Expr) = {
-    pats.foldRight(body)(Lambda)
+object Objs extends ((Data, List[Val]) => Val) {
+  def apply(fun: Data, args: List[Val]): Val = {
+    args.foldLeft(fun)(Obj)
+  }
+
+  def flatten(any: Data, args: List[Val]): (Data, List[Val]) = any match {
+    case Obj(fun, arg) =>
+      flatten(fun, arg :: args)
+    case _ =>
+      (any, args)
+  }
+
+  def unapply(any: Data): Option[(Data, List[Val])] = {
+    Some(flatten(any, Nil))
   }
 }
 
@@ -55,6 +66,11 @@ class Unary(val op: Id) {
 
   def unapply(e: Expr) = e match {
     case App(`op`, arg) => Some(arg)
+    case _ => None
+  }
+
+  def unapply(v: Val) = v match {
+    case Obj(`op`, arg) => Some(arg)
     case _ => None
   }
 
@@ -75,6 +91,11 @@ class Binary(val op: Id) {
 
   def unapply(e: Expr) = e match {
     case App(App(`op`, arg1), arg2) => Some((arg1, arg2))
+    case _ => None
+  }
+  
+  def unapply(v: Val) = v match {
+    case Obj(Obj(`op`, arg1), arg2) => Some((arg1, arg2))
     case _ => None
   }
 
@@ -131,6 +152,11 @@ class Nary(val op: Id) {
 
   def unapplySeq(e: Expr) = e match {
     case Apps(`op`, args) => Some(args)
+    case _ => None
+  }
+
+  def unapplySeq(v: Val) = v match {
+    case Objs(`op`, args) => Some(args)
     case _ => None
   }
 

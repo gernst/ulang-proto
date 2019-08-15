@@ -12,6 +12,9 @@ definition
   numbers n = [n; numbers (Succ n)];
 end
 
+import
+  nat list;
+
 eval
   eq A A;
   

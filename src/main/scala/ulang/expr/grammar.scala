@@ -62,8 +62,8 @@ object grammar {
   val args = arg +
 
   val abs = patargs ~ "->" ~ expr
-  val lambda = Lambdas("\\" ~ abs)
-  val binder = App(bindatom ~ Lambdas(abs))
+  val lambda = Lambda("\\" ~ abs)
+  val binder = App(bindatom ~ Lambda(abs))
 
   val ite = ("if" ~ expr ~ "then" ~ expr ~ "else" ~ expr) map {
     case test ~ left ~ right => builtin.IfThenElse(test, left, right)

@@ -19,7 +19,7 @@ import ulang.expr.UnApps
 import ulang.expr.UnApps
 import ulang.expr.Env
 import ulang.expr.Pat
-import ulang.expr.Lambdas
+import ulang.expr.Lambda
 
 object exec {
   import shell.defs
@@ -54,7 +54,7 @@ object exec {
     val funs = dfs.distinct.collect {
       case Def(UnApps(id: Var, pats), rhs) if !pats.isEmpty =>
         // println(id + pats.mkString(" ", " ", " = ") + rhs)
-        val lambda = Lambdas(pats, rhs)
+        val lambda = Lambda(pats, rhs)
         val Lambda(cases) = lambda
         (id, cases)
     }
@@ -135,7 +135,7 @@ object exec {
 
       for (expr <- exprs) {
         ulang.out(expr)
-        val res = eval.eval(expr, dyn)
+        val res = eval.strict(expr, dyn)
         ulang.out("  = " + res + ";")
       }
 

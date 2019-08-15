@@ -85,7 +85,8 @@ object rewrite {
   def apply(cs: ulang.expr.Case, arg: Expr, dyn: Env): Expr = cs match {
     case ulang.expr.Case(pat, body) =>
       val lex: Env = ??? // needs to start with some context!
-      rewrite(body, bind(pat, arg, lex), dyn)
+      ???
+      // rewrite(body, bind(pat, arg, lex), dyn)
   }
 
   def apply(cases: List[ulang.expr.Case], arg: Expr, dyn: Env): Expr = cases match {

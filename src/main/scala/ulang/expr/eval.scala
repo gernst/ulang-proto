@@ -42,7 +42,7 @@ object eval {
       env + (x -> arg)
 
     case tag: Tag =>
-      if (tag == norm(arg)) env
+      if (tag == force(arg)) env
       else backtrack()
 
     case Named(pat, x) =>
@@ -54,7 +54,7 @@ object eval {
       else backtrack()
 
     case UnApp(fun1, arg1) =>
-      norm(arg) match {
+      force(arg) match {
         case Obj(fun2, arg2) =>
           bind(arg1, arg2, bind(fun1, fun2, env))
         case _ =>
@@ -65,100 +65,78 @@ object eval {
       backtrack()
   }
 
-  def apply(bn: Bind, arg: Val, dyn: Env): Norm = bn match {
-    case Bind(pat, body, lex) =>
-      eval(body, bind(pat, arg, lex), dyn)
+  def bind(pats: List[Pat], args: List[Val], env: Env): Env = (pats, args) match {
+    case (Nil, Nil) =>
+      env
+    case (pat :: pats, arg :: args) =>
+      bind(pats, args, bind(pat, arg, env))
+    case _ =>
+      sys.error("argument length mismatch: " + pats.mkString(" ") + " and " + args.mkString(" "))
   }
 
-  def apply(cases: List[Bind], arg: Val, dyn: Env): List[Norm] = cases match {
+  def apply(cs: Case, args: List[Val], lex: Env, dyn: Env): Norm = cs match {
+    case Case(pats, body) =>
+      norm(body, bind(pats, args, lex), dyn)
+  }
+
+  def apply(fun: Fun, cases: List[Case], args: List[Val], lex: Env, dyn: Env): Norm = cases match {
     case Nil =>
-      Nil
+      sys.error("cannot apply " + fun + " to " + args.mkString(" "))
 
-    case bind :: rest =>
-      { apply(bind, arg, dyn) :: apply(rest, arg, dyn) } or { apply(rest, arg, dyn) }
+    case cs :: rest =>
+      { apply(cs, args, lex, dyn) } or { apply(fun, rest, args, lex, dyn) }
   }
 
-  def merge(norms: List[Norm]): Option[Norm] = {
-    val binds = norms collect {
-      case Fun(binds, _) => binds
-    }
-
-    val consts = norms collect {
-      case Fun(_, res) => res
-      case res: Data => List(res)
-      case res => ulang.error("dropped result: " + res) // note: currently unreachable
-    }
-
-    (binds.flatten, consts.flatten) match {
-      case (Nil, Nil) =>
-        // ulang.error("undefined")
-        None
-      case (Nil, res :: rest) =>
-        // if (!rest.isEmpty)
-        //   ulang.warning("ignoring results: " + rest.mkString("[", ", ", "]"))
-        Some(res)
-      case (binds, res) =>
-        Some(Fun(binds, res))
+  def apply(fun: Fun, dyn: Env): Norm = {
+    if (fun.isComplete) {
+      val cases = fun.cases
+      val args = fun.rargs.reverse
+      val lex = fun.lex
+      apply(fun, cases, args, lex, dyn)
+    } else {
+      fun
     }
   }
 
-  def apply(fun: Norm, arg: Val, dyn: Env): Norm = fun match {
-    case obj: Data => Obj(obj, arg)
-    case Fun(cases, res) =>
-      merge(apply(cases, arg, dyn)) match {
-        case None => cases map println; ulang.error("unmatched: " + norm(arg))
-        case Some(res) => res
-      }
-    case _ => ulang.error("not a function: " + fun)
+  def push(fun: Norm, arg: Val, dyn: Env): Norm = fun match {
+    case data: Data =>
+      Obj(data, arg)
+    case Fun(cases, rargs, lex) =>
+      apply(Fun(cases, arg :: rargs, lex), dyn)
+    case _ =>
+      sys.error("not a function: " + fun)
   }
 
-  def defer(cases: List[Case], lex: Env): List[Bind] = {
-    cases map { case Case(pat, body) => Bind(pat, body, lex) }
+  def force(arg: Val): Norm = arg match {
+    case defer: Defer => defer.norm
+    case norm: Norm => norm
   }
 
-  def defer(expr: Expr, lex: Env, dyn: Env): Val = expr match {
-    case tag: Tag => tag
-    /* case x: Var if lex contains x => lex(x)
-    case x: Var if dyn contains x => dyn(x)
-    case x: Var => ulang.error("unbound variable: " + x) */
-    case Lambda(cases) => Fun(defer(cases, lex))
-    case _ => Defer(expr, lex, dyn)
-  }
-
-  def norm(arg: Val): Norm = arg match {
-    case d: Defer => d.norm
-    case n: Norm => n
+  def defer(expr: Expr, lex: Env, dyn: Env): Val = {
+    Defer(expr, lex, dyn)
   }
 
   def const(arg: Val): Data = arg match {
-    case c: Const => c
-    case d: Defer => const(d.norm)
+    case defer: Defer => const(defer.norm)
+    case tag: Tag => tag
     case Obj(fun, arg) => Obj(const(fun), const(arg))
-    case Fun(Nil, List(res)) => res
-    case _: Fun => 
-      ulang.error("not constant: " + arg)
+    case _ => sys.error("not constant: " + arg)
   }
 
-  def eval(expr: Expr, dyn: Env): Norm = {
-    val lex = Env.empty
-    eval(expr, lex, dyn)
+  def norm(expr: Expr, lex: Env, dyn: Env): Norm = expr match {
+    case x: Var if lex contains x => force(lex(x))
+    case x: Var if dyn contains x => force(dyn(x))
+    case x: Var => sys.error("unbound variable: " + x + " in " + lex + " and " + dyn)
+    case tag: Tag => tag
+    case Lambda(cases) => Fun(cases, Nil, lex)
+    case App(fun, arg) => push(norm(fun, lex, dyn), defer(arg, lex, dyn), dyn)
   }
 
-  def strict(expr: Expr, dyn: Env): Data = {
+  def eval(expr: Expr, dyn: Env) = {
+    norm(expr, Env.empty, dyn)
+  }
+
+  def strict(expr: Expr, dyn: Env) = {
     const(eval(expr, dyn))
-  }
-
-  def eval(expr: Expr, lex: Env, dyn: Env): Norm = {
-    val res = expr match {
-      case tag: Tag => tag
-      case x: Var if lex contains x => norm(lex(x))
-      case x: Var if dyn contains x => norm(dyn(x))
-      case x: Var => ulang.error("unbound variable: " + x)
-      case Lambda(cases) => Fun(defer(cases, lex))
-      case App(fun, arg) => apply(eval(fun, lex, dyn), defer(arg, lex, dyn), dyn)
-    }
-    // println("eval " + expr)
-    // println("  = " + res)
-    res
   }
 }
